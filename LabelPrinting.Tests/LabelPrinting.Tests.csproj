@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsPackable>false</IsPackable>
+		<RootNamespace>LabelPrinting.Tests</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+		<PackageReference Include="xunit" Version="2.9.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+		<PackageReference Include="SkiaSharp" Version="4.150.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!--
+			Bewusst KEIN <ProjectReference> auf LabelPrinting.csproj: Die Bibliothek zielt nur auf
+			MAUI-Plattform-TFMs (Android/iOS/MacCatalyst/Windows), weil zwei Klassen
+			(LabelTemplateStore, PrinterSettingsStore) MAUI Essentials (FileSystem/Preferences)
+			nutzen. Ein plattform-neutrales Testprojekt könnte diese TFMs nicht ohne MAUI-Workload
+			bzw. Emulator ausführen.
+
+			Die hier getesteten Klassen (reine ZPL-/Rendering-/Validierungslogik) haben selbst KEINE
+			MAUI-Abhängigkeit. Sie werden deshalb per <Compile Include> direkt eingebunden, damit
+			"dotnet test" auf jeder Maschine ohne MAUI-Workload läuft. Sobald die Bibliothek (siehe
+			Refactoring-Plan, Schritt 3: Connection-Abstraktion) die reine Logik sauberer von der
+			MAUI-Persistenz trennt, kann hier stattdessen eine normale ProjectReference stehen.
+		-->
+		<Compile Include="..\LabelPrinting\Models\BindableValue.cs" Link="Models\BindableValue.cs" />
+		<Compile Include="..\LabelPrinting\Models\LabelElement.cs" Link="Models\LabelElement.cs" />
+		<Compile Include="..\LabelPrinting\Models\LabelTemplate.cs" Link="Models\LabelTemplate.cs" />
+		<Compile Include="..\LabelPrinting\Models\PlaceholderDefinition.cs" Link="Models\PlaceholderDefinition.cs" />
+		<Compile Include="..\LabelPrinting\Services\ZplGraphic.cs" Link="Services\ZplGraphic.cs" />
+		<Compile Include="..\LabelPrinting\Services\ZplLabelBuilder.cs" Link="Services\ZplLabelBuilder.cs" />
+		<Compile Include="..\LabelPrinting\Services\ZplImageConverter.cs" Link="Services\ZplImageConverter.cs" />
+		<Compile Include="..\LabelPrinting\Services\LabelTemplateRenderer.cs" Link="Services\LabelTemplateRenderer.cs" />
+		<Compile Include="..\LabelPrinting\Services\LabelTemplateFillService.cs" Link="Services\LabelTemplateFillService.cs" />
+		<Compile Include="..\LabelPrinting\Services\TemplateFillResult.cs" Link="Services\TemplateFillResult.cs" />
+	</ItemGroup>
+
+</Project>

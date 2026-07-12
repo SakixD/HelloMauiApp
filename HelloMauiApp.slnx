@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="HelloMauiApp/HelloMauiApp.csproj" />
   <Project Path="LabelPrinting/LabelPrinting.csproj" />
+  <Project Path="LabelPrinting.Tests/LabelPrinting.Tests.csproj" />
 </Solution>

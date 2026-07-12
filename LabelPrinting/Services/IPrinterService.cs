@@ -16,4 +16,16 @@ public interface IPrinterService
 	/// Antwort, die der Drucker über dieselbe TCP-Verbindung zurückschickt.
 	/// </summary>
 	Task<PrinterQueryResult> QueryAsync(string ipAddress, int port, string command, CancellationToken cancellationToken = default);
+
+	/// <summary>
+	/// Fragt den Druckerstatus ab (ZPL "~HS"). Wrapper um <see cref="QueryAsync"/>, damit Aufrufer
+	/// (insbesondere das UI) den rohen Statusbefehl nicht selbst kennen müssen.
+	/// </summary>
+	Task<PrinterQueryResult> GetStatusAsync(string ipAddress, int port, CancellationToken cancellationToken = default);
+
+	/// <summary>
+	/// Startet die Medienkalibrierung (ZPL "~JC"): Der Drucker zieht mehrere Etiketten durch, um
+	/// Etikettenlänge sowie Lücken-/Schwarzmarkenposition automatisch zu erkennen.
+	/// </summary>
+	Task<PrinterResult> CalibrateMediaAsync(string ipAddress, int port, CancellationToken cancellationToken = default);
 }

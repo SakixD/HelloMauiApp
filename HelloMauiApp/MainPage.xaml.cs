@@ -6,6 +6,7 @@ namespace HelloMauiApp;
 public partial class MainPage : ContentPage
 {
 	readonly IPrinterService _printerService = new ZplPrinterService();
+	readonly PrinterSettingsStore _settingsStore = new();
 
 	public MainPage()
 	{
@@ -20,7 +21,7 @@ public partial class MainPage : ContentPage
 
 	void UpdatePrinterStatusLabel()
 	{
-		var settings = PrinterSettings.Load();
+		var settings = _settingsStore.Load();
 		PrinterStatusLabel.Text = string.IsNullOrWhiteSpace(settings.IpAddress)
 			? "Kein Drucker konfiguriert."
 			: $"Drucker: {settings.IpAddress}:{settings.Port}  •  Label {settings.LabelWidthMm}×{settings.LabelHeightMm} mm @ {settings.Dpi} dpi";
@@ -75,7 +76,7 @@ public partial class MainPage : ContentPage
 
 	async void OnTestConnectionClicked(object? sender, EventArgs e)
 	{
-		var settings = PrinterSettings.Load();
+		var settings = _settingsStore.Load();
 		if (!RequirePrinterConfigured(settings))
 		{
 			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
@@ -94,18 +95,14 @@ public partial class MainPage : ContentPage
 
 	async void OnPrintTestLabelClicked(object? sender, EventArgs e)
 	{
-		var settings = PrinterSettings.Load();
+		var settings = _settingsStore.Load();
 		if (!RequirePrinterConfigured(settings))
 		{
 			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
 			return;
 		}
 
-		var label = new ZplLabelBuilder(settings.LabelWidthMm, settings.LabelHeightMm, settings.Dpi)
-			.AddText(40, 40, "Testlabel", fontHeight: 50, fontWidth: 50)
-			.AddText(40, 110, DateTime.Now.ToString("dd.MM.yyyy HH:mm"), fontHeight: 30, fontWidth: 30)
-			.AddBarcode128(40, 170, "123456789012")
-			.Build();
+		string label = LabelSamples.CreateTestLabelZpl(settings);
 
 		SetBusy(true);
 		var result = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, label);
@@ -119,7 +116,7 @@ public partial class MainPage : ContentPage
 
 	async void OnPickImageClicked(object? sender, EventArgs e)
 	{
-		var settings = PrinterSettings.Load();
+		var settings = _settingsStore.Load();
 		if (!RequirePrinterConfigured(settings))
 		{
 			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
@@ -151,13 +148,7 @@ public partial class MainPage : ContentPage
 			using var ms = new MemoryStream();
 			await stream.CopyToAsync(ms);
 
-			int labelWidthDots = ZplLabelBuilder.MmToDots(settings.LabelWidthMm, settings.Dpi);
-			int labelHeightDots = ZplLabelBuilder.MmToDots(settings.LabelHeightMm, settings.Dpi);
-			var graphic = ZplImageConverter.Convert(ms.ToArray(), maxWidthDots: labelWidthDots - 40, maxHeightDots: labelHeightDots - 40);
-
-			var label = new ZplLabelBuilder(settings.LabelWidthMm, settings.LabelHeightMm, settings.Dpi)
-				.AddImage(20, 20, graphic)
-				.Build();
+			string label = LabelSamples.CreateImageLabelZpl(settings, ms.ToArray());
 
 			var result = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, label);
 
@@ -178,7 +169,7 @@ public partial class MainPage : ContentPage
 
 	async void OnSendZplClicked(object? sender, EventArgs e)
 	{
-		var settings = PrinterSettings.Load();
+		var settings = _settingsStore.Load();
 		if (!RequirePrinterConfigured(settings))
 		{
 			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
@@ -203,7 +194,7 @@ public partial class MainPage : ContentPage
 
 	async void OnSendZplQueryClicked(object? sender, EventArgs e)
 	{
-		var settings = PrinterSettings.Load();
+		var settings = _settingsStore.Load();
 		if (!RequirePrinterConfigured(settings))
 		{
 			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
@@ -227,7 +218,7 @@ public partial class MainPage : ContentPage
 
 	async void OnQueryStatusClicked(object? sender, EventArgs e)
 	{
-		var settings = PrinterSettings.Load();
+		var settings = _settingsStore.Load();
 		if (!RequirePrinterConfigured(settings))
 		{
 			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
@@ -235,7 +226,7 @@ public partial class MainPage : ContentPage
 		}
 
 		SetBusy(true);
-		var result = await _printerService.QueryAsync(settings.IpAddress, settings.Port, "~HS");
+		var result = await _printerService.GetStatusAsync(settings.IpAddress, settings.Port);
 		SetBusy(false);
 
 		ResponseEditor.Text = result.Success
@@ -245,7 +236,7 @@ public partial class MainPage : ContentPage
 
 	async void OnCalibrateMediaClicked(object? sender, EventArgs e)
 	{
-		var settings = PrinterSettings.Load();
+		var settings = _settingsStore.Load();
 		if (!RequirePrinterConfigured(settings))
 		{
 			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
@@ -262,7 +253,7 @@ public partial class MainPage : ContentPage
 			return;
 
 		SetBusy(true);
-		var result = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, "~JC");
+		var result = await _printerService.CalibrateMediaAsync(settings.IpAddress, settings.Port);
 		SetBusy(false);
 
 		await DisplayAlertAsync(

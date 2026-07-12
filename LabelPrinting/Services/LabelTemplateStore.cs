@@ -20,7 +20,12 @@ public class LabelTemplateStore
 
 	static string PathFor(string name) => Path.Combine(TemplatesDirectory, SanitizeFileName(name) + ".json");
 
-	static string SanitizeFileName(string name)
+	/// <summary>
+	/// Macht einen Vorlagennamen dateisystemtauglich (ersetzt ungültige Zeichen durch "_").
+	/// Öffentlich, damit Aufrufer (z.B. Export-Funktionen im UI) denselben Dateinamen erzeugen
+	/// wie der Store selbst, ohne die Logik zu duplizieren.
+	/// </summary>
+	public static string SanitizeFileName(string name)
 	{
 		var invalid = Path.GetInvalidFileNameChars();
 		var chars = name.Select(c => invalid.Contains(c) ? '_' : c).ToArray();

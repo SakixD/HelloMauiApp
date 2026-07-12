@@ -15,7 +15,8 @@
 | `Services/ZplLabelBuilder.cs` | Fluent-Builder für Labels aus Text-, Barcode- und Grafikfeldern |
 | `Services/ZplImageConverter.cs` | Wandelt Bilder (Logos/Symbole) via SkiaSharp + Dithering in ZPL-Grafikfelder (`^GFA`) um |
 | `Services/PrinterResult.cs`, `PrinterQueryResult.cs`, `ZplGraphic.cs` | Ergebnistypen |
-| `Models/PrinterSettings.cs` | Persistierte Druckerkonfiguration (IP, Port, Labelgröße, DPI) über `Preferences` |
+| `Services/LabelSamples.cs` | Fertige ZPL-Beispiellabels (Testdruck, Bild-als-Label) für die Testfunktionen der App |
+| `Models/PrinterSettings.cs` + `Services/PrinterSettingsStore.cs` | Druckerkonfiguration (IP, Port, Labelgröße, DPI) als reines Datenmodell plus Store, der sie über `Preferences` persistiert |
 
 ## Verwendung (Kurzbeispiel)
 

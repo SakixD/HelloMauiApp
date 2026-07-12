@@ -7,6 +7,7 @@ public partial class TemplateTestPage : ContentPage
 {
 	readonly LabelTemplateStore _store = new();
 	readonly IPrinterService _printerService = new ZplPrinterService();
+	readonly PrinterSettingsStore _settingsStore = new();
 	readonly Dictionary<string, View> _fieldControls = [];
 
 	LabelTemplate? _template;
@@ -166,7 +167,7 @@ public partial class TemplateTestPage : ContentPage
 		if (result is null)
 			return;
 
-		var settings = PrinterSettings.Load();
+		var settings = _settingsStore.Load();
 		if (string.IsNullOrWhiteSpace(settings.IpAddress))
 		{
 			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");

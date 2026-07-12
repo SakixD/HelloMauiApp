@@ -10,6 +10,7 @@ public partial class DesignerPage : ContentPage
 
 	readonly LabelTemplateStore _store = new();
 	readonly IPrinterService _printerService = new ZplPrinterService();
+	readonly PrinterSettingsStore _settingsStore = new();
 
 	LabelTemplate _template;
 	LabelElement? _selectedElement;
@@ -20,7 +21,7 @@ public partial class DesignerPage : ContentPage
 	{
 		InitializeComponent();
 
-		var settings = PrinterSettings.Load();
+		var settings = _settingsStore.Load();
 		_template = new LabelTemplate
 		{
 			Name = "Neue Vorlage",
@@ -395,7 +396,7 @@ public partial class DesignerPage : ContentPage
 		if (!confirmed)
 			return;
 
-		var settings = PrinterSettings.Load();
+		var settings = _settingsStore.Load();
 		_template = new LabelTemplate
 		{
 			Name = "Neue Vorlage",
@@ -442,20 +443,12 @@ public partial class DesignerPage : ContentPage
 		RenderCanvas();
 	}
 
-	static string SanitizeFileName(string name)
-	{
-		var invalid = Path.GetInvalidFileNameChars();
-		var chars = name.Select(c => invalid.Contains(c) ? '_' : c).ToArray();
-		string result = new string(chars).Trim();
-		return string.IsNullOrEmpty(result) ? "Vorlage" : result;
-	}
-
 	async void OnExportClicked(object? sender, EventArgs e)
 	{
 		try
 		{
 			string json = System.Text.Json.JsonSerializer.Serialize(_template, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-			string fileName = $"{SanitizeFileName(_template.Name)}.json";
+			string fileName = $"{LabelTemplateStore.SanitizeFileName(_template.Name)}.json";
 			string tempPath = Path.Combine(FileSystem.Current.CacheDirectory, fileName);
 			await File.WriteAllTextAsync(tempPath, json);
 
@@ -512,7 +505,7 @@ public partial class DesignerPage : ContentPage
 
 	async void OnPrintClicked(object? sender, EventArgs e)
 	{
-		var settings = PrinterSettings.Load();
+		var settings = _settingsStore.Load();
 		if (string.IsNullOrWhiteSpace(settings.IpAddress))
 		{
 			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");

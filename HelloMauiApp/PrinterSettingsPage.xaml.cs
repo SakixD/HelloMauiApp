@@ -6,6 +6,7 @@ namespace HelloMauiApp;
 public partial class PrinterSettingsPage : ContentPage
 {
 	readonly IPrinterService _printerService = new ZplPrinterService();
+	readonly PrinterSettingsStore _settingsStore = new();
 
 	public PrinterSettingsPage()
 	{
@@ -15,7 +16,7 @@ public partial class PrinterSettingsPage : ContentPage
 
 	void LoadSettings()
 	{
-		var settings = PrinterSettings.Load();
+		var settings = _settingsStore.Load();
 		IpEntry.Text = settings.IpAddress;
 		PortEntry.Text = settings.Port.ToString();
 		WidthEntry.Text = settings.LabelWidthMm.ToString("0.##");
@@ -77,7 +78,7 @@ public partial class PrinterSettingsPage : ContentPage
 			return;
 		}
 
-		settings.Save();
+		_settingsStore.Save(settings);
 		StatusLabel.Text = "Gespeichert.";
 	}
 
