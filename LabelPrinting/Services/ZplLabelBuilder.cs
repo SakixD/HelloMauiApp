@@ -36,10 +36,61 @@ public class ZplLabelBuilder
 		return this;
 	}
 
+	/// <summary>EAN-13-Barcode. Data sollte 12 Ziffern enthalten (13. Ziffer = Prüfziffer, wird vom Drucker berechnet).</summary>
+	public ZplLabelBuilder AddEan13(int x, int y, string data, int height = 80, bool printHumanReadable = true)
+	{
+		string safe = data.Replace("^", string.Empty).Replace("~", string.Empty);
+		string hr = printHumanReadable ? "Y" : "N";
+		_fields.Add($"^FO{x},{y}^BY2^BEN,{height},{hr},N^FD{safe}^FS");
+		return this;
+	}
+
+	/// <summary>Code39-Barcode.</summary>
+	public ZplLabelBuilder AddCode39(int x, int y, string data, int height = 80, bool printHumanReadable = true)
+	{
+		string safe = data.Replace("^", string.Empty).Replace("~", string.Empty);
+		string hr = printHumanReadable ? "Y" : "N";
+		_fields.Add($"^FO{x},{y}^B3N,N,{height},{hr},N^FD{safe}^FS");
+		return this;
+	}
+
+	/// <summary>QR-Code. errorCorrection: L (~7%), M (~15%), Q (~25%) oder H (~30%).</summary>
+	public ZplLabelBuilder AddQrCode(int x, int y, string data, int magnification = 5, char errorCorrection = 'M')
+	{
+		string safe = data.Replace("^", string.Empty).Replace("~", string.Empty);
+		_fields.Add($"^FO{x},{y}^BQN,2,{magnification}^FD{errorCorrection}A,{safe}^FS");
+		return this;
+	}
+
+	/// <summary>DataMatrix-Code (ECC200).</summary>
+	public ZplLabelBuilder AddDataMatrix(int x, int y, string data, int moduleSize = 5)
+	{
+		string safe = data.Replace("^", string.Empty).Replace("~", string.Empty);
+		_fields.Add($"^FO{x},{y}^BXN,{moduleSize},200^FD{safe}^FS");
+		return this;
+	}
+
+	/// <summary>PDF417-Stapelcode.</summary>
+	public ZplLabelBuilder AddPdf417(int x, int y, string data, int rowHeight = 8)
+	{
+		string safe = data.Replace("^", string.Empty).Replace("~", string.Empty);
+		_fields.Add($"^FO{x},{y}^B7N,{rowHeight},0^FD{safe}^FS");
+		return this;
+	}
+
 	/// <summary>Platziert ein zuvor mit ZplImageConverter erzeugtes Grafikfeld (Logo, Symbol, ...).</summary>
 	public ZplLabelBuilder AddImage(int x, int y, ZplGraphic graphic)
 	{
 		_fields.Add(graphic.ToFieldOrigin(x, y));
+		return this;
+	}
+
+	/// <summary>Rechteck oder Linie (^GB Graphic Box). Für eine Linie width oder height gleich der Dicke setzen.</summary>
+	public ZplLabelBuilder AddBox(int x, int y, int width, int height, int thickness = 2)
+	{
+		width = Math.Max(width, thickness);
+		height = Math.Max(height, thickness);
+		_fields.Add($"^FO{x},{y}^GB{width},{height},{thickness}^FS");
 		return this;
 	}
 

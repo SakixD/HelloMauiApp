@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HelloMauiApp.TemplateTestPage"
+             Title="Vorlage testen">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+
+            <Label x:Name="TitleLabel" Text="Vorlage testen" FontSize="16" FontAttributes="Bold" />
+            <Button Text="Andere Vorlage wählen" Clicked="OnChooseTemplateClicked" />
+
+            <BoxView HeightRequest="1" BackgroundColor="LightGray" />
+
+            <Label Text="Testdaten" FontSize="16" FontAttributes="Bold" />
+            <Label Text="* = Pflichtfeld" FontSize="11" TextColor="Gray" />
+            <VerticalStackLayout x:Name="FormLayout" Spacing="10" />
+
+            <Label x:Name="ValidationErrorLabel" TextColor="IndianRed" IsVisible="False" />
+
+            <Button Text="Vorschau (materialfrei)" Clicked="OnPreviewClicked" />
+            <Button Text="Testdruck (echter Ausdruck)" Clicked="OnTestPrintClicked" />
+
+            <BoxView HeightRequest="1" BackgroundColor="LightGray" />
+
+            <Label Text="Vorschau" FontSize="16" FontAttributes="Bold" />
+            <ScrollView Orientation="Horizontal">
+                <Border Stroke="Gray"
+                        StrokeThickness="1"
+                        BackgroundColor="White"
+                        HorizontalOptions="Start"
+                        Margin="0,0,0,24">
+                    <AbsoluteLayout x:Name="PreviewCanvas" />
+                </Border>
+            </ScrollView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

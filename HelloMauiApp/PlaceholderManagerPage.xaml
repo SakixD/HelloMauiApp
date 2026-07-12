@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HelloMauiApp.PlaceholderManagerPage"
+             Title="Platzhalter verwalten">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+
+            <Label Text="Platzhalter dieser Vorlage" FontSize="16" FontAttributes="Bold" />
+            <Label Text="Platzhalter können in Text- und Barcode-Feldern über 'Als Platzhalter' referenziert werden."
+                   FontSize="12" TextColor="Gray" />
+
+            <VerticalStackLayout x:Name="PlaceholderListLayout" Spacing="6" />
+
+            <Button Text="+ Neuer Platzhalter" Clicked="OnAddPlaceholderClicked" />
+
+            <Border x:Name="EditPanel" IsVisible="False" Padding="12" StrokeThickness="1" Stroke="LightGray">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Platzhalter bearbeiten" FontAttributes="Bold" />
+
+                    <Label Text="Key (eindeutig)" />
+                    <Entry x:Name="KeyEntry" Placeholder="z.B. sku, empfaenger, versanddatum" />
+
+                    <Label Text="Typ" />
+                    <Picker x:Name="TypePicker">
+                        <Picker.ItemsSource>
+                            <x:Array Type="{x:Type x:String}">
+                                <x:String>Text</x:String>
+                                <x:String>Zahl</x:String>
+                                <x:String>Datum</x:String>
+                            </x:Array>
+                        </Picker.ItemsSource>
+                    </Picker>
+
+                    <HorizontalStackLayout Spacing="6">
+                        <CheckBox x:Name="RequiredCheckBox" />
+                        <Label Text="Pflichtfeld" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+
+                    <Label Text="Standardwert (optional – wird genutzt, wenn beim Drucken kein Wert geliefert wird)"
+                           FontSize="11" TextColor="Gray" />
+                    <Entry x:Name="DefaultValueEntry" />
+
+                    <Button Text="Speichern" Clicked="OnSavePlaceholderClicked" />
+                    <Button Text="Löschen" BackgroundColor="IndianRed" TextColor="White" Clicked="OnDeletePlaceholderClicked" />
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

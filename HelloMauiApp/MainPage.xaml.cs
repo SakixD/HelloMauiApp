@@ -58,6 +58,16 @@ public partial class MainPage : ContentPage
 		UpdatePrinterStatusLabel();
 	}
 
+	async void OnOpenDesignerClicked(object? sender, EventArgs e)
+	{
+		await Navigation.PushAsync(new DesignerPage());
+	}
+
+	async void OnOpenTemplateTestClicked(object? sender, EventArgs e)
+	{
+		await Navigation.PushAsync(new TemplateTestPage());
+	}
+
 	async void OnTestConnectionClicked(object? sender, EventArgs e)
 	{
 		var settings = PrinterSettings.Load();

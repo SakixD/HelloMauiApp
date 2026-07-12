@@ -14,6 +14,14 @@
 
             <BoxView HeightRequest="1" BackgroundColor="LightGray" Margin="0,10" />
 
+            <Label Text="Label-Designer" FontSize="16" FontAttributes="Bold" />
+            <Label Text="Eigene Etiketten per Drag &amp; Drop gestalten und als Vorlage speichern."
+                   FontSize="12" TextColor="Gray" />
+            <Button x:Name="OpenDesignerBtn" Text="Label-Designer öffnen" Clicked="OnOpenDesignerClicked" />
+            <Button x:Name="OpenTemplateTestBtn" Text="Vorlage testen" Clicked="OnOpenTemplateTestClicked" />
+
+            <BoxView HeightRequest="1" BackgroundColor="LightGray" Margin="0,10" />
+
             <Label Text="Testlabel" FontSize="16" FontAttributes="Bold" />
             <Button x:Name="TestConnectionBtn" Text="Verbindung testen" Clicked="OnTestConnectionClicked" />
             <Button x:Name="PrintTestLabelBtn" Text="Testlabel drucken" Clicked="OnPrintTestLabelClicked" />

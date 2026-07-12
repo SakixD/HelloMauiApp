@@ -12,6 +12,9 @@ obj/
 .vscode/*
 !.vscode/extensions.json
 
+# Claude Code lokaler Tool-Zustand
+.claude/
+
 # .NET
 *.dll
 *.pdb
