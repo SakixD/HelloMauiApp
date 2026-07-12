@@ -22,6 +22,8 @@
                 <Button Text="+ Rahmen" Clicked="OnAddFrameClicked" />
                 <Button Text="+ Linie" Clicked="OnAddLineClicked" />
                 <Button Text="Platzhalter verwalten" Clicked="OnManagePlaceholdersClicked" />
+                <Button Text="Medium" Clicked="OnManageMediaClicked" />
+                <Button Text="Eigenschaften" Clicked="OnPropertiesClicked" />
                 <Button Text="Vorlage laden" Clicked="OnLoadClicked" />
                 <Button Text="Speichern" Clicked="OnSaveClicked" />
                 <Button Text="Exportieren" Clicked="OnExportClicked" />

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HelloMauiApp.TemplatePropertiesPage"
+             Title="Vorlagen-Eigenschaften">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="8">
+
+            <Label Text="Id" FontAttributes="Bold" />
+            <Label x:Name="IdLabel" FontSize="12" TextColor="Gray" />
+
+            <Label Text="Beschreibung" />
+            <Editor x:Name="DescriptionEditor" AutoSize="TextChanges" MinimumHeightRequest="60" />
+
+            <Label Text="Kategorie" />
+            <Entry x:Name="CategoryEntry" />
+
+            <Label Text="Tags (kommagetrennt)" />
+            <Entry x:Name="TagsEntry" Placeholder="z.B. Versand, Lager, Produktion" />
+
+            <BoxView HeightRequest="1" BackgroundColor="LightGray" Margin="0,8" />
+
+            <Label Text="Druckparameter" FontAttributes="Bold" />
+
+            <Label Text="Bevorzugtes Medium" />
+            <Label x:Name="PreferredMediaLabel" FontSize="12" TextColor="Gray" />
+            <Label Text="Wird über den Designer-Button „Medium“ gesetzt." FontSize="11" TextColor="Gray" />
+
+            <Label Text="Druckgeschwindigkeit in ips (leer = Druckerstandard)" />
+            <Entry x:Name="SpeedEntry" Keyboard="Numeric" />
+
+            <Label Text="Darkness 0-30 (leer = Druckerstandard)" />
+            <Entry x:Name="DarknessEntry" Keyboard="Numeric" />
+
+            <Button Text="Übernehmen" Clicked="OnApplyClicked" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

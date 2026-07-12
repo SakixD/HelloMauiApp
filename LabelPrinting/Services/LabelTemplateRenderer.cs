@@ -15,6 +15,11 @@ public static class LabelTemplateRenderer
 	{
 		var builder = new ZplLabelBuilder(template.WidthMm, template.HeightMm, template.Dpi);
 
+		if (template.PrintParameters.PrintSpeed is int speed)
+			builder.SetPrintSpeed(speed);
+		if (template.PrintParameters.Darkness is int darkness)
+			builder.SetDarkness(darkness);
+
 		foreach (var element in template.Elements)
 		{
 			int x = ZplLabelBuilder.MmToDots(element.X, template.Dpi);
@@ -42,11 +47,10 @@ public static class LabelTemplateRenderer
 				case FrameElement frame:
 					int frameWidthDots = ZplLabelBuilder.MmToDots(frame.WidthMm, template.Dpi);
 					int frameHeightDots = ZplLabelBuilder.MmToDots(frame.HeightMm, template.Dpi);
-					// "Gefüllt" = Randstärke mindestens so groß wie die größere Seite, dann füllt ^GB die Fläche komplett.
-					int frameThicknessDots = frame.Filled
-						? Math.Max(frameWidthDots, frameHeightDots)
-						: Math.Max(1, ZplLabelBuilder.MmToDots(frame.ThicknessMm, template.Dpi));
-					builder.AddBox(x, y, frameWidthDots, frameHeightDots, frameThicknessDots);
+					if (frame.Filled)
+						builder.AddFilledBox(x, y, frameWidthDots, frameHeightDots);
+					else
+						builder.AddBox(x, y, frameWidthDots, frameHeightDots, Math.Max(1, ZplLabelBuilder.MmToDots(frame.ThicknessMm, template.Dpi)));
 					break;
 
 				case LineElement line:

@@ -28,4 +28,22 @@ public interface IPrinterService
 	/// Etikettenlänge sowie Lücken-/Schwarzmarkenposition automatisch zu erkennen.
 	/// </summary>
 	Task<PrinterResult> CalibrateMediaAsync(string ipAddress, int port, CancellationToken cancellationToken = default);
+
+	/// <summary>
+	/// Fragt den Druckerstatus ab (wie <see cref="GetStatusAsync"/>) und wertet die Antwort zusätzlich
+	/// in strukturierte Felder aus (Papier/Band/Kopf, zuletzt kalibrierte Etikettenlänge) – u.a. die
+	/// Grundlage für die automatische Medienerkennung.
+	/// </summary>
+	Task<PrinterStatus> GetDetailedStatusAsync(string ipAddress, int port, CancellationToken cancellationToken = default);
+
+	// ---------- Transportunabhängige Überladungen (TCP/IP, seriell, künftig USB/Bluetooth) ----------
+
+	/// <summary>Wie <see cref="SendZplAsync(string, int, string, CancellationToken)"/>, aber über eine beliebige, bereits konfigurierte <see cref="IPrinterConnection"/>.</summary>
+	Task<PrinterResult> SendZplAsync(IPrinterConnection connection, string zpl, CancellationToken cancellationToken = default);
+
+	/// <summary>Wie <see cref="SendRawAsync(string, int, byte[], CancellationToken)"/>, aber über eine beliebige, bereits konfigurierte <see cref="IPrinterConnection"/>.</summary>
+	Task<PrinterResult> SendRawAsync(IPrinterConnection connection, byte[] data, CancellationToken cancellationToken = default);
+
+	/// <summary>Wie <see cref="QueryAsync(string, int, string, CancellationToken)"/>, aber über eine beliebige, bereits konfigurierte <see cref="IPrinterConnection"/>.</summary>
+	Task<PrinterQueryResult> QueryAsync(IPrinterConnection connection, string command, CancellationToken cancellationToken = default);
 }

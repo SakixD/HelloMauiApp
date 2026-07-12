@@ -14,8 +14,7 @@ public static class ZplImageConverter
 	/// <param name="threshold">Schwellwert 0-255 für Schwarz/Weiß-Umwandlung; wird mit Floyd-Steinberg-Dithering kombiniert.</param>
 	public static ZplGraphic Convert(byte[] imageBytes, int maxWidthDots, int? maxHeightDots = null, byte threshold = 128)
 	{
-		using var original = SKBitmap.Decode(imageBytes)
-			?? throw new InvalidOperationException("Bilddaten konnten nicht gelesen werden.");
+		using var original = DecodeOrThrow(imageBytes);
 
 		var (targetWidth, targetHeight) = ScaleToFit(original.Width, original.Height, maxWidthDots, maxHeightDots);
 
@@ -46,6 +45,24 @@ public static class ZplImageConverter
 		string field = $"^GFA,{totalBytes},{totalBytes},{bytesPerRow},{hex}";
 
 		return new ZplGraphic(targetWidth, targetHeight, field);
+	}
+
+	/// <summary>
+	/// SKBitmap.Decode gibt bei manchen ungültigen/nicht unterstützten Bildformaten null zurück, wirft
+	/// bei anderen (je nach SkiaSharp-Version) stattdessen intern eine ArgumentException – beide Fälle
+	/// werden hier auf dieselbe, aussagekräftige Exception vereinheitlicht.
+	/// </summary>
+	static SKBitmap DecodeOrThrow(byte[] imageBytes)
+	{
+		try
+		{
+			return SKBitmap.Decode(imageBytes)
+				?? throw new InvalidOperationException("Bilddaten konnten nicht gelesen werden.");
+		}
+		catch (ArgumentException ex)
+		{
+			throw new InvalidOperationException("Bilddaten konnten nicht gelesen werden.", ex);
+		}
 	}
 
 	static (int width, int height) ScaleToFit(int sourceWidth, int sourceHeight, int maxWidth, int? maxHeight)

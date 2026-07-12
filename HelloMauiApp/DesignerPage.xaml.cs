@@ -44,12 +44,22 @@ public partial class DesignerPage : ContentPage
 	{
 		base.OnAppearing();
 
+		// Nach Rückkehr von "Medium" kann sich die Labelgröße geändert haben.
+		UpdateCanvasSize();
+
 		// Nach Rückkehr von "Platzhalter verwalten" könnten sich Keys geändert haben.
 		if (_selectedElement is not null && _selectedBorder is not null)
 			ShowPropertiesFor(_selectedElement);
 	}
 
 	// ---------- Canvas-Aufbau ----------
+
+	void UpdateCanvasSize()
+	{
+		CanvasLayout.WidthRequest = Math.Max(10, _template.WidthMm * PixelsPerMm);
+		CanvasLayout.HeightRequest = Math.Max(10, _template.HeightMm * PixelsPerMm);
+		TitleLabel.Text = $"Label-Designer – {_template.Name} ({_template.WidthMm:0.#}×{_template.HeightMm:0.#} mm)";
+	}
 
 	void RenderCanvas()
 	{
@@ -58,13 +68,10 @@ public partial class DesignerPage : ContentPage
 		_selectedBorder = null;
 		PropertiesPanel.IsVisible = false;
 
-		CanvasLayout.WidthRequest = Math.Max(10, _template.WidthMm * PixelsPerMm);
-		CanvasLayout.HeightRequest = Math.Max(10, _template.HeightMm * PixelsPerMm);
+		UpdateCanvasSize();
 
 		foreach (var element in _template.Elements)
 			CanvasLayout.Children.Add(CreateElementView(element));
-
-		TitleLabel.Text = $"Label-Designer – {_template.Name} ({_template.WidthMm:0.#}×{_template.HeightMm:0.#} mm)";
 	}
 
 	Border CreateElementView(LabelElement element)
@@ -388,6 +395,18 @@ public partial class DesignerPage : ContentPage
 		await Navigation.PushAsync(new PlaceholderManagerPage(_template));
 	}
 
+	// ---------- Medium ----------
+
+	async void OnManageMediaClicked(object? sender, EventArgs e)
+	{
+		await Navigation.PushAsync(new MediaManagerPage(_template));
+	}
+
+	async void OnPropertiesClicked(object? sender, EventArgs e)
+	{
+		await Navigation.PushAsync(new TemplatePropertiesPage(_template));
+	}
+
 	// ---------- Neu / Speichern / Laden / Exportieren / Importieren / Drucken ----------
 
 	async void OnNewClicked(object? sender, EventArgs e)
@@ -445,23 +464,70 @@ public partial class DesignerPage : ContentPage
 
 	async void OnExportClicked(object? sender, EventArgs e)
 	{
+		const string saveAsOption = "Speichern unter...";
+		const string shareOption = "Teilen...";
+
+		string choice = await DisplayActionSheetAsync("Vorlage exportieren", "Abbrechen", null, saveAsOption, shareOption);
+		if (string.IsNullOrEmpty(choice) || choice == "Abbrechen")
+			return;
+
 		try
 		{
 			string json = System.Text.Json.JsonSerializer.Serialize(_template, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
 			string fileName = $"{LabelTemplateStore.SanitizeFileName(_template.Name)}.json";
-			string tempPath = Path.Combine(FileSystem.Current.CacheDirectory, fileName);
-			await File.WriteAllTextAsync(tempPath, json);
 
-			await Share.Default.RequestAsync(new ShareFileRequest
-			{
-				Title = "Vorlage exportieren",
-				File = new ShareFile(tempPath),
-			});
+			if (choice == saveAsOption)
+				await ExportSaveAsAsync(fileName, json);
+			else
+				await ExportShareAsync(fileName, json);
 		}
 		catch (Exception ex)
 		{
 			await DisplayAlertAsync("Fehler", $"Export fehlgeschlagen: {ex.Message}", "OK");
 		}
+	}
+
+	async Task ExportShareAsync(string fileName, string json)
+	{
+		string tempPath = Path.Combine(FileSystem.Current.CacheDirectory, fileName);
+		await File.WriteAllTextAsync(tempPath, json);
+
+		await Share.Default.RequestAsync(new ShareFileRequest
+		{
+			Title = "Vorlage exportieren",
+			File = new ShareFile(tempPath),
+		});
+	}
+
+	async Task ExportSaveAsAsync(string fileName, string json)
+	{
+#if WINDOWS
+		var nativeWindow = Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault()?.Handler?.PlatformView as Microsoft.UI.Xaml.Window;
+		if (nativeWindow is null)
+		{
+			await ExportShareAsync(fileName, json);
+			return;
+		}
+
+		var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(nativeWindow);
+		var picker = new Windows.Storage.Pickers.FileSavePicker();
+		WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+		picker.SuggestedFileName = Path.GetFileNameWithoutExtension(fileName);
+		picker.FileTypeChoices.Add("JSON-Vorlage", new List<string> { ".json" });
+
+		var file = await picker.PickSaveFileAsync();
+		if (file is null)
+			return;
+
+		await Windows.Storage.FileIO.WriteTextAsync(file, json);
+		await DisplayAlertAsync("Gespeichert", $"Vorlage wurde unter \"{file.Path}\" gespeichert.", "OK");
+#else
+		// Android/iOS/MacCatalyst haben ohne Zusatzpaket (z.B. CommunityToolkit.Maui.Storage, aktuell
+		// wegen einer Versionskollision mit Microsoft.Maui.Controls nicht einbindbar) keinen
+		// systemweiten "Speichern unter"-Dialog – dort bleibt Teilen der Weg, um die Datei z.B. direkt
+		// in "Dateien"/Drive/OneDrive abzulegen.
+		await ExportShareAsync(fileName, json);
+#endif
 	}
 
 	async void OnImportClicked(object? sender, EventArgs e)

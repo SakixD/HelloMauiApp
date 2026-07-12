@@ -7,11 +7,41 @@ public partial class PrinterSettingsPage : ContentPage
 {
 	readonly IPrinterService _printerService = new ZplPrinterService();
 	readonly PrinterSettingsStore _settingsStore = new();
+	readonly PrintMediaStore _mediaStore = new();
+
+	List<PrintMedia> _mediaList = [];
+	bool _suppressMediaPickerChanged;
 
 	public PrinterSettingsPage()
 	{
 		InitializeComponent();
 		LoadSettings();
+	}
+
+	protected override async void OnAppearing()
+	{
+		base.OnAppearing();
+		await RefreshMediaPickerAsync();
+	}
+
+	async Task RefreshMediaPickerAsync()
+	{
+		_mediaList = await _mediaStore.ListAsync();
+
+		_suppressMediaPickerChanged = true;
+		MediaPicker.ItemsSource = _mediaList.Select(m => $"{m.Name} ({m.WidthMm:0.#}×{m.HeightMm:0.#} mm)").ToList();
+		MediaPicker.SelectedIndex = -1;
+		_suppressMediaPickerChanged = false;
+	}
+
+	void OnMediaPickerChanged(object? sender, EventArgs e)
+	{
+		if (_suppressMediaPickerChanged || MediaPicker.SelectedIndex < 0 || MediaPicker.SelectedIndex >= _mediaList.Count)
+			return;
+
+		var media = _mediaList[MediaPicker.SelectedIndex];
+		WidthEntry.Text = media.WidthMm.ToString("0.##");
+		HeightEntry.Text = media.HeightMm.ToString("0.##");
 	}
 
 	void LoadSettings()

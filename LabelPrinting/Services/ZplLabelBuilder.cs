@@ -11,6 +11,8 @@ public class ZplLabelBuilder
 	readonly List<string> _fields = [];
 	readonly int _widthDots;
 	readonly int _heightDots;
+	int? _printSpeedIps;
+	int? _darkness;
 
 	public ZplLabelBuilder(double widthMm, double heightMm, int dpi)
 	{
@@ -19,6 +21,22 @@ public class ZplLabelBuilder
 	}
 
 	public static int MmToDots(double mm, int dpi) => (int)Math.Round(mm / 25.4 * dpi);
+
+	public static double DotsToMm(int dots, int dpi) => dots / (double)dpi * 25.4;
+
+	/// <summary>Druckgeschwindigkeit in ips (^PR). Nicht aufgerufen = Druckerstandard bleibt unverändert.</summary>
+	public ZplLabelBuilder SetPrintSpeed(int ips)
+	{
+		_printSpeedIps = ips;
+		return this;
+	}
+
+	/// <summary>Druckdichte/Darkness 0-30 (~SD). Nicht aufgerufen = Druckerstandard bleibt unverändert.</summary>
+	public ZplLabelBuilder SetDarkness(int darkness)
+	{
+		_darkness = darkness;
+		return this;
+	}
 
 	public ZplLabelBuilder AddText(int x, int y, string text, int fontHeight = 30, int fontWidth = 30, string font = "0")
 	{
@@ -94,6 +112,19 @@ public class ZplLabelBuilder
 		return this;
 	}
 
+	/// <summary>
+	/// Vollflächig gefülltes Rechteck. Nutzt bewusst nicht <see cref="AddBox"/>, dessen Dicke-Klemme
+	/// (Box nie schmaler als die eigene Randstärke) für Linien gedacht ist – hier würde sie die
+	/// absichtlich übergroße Füll-Dicke fälschlich in die Breite/Höhe übernehmen und das Rechteck
+	/// dadurch größer drucken als angegeben.
+	/// </summary>
+	public ZplLabelBuilder AddFilledBox(int x, int y, int width, int height)
+	{
+		int thickness = Math.Max(width, height);
+		_fields.Add($"^FO{x},{y}^GB{width},{height},{thickness}^FS");
+		return this;
+	}
+
 	/// <summary>Fügt einen beliebigen, bereits fertigen ZPL-Schnipsel ein (z.B. von einer Carrier-API).</summary>
 	public ZplLabelBuilder AddRaw(string zpl)
 	{
@@ -108,6 +139,10 @@ public class ZplLabelBuilder
 		sb.Append("^CI28"); // UTF-8-Zeichenkodierung
 		sb.Append($"^PW{_widthDots}");
 		sb.Append($"^LL{_heightDots}");
+		if (_printSpeedIps is int speed)
+			sb.Append($"^PR{speed}");
+		if (_darkness is int darkness)
+			sb.Append($"~SD{darkness:00}");
 		foreach (var field in _fields)
 			sb.Append(field);
 		sb.Append("^XZ");

@@ -32,6 +32,8 @@
 		<Compile Include="..\LabelPrinting\Models\BindableValue.cs" Link="Models\BindableValue.cs" />
 		<Compile Include="..\LabelPrinting\Models\LabelElement.cs" Link="Models\LabelElement.cs" />
 		<Compile Include="..\LabelPrinting\Models\LabelTemplate.cs" Link="Models\LabelTemplate.cs" />
+		<Compile Include="..\LabelPrinting\Models\LabelTemplateMetadata.cs" Link="Models\LabelTemplateMetadata.cs" />
+		<Compile Include="..\LabelPrinting\Models\LabelPrintParameters.cs" Link="Models\LabelPrintParameters.cs" />
 		<Compile Include="..\LabelPrinting\Models\PlaceholderDefinition.cs" Link="Models\PlaceholderDefinition.cs" />
 		<Compile Include="..\LabelPrinting\Services\ZplGraphic.cs" Link="Services\ZplGraphic.cs" />
 		<Compile Include="..\LabelPrinting\Services\ZplLabelBuilder.cs" Link="Services\ZplLabelBuilder.cs" />

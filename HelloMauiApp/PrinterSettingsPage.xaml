@@ -13,6 +13,9 @@
             <Label Text="Port" FontAttributes="Bold" />
             <Entry x:Name="PortEntry" Placeholder="9100" Keyboard="Numeric" />
 
+            <Label Text="Medium (optional, füllt Breite/Höhe aus)" FontAttributes="Bold" />
+            <Picker x:Name="MediaPicker" Title="Gespeichertes Medium wählen" SelectedIndexChanged="OnMediaPickerChanged" />
+
             <Label Text="Labelbreite (mm)" FontAttributes="Bold" />
             <Entry x:Name="WidthEntry" Placeholder="100" Keyboard="Numeric" />
 

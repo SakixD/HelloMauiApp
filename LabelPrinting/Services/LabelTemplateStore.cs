@@ -58,8 +58,18 @@ public class LabelTemplateStore
 
 		try
 		{
-			await using var stream = File.OpenRead(path);
-			return await JsonSerializer.DeserializeAsync<LabelTemplate>(stream, JsonOptions).ConfigureAwait(false);
+			string json = await File.ReadAllTextAsync(path).ConfigureAwait(false);
+			var template = JsonSerializer.Deserialize<LabelTemplate>(json, JsonOptions);
+			if (template is null)
+				return null;
+
+			// Vorlagen aus einer Zeit vor Einführung der Id hätten sonst bei jedem Laden eine neue,
+			// instabile Id (Default-Wert des Konstruktors) – stattdessen einmalig zuweisen und sofort
+			// zurückschreiben, damit sie ab jetzt stabil bleibt.
+			if (!json.Contains("\"Id\"", StringComparison.Ordinal))
+				await SaveAsync(template).ConfigureAwait(false);
+
+			return template;
 		}
 		catch (JsonException)
 		{
