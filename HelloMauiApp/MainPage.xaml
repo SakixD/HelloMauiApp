@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HelloMauiApp.MainPage"
+             Title="Versandlabel-Druck">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="14">
+
+            <Label Text="Versandlabel-Druck" FontSize="22" FontAttributes="Bold" />
+
+            <Button x:Name="SettingsBtn" Text="Drucker-Einstellungen" Clicked="OnSettingsClicked" />
+            <Label x:Name="PrinterStatusLabel" FontSize="13" TextColor="Gray" />
+
+            <BoxView HeightRequest="1" BackgroundColor="LightGray" Margin="0,10" />
+
+            <Label Text="Testlabel" FontSize="16" FontAttributes="Bold" />
+            <Button x:Name="TestConnectionBtn" Text="Verbindung testen" Clicked="OnTestConnectionClicked" />
+            <Button x:Name="PrintTestLabelBtn" Text="Testlabel drucken" Clicked="OnPrintTestLabelClicked" />
+
+            <BoxView HeightRequest="1" BackgroundColor="LightGray" Margin="0,10" />
+
+            <Label Text="Bild als Label drucken (Logo/Symbol)" FontSize="16" FontAttributes="Bold" />
+            <Button x:Name="PickImageBtn" Text="Bild auswählen &amp; drucken" Clicked="OnPickImageClicked" />
+
+            <BoxView HeightRequest="1" BackgroundColor="LightGray" Margin="0,10" />
+
+            <Label Text="Fertiges ZPL drucken (z.B. von DHL/Hermes-API)" FontSize="16" FontAttributes="Bold" />
+            <Editor x:Name="ZplEditor"
+                    Placeholder="^XA ... ^XZ  oder ein Befehl wie ~HS / ! U1 getvar &quot;media.type&quot;"
+                    AutoSize="TextChanges"
+                    MinimumHeightRequest="100" />
+            <Button x:Name="SendZplBtn" Text="ZPL senden" Clicked="OnSendZplClicked" />
+            <Button x:Name="SendZplQueryBtn" Text="Senden &amp; Antwort lesen" Clicked="OnSendZplQueryClicked" />
+
+            <BoxView HeightRequest="1" BackgroundColor="LightGray" Margin="0,10" />
+
+            <Label Text="Mit dem Drucker sprechen" FontSize="16" FontAttributes="Bold" />
+            <Label Text="Status abfragen oder den Sensor auf das eingelegte Medium (Etikett/Lücke/Schwarzmarke) automatisch kalibrieren lassen."
+                   FontSize="12" TextColor="Gray" />
+            <Button x:Name="QueryStatusBtn" Text="Status abfragen (~HS)" Clicked="OnQueryStatusClicked" />
+            <Button x:Name="CalibrateMediaBtn" Text="Medium automatisch kalibrieren (~JC)" Clicked="OnCalibrateMediaClicked" />
+            <Editor x:Name="ResponseEditor"
+                    IsReadOnly="True"
+                    Placeholder="Antwort des Druckers erscheint hier..."
+                    AutoSize="TextChanges"
+                    MinimumHeightRequest="80" />
+
+            <ActivityIndicator x:Name="BusyIndicator" IsRunning="False" IsVisible="False" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

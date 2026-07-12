@@ -1,0 +1,21 @@
+# Build-Ausgaben
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Rider / VS Code
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# .NET
+*.dll
+*.pdb
+
+# OS
+.DS_Store
+Thumbs.db
