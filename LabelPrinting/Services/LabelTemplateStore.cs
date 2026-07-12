@@ -40,14 +40,26 @@ public class LabelTemplateStore
 		return Task.FromResult(names);
 	}
 
+	/// <summary>
+	/// Lädt eine Vorlage. Gibt null zurück, wenn die Datei fehlt ODER ihr JSON nicht mehr zum
+	/// aktuellen Format passt (z.B. aus einer älteren App-Version) – wirft dafür bewusst keine
+	/// Exception, damit ein einzelnes veraltetes Vorlagen-File nie die App zum Absturz bringt.
+	/// </summary>
 	public async Task<LabelTemplate?> LoadAsync(string name)
 	{
 		string path = PathFor(name);
 		if (!File.Exists(path))
 			return null;
 
-		await using var stream = File.OpenRead(path);
-		return await JsonSerializer.DeserializeAsync<LabelTemplate>(stream, JsonOptions).ConfigureAwait(false);
+		try
+		{
+			await using var stream = File.OpenRead(path);
+			return await JsonSerializer.DeserializeAsync<LabelTemplate>(stream, JsonOptions).ConfigureAwait(false);
+		}
+		catch (JsonException)
+		{
+			return null;
+		}
 	}
 
 	public async Task SaveAsync(LabelTemplate template)

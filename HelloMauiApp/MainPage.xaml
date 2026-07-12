@@ -19,6 +19,7 @@
                    FontSize="12" TextColor="Gray" />
             <Button x:Name="OpenDesignerBtn" Text="Label-Designer öffnen" Clicked="OnOpenDesignerClicked" />
             <Button x:Name="OpenTemplateTestBtn" Text="Vorlage testen" Clicked="OnOpenTemplateTestClicked" />
+            <Button x:Name="OpenTemplateManagerBtn" Text="Gespeicherte Vorlagen" Clicked="OnOpenTemplateManagerClicked" />
 
             <BoxView HeightRequest="1" BackgroundColor="LightGray" Margin="0,10" />
 

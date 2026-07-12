@@ -32,6 +32,13 @@ public partial class DesignerPage : ContentPage
 		RenderCanvas();
 	}
 
+	public DesignerPage(LabelTemplate template)
+	{
+		InitializeComponent();
+		_template = template;
+		RenderCanvas();
+	}
+
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();

@@ -68,6 +68,11 @@ public partial class MainPage : ContentPage
 		await Navigation.PushAsync(new TemplateTestPage());
 	}
 
+	async void OnOpenTemplateManagerClicked(object? sender, EventArgs e)
+	{
+		await Navigation.PushAsync(new TemplateManagerPage());
+	}
+
 	async void OnTestConnectionClicked(object? sender, EventArgs e)
 	{
 		var settings = PrinterSettings.Load();
