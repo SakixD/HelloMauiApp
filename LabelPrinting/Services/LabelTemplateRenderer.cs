@@ -29,7 +29,14 @@ public static class LabelTemplateRenderer
 			{
 				case TextElement text:
 					int fontDots = ZplLabelBuilder.MmToDots(text.FontSizeMm, template.Dpi);
-					builder.AddText(x, y, text.Text.Resolve(data), fontDots, fontDots);
+					char rotation = text.Rotation switch
+					{
+						TextRotation.Rotate90 => 'R',
+						TextRotation.Rotate180 => 'I',
+						TextRotation.Rotate270 => 'B',
+						_ => 'N',
+					};
+					builder.AddText(x, y, text.Text.Resolve(data), fontDots, fontDots, "0", rotation);
 					break;
 
 				case BarcodeElement barcode:
@@ -51,6 +58,15 @@ public static class LabelTemplateRenderer
 						builder.AddFilledBox(x, y, frameWidthDots, frameHeightDots);
 					else
 						builder.AddBox(x, y, frameWidthDots, frameHeightDots, Math.Max(1, ZplLabelBuilder.MmToDots(frame.ThicknessMm, template.Dpi)));
+					break;
+
+				case EllipseElement ellipse:
+					int ellipseWidthDots = ZplLabelBuilder.MmToDots(ellipse.WidthMm, template.Dpi);
+					int ellipseHeightDots = ZplLabelBuilder.MmToDots(ellipse.HeightMm, template.Dpi);
+					if (ellipse.Filled)
+						builder.AddFilledEllipse(x, y, ellipseWidthDots, ellipseHeightDots);
+					else
+						builder.AddEllipse(x, y, ellipseWidthDots, ellipseHeightDots, Math.Max(1, ZplLabelBuilder.MmToDots(ellipse.ThicknessMm, template.Dpi)));
 					break;
 
 				case LineElement line:

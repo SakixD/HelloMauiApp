@@ -12,16 +12,30 @@ namespace LabelPrinting.Models;
 [JsonDerivedType(typeof(ImageElement), "image")]
 [JsonDerivedType(typeof(FrameElement), "frame")]
 [JsonDerivedType(typeof(LineElement), "line")]
+[JsonDerivedType(typeof(EllipseElement), "ellipse")]
 public abstract class LabelElement
 {
 	public double X { get; set; }
 	public double Y { get; set; }
 }
 
+/// <summary>
+/// Drehung eines Feldes in 90°-Schritten (ZPL ^A-Rotationsparameter N/R/I/B).
+/// Gedreht wird im Uhrzeigersinn um den Feld-Ursprung (^FO, linke obere Ecke).
+/// </summary>
+public enum TextRotation
+{
+	None,
+	Rotate90,
+	Rotate180,
+	Rotate270,
+}
+
 public class TextElement : LabelElement
 {
 	public BindableValue Text { get; set; } = BindableValue.Literal("Text");
 	public double FontSizeMm { get; set; } = 4;
+	public TextRotation Rotation { get; set; } = TextRotation.None;
 }
 
 public enum BarcodeSymbology
@@ -70,6 +84,15 @@ public class ImageElement : LabelElement
 public class FrameElement : LabelElement
 {
 	public double WidthMm { get; set; } = 30;
+	public double HeightMm { get; set; } = 20;
+	public double ThicknessMm { get; set; } = 0.5;
+	public bool Filled { get; set; }
+}
+
+/// <summary>Ellipse/Kreis (ZPL ^GE Graphic Ellipse), wahlweise nur umrandet oder komplett gefüllt.</summary>
+public class EllipseElement : LabelElement
+{
+	public double WidthMm { get; set; } = 20;
 	public double HeightMm { get; set; } = 20;
 	public double ThicknessMm { get; set; } = 0.5;
 	public bool Filled { get; set; }

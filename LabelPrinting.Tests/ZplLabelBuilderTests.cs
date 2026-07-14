@@ -68,6 +68,51 @@ public class ZplLabelBuilderTests
 		Assert.Contains("^GB3,30,3^FS", zpl);
 	}
 
+	[Theory]
+	[InlineData('N')]
+	[InlineData('R')]
+	[InlineData('I')]
+	[InlineData('B')]
+	public void AddText_KodiertRotation(char rotation)
+	{
+		string zpl = new ZplLabelBuilder(100, 150, 203)
+			.AddText(10, 10, "Hallo", fontHeight: 30, fontWidth: 30, font: "0", rotation: rotation)
+			.Build();
+
+		Assert.Contains($"^A0{rotation},30,30", zpl);
+	}
+
+	[Fact]
+	public void AddEllipse_ErzeugtGraphicEllipseFeld()
+	{
+		string zpl = new ZplLabelBuilder(100, 150, 203)
+			.AddEllipse(10, 20, width: 100, height: 60, thickness: 4)
+			.Build();
+
+		Assert.Contains("^FO10,20^GE100,60,4,B^FS", zpl);
+	}
+
+	[Fact]
+	public void AddEllipse_KlemmtMasseNieUnterDieDicke()
+	{
+		string zpl = new ZplLabelBuilder(100, 150, 203)
+			.AddEllipse(0, 0, width: 1, height: 30, thickness: 3)
+			.Build();
+
+		Assert.Contains("^GE3,30,3,B^FS", zpl);
+	}
+
+	[Fact]
+	public void AddFilledEllipse_FuelltUeberRanddicke()
+	{
+		string zpl = new ZplLabelBuilder(100, 150, 203)
+			.AddFilledEllipse(0, 0, width: 80, height: 40)
+			.Build();
+
+		// Dicke = max(width, height), damit der nach innen wachsende Rand alles füllt.
+		Assert.Contains("^GE80,40,80,B^FS", zpl);
+	}
+
 	[Fact]
 	public void AddRaw_FuegtSchnipselUnveraendertEin()
 	{

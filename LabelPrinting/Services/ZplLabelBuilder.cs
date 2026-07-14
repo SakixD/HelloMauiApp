@@ -38,10 +38,14 @@ public class ZplLabelBuilder
 		return this;
 	}
 
-	public ZplLabelBuilder AddText(int x, int y, string text, int fontHeight = 30, int fontWidth = 30, string font = "0")
+	/// <summary>
+	/// Textfeld. rotation: 'N' (normal), 'R' (90° im Uhrzeigersinn), 'I' (180°, kopfüber),
+	/// 'B' (270°, von unten nach oben) – ZPL ^A-Rotationsparameter, gedreht wird um den Feld-Ursprung.
+	/// </summary>
+	public ZplLabelBuilder AddText(int x, int y, string text, int fontHeight = 30, int fontWidth = 30, string font = "0", char rotation = 'N')
 	{
 		string safe = text.Replace("^", string.Empty).Replace("~", string.Empty);
-		_fields.Add($"^FO{x},{y}^A{font}N,{fontHeight},{fontWidth}^FD{safe}^FS");
+		_fields.Add($"^FO{x},{y}^A{font}{rotation},{fontHeight},{fontWidth}^FD{safe}^FS");
 		return this;
 	}
 
@@ -122,6 +126,26 @@ public class ZplLabelBuilder
 	{
 		int thickness = Math.Max(width, height);
 		_fields.Add($"^FO{x},{y}^GB{width},{height},{thickness}^FS");
+		return this;
+	}
+
+	/// <summary>Ellipse/Kreis-Umriss (^GE Graphic Ellipse). Der Rand wächst wie bei ^GB nach innen.</summary>
+	public ZplLabelBuilder AddEllipse(int x, int y, int width, int height, int thickness = 2)
+	{
+		width = Math.Max(width, thickness);
+		height = Math.Max(height, thickness);
+		_fields.Add($"^FO{x},{y}^GE{width},{height},{thickness},B^FS");
+		return this;
+	}
+
+	/// <summary>
+	/// Vollflächig gefüllte Ellipse. Analog zu <see cref="AddFilledBox"/>: Die Rand-Dicke wird so groß
+	/// gewählt, dass der nach innen wachsende Rand die gesamte Fläche füllt.
+	/// </summary>
+	public ZplLabelBuilder AddFilledEllipse(int x, int y, int width, int height)
+	{
+		int thickness = Math.Max(width, height);
+		_fields.Add($"^FO{x},{y}^GE{width},{height},{thickness},B^FS");
 		return this;
 	}
 

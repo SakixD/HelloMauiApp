@@ -32,11 +32,13 @@ public static class MauiProgram
 		builder.Services.AddSingleton<AppearanceService>();
 		builder.Services.AddSingleton<INavigationService, NavigationService>();
 		builder.Services.AddSingleton<IAlertService, AlertService>();
+		builder.Services.AddSingleton<IFileDialogService, FileDialogService>();
 
 		// ---------- Shell + Rail-Ziele (dauerhaft, je ein Exemplar für die App-Laufzeit – siehe AppShell) ----------
 		builder.Services.AddSingleton<AppShell>();
 		builder.Services.AddSingleton<MainPageViewModel>();
 		builder.Services.AddSingleton<MainPage>();
+		builder.Services.AddSingleton<DesignerViewModel>();
 		builder.Services.AddSingleton<DesignerPage>();
 		builder.Services.AddSingleton<TemplateManagerPage>();
 		builder.Services.AddSingleton<ZplConsolePage>();

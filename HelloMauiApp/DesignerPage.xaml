@@ -1,173 +1,328 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="HelloMauiApp.DesignerPage">
+             xmlns:viewmodels="clr-namespace:HelloMauiApp.ViewModels"
+             x:Class="HelloMauiApp.DesignerPage"
+             x:DataType="viewmodels:DesignerViewModel">
 
-    <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="0">
+    <ContentView.Resources>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Stroke" Value="{DynamicResource ColorStroke}" />
+            <Setter Property="BackgroundColor" Value="{DynamicResource ColorLayer}" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        </Style>
 
-        <Label x:Name="TitleLabel"
-               Grid.Row="0"
-               Text="Label-Designer"
-               FontSize="16"
-               FontAttributes="Bold"
-               Padding="12,10,12,4" />
+        <Style x:Key="ChipButton" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{DynamicResource ColorControl}" />
+            <Setter Property="TextColor" Value="{DynamicResource ColorText}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HeightRequest" Value="34" />
+            <Setter Property="MinimumHeightRequest" Value="34" />
+            <Setter Property="MinimumWidthRequest" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="12,0" />
+        </Style>
 
-        <ScrollView Grid.Row="1" Orientation="Horizontal">
-            <HorizontalStackLayout Spacing="8" Padding="12,0,12,10">
-                <Button Text="Neu" Clicked="OnNewClicked" />
-                <Button Text="+ Text" Clicked="OnAddTextClicked" />
-                <Button Text="+ Barcode" Clicked="OnAddBarcodeClicked" />
-                <Button Text="+ Bild" Clicked="OnAddImageClicked" />
-                <Button Text="+ Rahmen" Clicked="OnAddFrameClicked" />
-                <Button Text="+ Linie" Clicked="OnAddLineClicked" />
-                <Button Text="Platzhalter verwalten" Clicked="OnManagePlaceholdersClicked" />
-                <Button Text="Medium" Clicked="OnManageMediaClicked" />
-                <Button Text="Eigenschaften" Clicked="OnPropertiesClicked" />
-                <Button Text="Vorlage laden" Clicked="OnLoadClicked" />
-                <Button Text="Speichern" Clicked="OnSaveClicked" />
-                <Button Text="Exportieren" Clicked="OnExportClicked" />
-                <Button Text="Importieren" Clicked="OnImportClicked" />
-                <Button Text="Drucken" Clicked="OnPrintClicked" />
+        <Style x:Key="AccentChipButton" TargetType="Button" BasedOn="{StaticResource ChipButton}">
+            <Setter Property="BackgroundColor" Value="{DynamicResource AccentColor}" />
+            <Setter Property="TextColor" Value="{DynamicResource AccentTextColor}" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
+
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource ChipButton}">
+            <Setter Property="BackgroundColor" Value="{DynamicResource ColorDangerSoft}" />
+            <Setter Property="TextColor" Value="{DynamicResource ColorDanger}" />
+        </Style>
+
+        <Style x:Key="SectionTitle" TargetType="Label">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{DynamicResource ColorText}" />
+        </Style>
+
+        <Style x:Key="FieldLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="TextColor" Value="{DynamicResource ColorText3}" />
+            <Setter Property="CharacterSpacing" Value="0.5" />
+            <Setter Property="Margin" Value="0,10,0,2" />
+        </Style>
+
+        <Style x:Key="ToolbarSeparator" TargetType="BoxView">
+            <Setter Property="WidthRequest" Value="1" />
+            <Setter Property="HeightRequest" Value="22" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="BackgroundColor" Value="{DynamicResource ColorStroke}" />
+            <Setter Property="Margin" Value="4,0" />
+        </Style>
+    </ContentView.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*" Padding="24,20,24,20" RowSpacing="14">
+
+        <!-- KOPFZEILE: Titel + Vorlagen-Aktionen -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                <Label Text="Label-Designer" FontSize="22" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                <Label Text="{Binding Title}" FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
+            </VerticalStackLayout>
+            <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                <Button Text="Neu" Style="{StaticResource ChipButton}" Command="{Binding NewCommand}" />
+                <Button Text="Laden" Style="{StaticResource ChipButton}" Command="{Binding LoadCommand}" />
+                <Button Text="Importieren" Style="{StaticResource ChipButton}" Command="{Binding ImportCommand}" />
+                <Button Text="Exportieren" Style="{StaticResource ChipButton}" Command="{Binding ExportCommand}" />
+                <Button Text="Speichern" Style="{StaticResource ChipButton}" Command="{Binding SaveCommand}" />
+                <Button Text="Drucken" Style="{StaticResource AccentChipButton}" Command="{Binding PrintCommand}" />
             </HorizontalStackLayout>
-        </ScrollView>
+        </Grid>
 
-        <ScrollView Grid.Row="2" BackgroundColor="#DDDDDD">
-            <Border Stroke="Gray"
-                    StrokeThickness="1"
-                    BackgroundColor="White"
-                    HorizontalOptions="Center"
-                    VerticalOptions="Center"
-                    Margin="24">
-                <AbsoluteLayout x:Name="CanvasLayout" />
+        <!-- WERKZEUGLEISTE: Elemente + Vorlagen-Kontext -->
+        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="12,9">
+            <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                <HorizontalStackLayout Spacing="8">
+                    <Label Text="EINFÜGEN" FontSize="11" CharacterSpacing="0.5" TextColor="{DynamicResource ColorText3}" VerticalOptions="Center" Margin="2,0,4,0" />
+                    <Button Text="+ Text" Style="{StaticResource ChipButton}" Command="{Binding AddTextCommand}" />
+                    <Button Text="+ Barcode" Style="{StaticResource ChipButton}" Command="{Binding AddBarcodeCommand}" />
+                    <Button Text="+ Bild" Style="{StaticResource ChipButton}" Command="{Binding AddImageCommand}" />
+                    <Button Text="+ Rahmen" Style="{StaticResource ChipButton}" Command="{Binding AddFrameCommand}" />
+                    <Button Text="+ Ellipse" Style="{StaticResource ChipButton}" Command="{Binding AddEllipseCommand}" />
+                    <Button Text="+ Linie" Style="{StaticResource ChipButton}" Command="{Binding AddLineCommand}" />
+                    <BoxView Style="{StaticResource ToolbarSeparator}" />
+                    <Label Text="VORLAGE" FontSize="11" CharacterSpacing="0.5" TextColor="{DynamicResource ColorText3}" VerticalOptions="Center" Margin="2,0,4,0" />
+                    <Button Text="Medium" Style="{StaticResource ChipButton}" Command="{Binding ManageMediaCommand}" />
+                    <Button Text="Platzhalter" Style="{StaticResource ChipButton}" Command="{Binding ManagePlaceholdersCommand}" />
+                    <Button Text="Eigenschaften" Style="{StaticResource ChipButton}" Command="{Binding EditPropertiesCommand}" />
+                </HorizontalStackLayout>
+            </ScrollView>
+        </Border>
+
+        <!-- ARBEITSBEREICH: Canvas links, Eigenschaften + ZPL rechts -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,330" ColumnSpacing="16">
+
+            <Border Grid.Column="0" Style="{StaticResource Card}" BackgroundColor="{DynamicResource ColorCanvasBg}" Padding="0">
+                <Grid>
+                    <ScrollView Orientation="Both">
+                        <Border x:Name="LabelSurface"
+                                BackgroundColor="White"
+                                Stroke="#33000000"
+                                StrokeThickness="1"
+                                Margin="32"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center">
+                            <AbsoluteLayout x:Name="CanvasLayout" />
+                        </Border>
+                    </ScrollView>
+
+                    <!-- Zoom-Steuerung (Overlay unten rechts) -->
+                    <Border Style="{StaticResource Card}" HorizontalOptions="End" VerticalOptions="End" Margin="14" Padding="4,2">
+                        <HorizontalStackLayout Spacing="0">
+                            <Button Text="−" Style="{StaticResource ChipButton}" WidthRequest="34" Padding="0" Clicked="OnZoomOutClicked" />
+                            <Label x:Name="ZoomLabel" Text="100 %" FontSize="12.5" TextColor="{DynamicResource ColorText2}"
+                                   WidthRequest="52" HorizontalTextAlignment="Center" VerticalOptions="Center" />
+                            <Button Text="+" Style="{StaticResource ChipButton}" WidthRequest="34" Padding="0" Clicked="OnZoomInClicked" />
+                        </HorizontalStackLayout>
+                    </Border>
+                </Grid>
             </Border>
-        </ScrollView>
 
-        <Border x:Name="PropertiesPanel"
-                Grid.Row="3"
-                IsVisible="False"
-                Padding="12"
-                StrokeThickness="0,1,0,0"
-                Stroke="LightGray"
-                MaximumHeightRequest="420">
-            <ScrollView>
-                <VerticalStackLayout Spacing="8">
+            <ScrollView Grid.Column="1">
+                <VerticalStackLayout Spacing="14">
 
-                    <Label x:Name="SelectedElementLabel" FontAttributes="Bold" />
+                    <!-- EIGENSCHAFTEN -->
+                    <Border Style="{StaticResource Card}" Padding="18,16">
+                        <VerticalStackLayout Spacing="0">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Grid.Column="0" Text="Eigenschaften" Style="{StaticResource SectionTitle}" />
+                                <Label Grid.Column="1" Text="{Binding SelectedElementTitle}" FontSize="12.5" FontAttributes="Bold"
+                                       TextColor="{DynamicResource AccentColor}" VerticalOptions="Center" />
+                            </Grid>
 
-                    <Grid ColumnDefinitions="Auto,*,Auto,*" ColumnSpacing="8">
-                        <Label Text="X (mm)" Grid.Column="0" VerticalOptions="Center" />
-                        <Entry x:Name="XEntry" Grid.Column="1" Keyboard="Numeric" TextChanged="OnPropertyChanged" />
-                        <Label Text="Y (mm)" Grid.Column="2" VerticalOptions="Center" />
-                        <Entry x:Name="YEntry" Grid.Column="3" Keyboard="Numeric" TextChanged="OnPropertyChanged" />
-                    </Grid>
+                            <Label IsVisible="{Binding HasNoSelection}"
+                                   Text="Kein Element ausgewählt. Tippe ein Element auf der Arbeitsfläche an oder füge oben ein neues ein."
+                                   FontSize="12.5" TextColor="{DynamicResource ColorText2}" Margin="0,10,0,0" />
 
-                    <VerticalStackLayout x:Name="TextPropertiesGroup" Spacing="4" IsVisible="False">
-                        <Label Text="Text" />
-                        <Entry x:Name="TextValueEntry" TextChanged="OnPropertyChanged" />
-                        <HorizontalStackLayout Spacing="6">
-                            <CheckBox x:Name="TextIsPlaceholderCheckBox" CheckedChanged="OnTextIsPlaceholderChanged" />
-                            <Label Text="Als Platzhalter" VerticalOptions="Center" />
-                        </HorizontalStackLayout>
-                        <Picker x:Name="TextPlaceholderPicker" Title="Platzhalter wählen" IsVisible="False" SelectedIndexChanged="OnPropertyChanged" />
-                        <Label Text="Schriftgröße (mm)" />
-                        <Entry x:Name="FontSizeEntry" Keyboard="Numeric" TextChanged="OnPropertyChanged" />
-                    </VerticalStackLayout>
+                            <VerticalStackLayout IsVisible="{Binding HasSelection}" Spacing="0">
 
-                    <VerticalStackLayout x:Name="BarcodePropertiesGroup" Spacing="4" IsVisible="False">
-                        <Label Text="Symbologie" />
-                        <Picker x:Name="BarcodeSymbologyPicker" SelectedIndexChanged="OnBarcodeSymbologyChanged">
-                            <Picker.ItemsSource>
-                                <x:Array Type="{x:Type x:String}">
-                                    <x:String>Code128</x:String>
-                                    <x:String>EAN-13</x:String>
-                                    <x:String>Code39</x:String>
-                                    <x:String>QR-Code</x:String>
-                                    <x:String>DataMatrix</x:String>
-                                    <x:String>PDF417</x:String>
-                                </x:Array>
-                            </Picker.ItemsSource>
-                        </Picker>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="0">
+                                        <Label Text="X (MM)" Style="{StaticResource FieldLabel}" />
+                                        <Entry Text="{Binding XText}" Keyboard="Numeric" />
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="0">
+                                        <Label Text="Y (MM)" Style="{StaticResource FieldLabel}" />
+                                        <Entry Text="{Binding YText}" Keyboard="Numeric" />
+                                    </VerticalStackLayout>
+                                </Grid>
 
-                        <Label Text="Daten" />
-                        <Entry x:Name="BarcodeDataEntry" TextChanged="OnPropertyChanged" />
-                        <HorizontalStackLayout Spacing="6">
-                            <CheckBox x:Name="BarcodeIsPlaceholderCheckBox" CheckedChanged="OnBarcodeIsPlaceholderChanged" />
-                            <Label Text="Als Platzhalter" VerticalOptions="Center" />
-                        </HorizontalStackLayout>
-                        <Picker x:Name="BarcodePlaceholderPicker" Title="Platzhalter wählen" IsVisible="False" SelectedIndexChanged="OnPropertyChanged" />
+                                <!-- Text -->
+                                <VerticalStackLayout IsVisible="{Binding IsTextSelected}" Spacing="0">
+                                    <Label Text="TEXT" Style="{StaticResource FieldLabel}" />
+                                    <Entry Text="{Binding TextValue}" IsVisible="{Binding TextLiteralVisible}" />
+                                    <Picker ItemsSource="{Binding PlaceholderKeys}" SelectedItem="{Binding TextPlaceholderKey}"
+                                            Title="Platzhalter wählen" IsVisible="{Binding TextIsPlaceholder}" />
+                                    <HorizontalStackLayout Spacing="2">
+                                        <CheckBox IsChecked="{Binding TextIsPlaceholder}" />
+                                        <Label Text="Als Platzhalter" FontSize="13" TextColor="{DynamicResource ColorText2}" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+                                    <Label Text="SCHRIFTGRÖSSE (MM)" Style="{StaticResource FieldLabel}" />
+                                    <Entry Text="{Binding FontSizeText}" Keyboard="Numeric" />
+                                    <Label Text="DREHUNG" Style="{StaticResource FieldLabel}" />
+                                    <Picker SelectedIndex="{Binding TextRotationIndex}">
+                                        <Picker.ItemsSource>
+                                            <x:Array Type="{x:Type x:String}">
+                                                <x:String>0° (normal)</x:String>
+                                                <x:String>90° (im Uhrzeigersinn)</x:String>
+                                                <x:String>180° (kopfüber)</x:String>
+                                                <x:String>270° (von unten nach oben)</x:String>
+                                            </x:Array>
+                                        </Picker.ItemsSource>
+                                    </Picker>
+                                </VerticalStackLayout>
 
-                        <VerticalStackLayout x:Name="Barcode1DPropertiesGroup" Spacing="4">
-                            <Label Text="Höhe (mm)" />
-                            <Entry x:Name="BarcodeHeightEntry" Keyboard="Numeric" TextChanged="OnPropertyChanged" />
-                            <HorizontalStackLayout Spacing="6">
-                                <CheckBox x:Name="BarcodeHrCheckBox" CheckedChanged="OnPropertyChanged" />
-                                <Label Text="Daten als Text mit anzeigen" VerticalOptions="Center" />
-                            </HorizontalStackLayout>
+                                <!-- Barcode -->
+                                <VerticalStackLayout IsVisible="{Binding IsBarcodeSelected}" Spacing="0">
+                                    <Label Text="SYMBOLOGIE" Style="{StaticResource FieldLabel}" />
+                                    <Picker SelectedIndex="{Binding SymbologyIndex}">
+                                        <Picker.ItemsSource>
+                                            <x:Array Type="{x:Type x:String}">
+                                                <x:String>Code128</x:String>
+                                                <x:String>EAN-13</x:String>
+                                                <x:String>Code39</x:String>
+                                                <x:String>QR-Code</x:String>
+                                                <x:String>DataMatrix</x:String>
+                                                <x:String>PDF417</x:String>
+                                            </x:Array>
+                                        </Picker.ItemsSource>
+                                    </Picker>
+                                    <Label Text="DATEN" Style="{StaticResource FieldLabel}" />
+                                    <Entry Text="{Binding BarcodeData}" IsVisible="{Binding BarcodeLiteralVisible}" />
+                                    <Picker ItemsSource="{Binding PlaceholderKeys}" SelectedItem="{Binding BarcodePlaceholderKey}"
+                                            Title="Platzhalter wählen" IsVisible="{Binding BarcodeIsPlaceholder}" />
+                                    <HorizontalStackLayout Spacing="2">
+                                        <CheckBox IsChecked="{Binding BarcodeIsPlaceholder}" />
+                                        <Label Text="Als Platzhalter" FontSize="13" TextColor="{DynamicResource ColorText2}" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+
+                                    <VerticalStackLayout IsVisible="{Binding IsBarcode1DVisible}" Spacing="0">
+                                        <Label Text="HÖHE (MM)" Style="{StaticResource FieldLabel}" />
+                                        <Entry Text="{Binding BarcodeHeightText}" Keyboard="Numeric" />
+                                        <HorizontalStackLayout Spacing="2">
+                                            <CheckBox IsChecked="{Binding BarcodeHumanReadable}" />
+                                            <Label Text="Daten als Text mit anzeigen" FontSize="13" TextColor="{DynamicResource ColorText2}" VerticalOptions="Center" />
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
+
+                                    <VerticalStackLayout IsVisible="{Binding IsBarcode2DVisible}" Spacing="0">
+                                        <Label Text="MODULGRÖSSE" Style="{StaticResource FieldLabel}" />
+                                        <Entry Text="{Binding BarcodeMagnificationText}" Keyboard="Numeric" />
+                                    </VerticalStackLayout>
+
+                                    <VerticalStackLayout IsVisible="{Binding IsQrVisible}" Spacing="0">
+                                        <Label Text="FEHLERKORREKTUR (QR)" Style="{StaticResource FieldLabel}" />
+                                        <Picker SelectedIndex="{Binding QrErrorCorrectionIndex}">
+                                            <Picker.ItemsSource>
+                                                <x:Array Type="{x:Type x:String}">
+                                                    <x:String>Niedrig (~7%)</x:String>
+                                                    <x:String>Mittel (~15%)</x:String>
+                                                    <x:String>Qualität (~25%)</x:String>
+                                                    <x:String>Hoch (~30%)</x:String>
+                                                </x:Array>
+                                            </Picker.ItemsSource>
+                                        </Picker>
+                                    </VerticalStackLayout>
+                                </VerticalStackLayout>
+
+                                <!-- Bild -->
+                                <VerticalStackLayout IsVisible="{Binding IsImageSelected}" Spacing="0">
+                                    <Label Text="BREITE (MM)" Style="{StaticResource FieldLabel}" />
+                                    <Entry Text="{Binding ImageWidthText}" Keyboard="Numeric" />
+                                    <Label Text="HÖHE (MM)" Style="{StaticResource FieldLabel}" />
+                                    <Entry Text="{Binding ImageHeightText}" Keyboard="Numeric" />
+                                </VerticalStackLayout>
+
+                                <!-- Rahmen -->
+                                <VerticalStackLayout IsVisible="{Binding IsFrameSelected}" Spacing="0">
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="0">
+                                            <Label Text="BREITE (MM)" Style="{StaticResource FieldLabel}" />
+                                            <Entry Text="{Binding FrameWidthText}" Keyboard="Numeric" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="0">
+                                            <Label Text="HÖHE (MM)" Style="{StaticResource FieldLabel}" />
+                                            <Entry Text="{Binding FrameHeightText}" Keyboard="Numeric" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Label Text="DICKE (MM)" Style="{StaticResource FieldLabel}" />
+                                    <Entry Text="{Binding FrameThicknessText}" Keyboard="Numeric" />
+                                    <HorizontalStackLayout Spacing="2">
+                                        <CheckBox IsChecked="{Binding FrameFilled}" />
+                                        <Label Text="Gefüllt" FontSize="13" TextColor="{DynamicResource ColorText2}" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+
+                                <!-- Ellipse -->
+                                <VerticalStackLayout IsVisible="{Binding IsEllipseSelected}" Spacing="0">
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="0">
+                                            <Label Text="BREITE (MM)" Style="{StaticResource FieldLabel}" />
+                                            <Entry Text="{Binding EllipseWidthText}" Keyboard="Numeric" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="0">
+                                            <Label Text="HÖHE (MM)" Style="{StaticResource FieldLabel}" />
+                                            <Entry Text="{Binding EllipseHeightText}" Keyboard="Numeric" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Label Text="RANDDICKE (MM)" Style="{StaticResource FieldLabel}" />
+                                    <Entry Text="{Binding EllipseThicknessText}" Keyboard="Numeric" />
+                                    <HorizontalStackLayout Spacing="2">
+                                        <CheckBox IsChecked="{Binding EllipseFilled}" />
+                                        <Label Text="Gefüllt" FontSize="13" TextColor="{DynamicResource ColorText2}" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+
+                                <!-- Linie -->
+                                <VerticalStackLayout IsVisible="{Binding IsLineSelected}" Spacing="0">
+                                    <Label Text="LÄNGE (MM)" Style="{StaticResource FieldLabel}" />
+                                    <Entry Text="{Binding LineLengthText}" Keyboard="Numeric" />
+                                    <Label Text="DICKE (MM)" Style="{StaticResource FieldLabel}" />
+                                    <Entry Text="{Binding LineThicknessText}" Keyboard="Numeric" />
+                                    <Label Text="AUSRICHTUNG" Style="{StaticResource FieldLabel}" />
+                                    <Picker SelectedIndex="{Binding LineOrientationIndex}">
+                                        <Picker.ItemsSource>
+                                            <x:Array Type="{x:Type x:String}">
+                                                <x:String>Horizontal</x:String>
+                                                <x:String>Vertikal</x:String>
+                                            </x:Array>
+                                        </Picker.ItemsSource>
+                                    </Picker>
+                                    <Label Text="ZPL-Drucker drucken Linien nur horizontal oder vertikal, kein freier Winkel."
+                                           FontSize="11" TextColor="{DynamicResource ColorText3}" Margin="0,4,0,0" />
+                                </VerticalStackLayout>
+
+                                <Button Text="Element löschen" Style="{StaticResource DangerButton}" Command="{Binding DeleteElementCommand}" Margin="0,16,0,0" />
+
+                            </VerticalStackLayout>
                         </VerticalStackLayout>
+                    </Border>
 
-                        <VerticalStackLayout x:Name="Barcode2DPropertiesGroup" Spacing="4">
-                            <Label Text="Modulgröße" />
-                            <Entry x:Name="BarcodeMagnificationEntry" Keyboard="Numeric" TextChanged="OnPropertyChanged" />
+                    <!-- ZPL-VORSCHAU -->
+                    <Border Style="{StaticResource Card}" Padding="18,16">
+                        <VerticalStackLayout Spacing="10">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Grid.Column="0" Text="ZPL-Vorschau" Style="{StaticResource SectionTitle}" VerticalOptions="Center" />
+                                <Button Grid.Column="1" Text="Kopieren" Style="{StaticResource ChipButton}" Command="{Binding CopyZplCommand}" />
+                            </Grid>
+                            <Border BackgroundColor="{DynamicResource ColorCodeBg}" StrokeThickness="0" StrokeShape="RoundRectangle 8" Padding="12,10">
+                                <Label Text="{Binding ZplPreview}" FontFamily="Consolas" FontSize="11.5"
+                                       TextColor="{DynamicResource ColorCodeFg}" LineBreakMode="CharacterWrap" />
+                            </Border>
+                            <Label Text="Aktualisiert sich beim Bearbeiten automatisch. „Kopieren“ übernimmt den vollständigen Code (inkl. Bilddaten)."
+                                   FontSize="11.5" TextColor="{DynamicResource ColorText3}" />
                         </VerticalStackLayout>
-
-                        <VerticalStackLayout x:Name="BarcodeQrEcGroup" Spacing="4">
-                            <Label Text="Fehlerkorrektur (QR)" />
-                            <Picker x:Name="QrErrorCorrectionPicker" SelectedIndexChanged="OnPropertyChanged">
-                                <Picker.ItemsSource>
-                                    <x:Array Type="{x:Type x:String}">
-                                        <x:String>Niedrig (~7%)</x:String>
-                                        <x:String>Mittel (~15%)</x:String>
-                                        <x:String>Qualität (~25%)</x:String>
-                                        <x:String>Hoch (~30%)</x:String>
-                                    </x:Array>
-                                </Picker.ItemsSource>
-                            </Picker>
-                        </VerticalStackLayout>
-                    </VerticalStackLayout>
-
-                    <VerticalStackLayout x:Name="ImagePropertiesGroup" Spacing="4" IsVisible="False">
-                        <Label Text="Breite (mm)" />
-                        <Entry x:Name="ImageWidthEntry" Keyboard="Numeric" TextChanged="OnPropertyChanged" />
-                        <Label Text="Höhe (mm)" />
-                        <Entry x:Name="ImageHeightEntry" Keyboard="Numeric" TextChanged="OnPropertyChanged" />
-                    </VerticalStackLayout>
-
-                    <VerticalStackLayout x:Name="FramePropertiesGroup" Spacing="4" IsVisible="False">
-                        <Label Text="Breite (mm)" />
-                        <Entry x:Name="FrameWidthEntry" Keyboard="Numeric" TextChanged="OnPropertyChanged" />
-                        <Label Text="Länge/Höhe (mm)" />
-                        <Entry x:Name="FrameHeightEntry" Keyboard="Numeric" TextChanged="OnPropertyChanged" />
-                        <Label Text="Dicke (mm)" />
-                        <Entry x:Name="FrameThicknessEntry" Keyboard="Numeric" TextChanged="OnPropertyChanged" />
-                        <HorizontalStackLayout Spacing="6">
-                            <CheckBox x:Name="FrameFilledCheckBox" CheckedChanged="OnPropertyChanged" />
-                            <Label Text="Gefüllt" VerticalOptions="Center" />
-                        </HorizontalStackLayout>
-                    </VerticalStackLayout>
-
-                    <VerticalStackLayout x:Name="LinePropertiesGroup" Spacing="4" IsVisible="False">
-                        <Label Text="Länge (mm)" />
-                        <Entry x:Name="LineLengthEntry" Keyboard="Numeric" TextChanged="OnPropertyChanged" />
-                        <Label Text="Dicke (mm)" />
-                        <Entry x:Name="LineThicknessEntry" Keyboard="Numeric" TextChanged="OnPropertyChanged" />
-                        <Label Text="Ausrichtung" />
-                        <Label Text="ZPL-Drucker können Linien nur horizontal oder vertikal drucken, kein freier Winkel."
-                               FontSize="11" TextColor="Gray" />
-                        <Picker x:Name="LineOrientationPicker" SelectedIndexChanged="OnPropertyChanged">
-                            <Picker.ItemsSource>
-                                <x:Array Type="{x:Type x:String}">
-                                    <x:String>Horizontal</x:String>
-                                    <x:String>Vertikal</x:String>
-                                </x:Array>
-                            </Picker.ItemsSource>
-                        </Picker>
-                    </VerticalStackLayout>
-
-                    <Button Text="Element löschen" BackgroundColor="IndianRed" TextColor="White" Clicked="OnDeleteElementClicked" />
+                    </Border>
 
                 </VerticalStackLayout>
             </ScrollView>
-        </Border>
+        </Grid>
 
     </Grid>
 

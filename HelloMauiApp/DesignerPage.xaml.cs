@@ -1,119 +1,120 @@
 using HelloMauiApp.Services;
+using HelloMauiApp.ViewModels;
 using LabelPrinting.Models;
-using LabelPrinting.Services;
-using Microsoft.Maui.Layouts;
 
 namespace HelloMauiApp;
 
+/// <summary>
+/// View des Label-Designers. Die gesamte Vorlagen-/Editor-Logik liegt im <see cref="DesignerViewModel"/>;
+/// hier lebt nur, was zwingend View ist: das Zeichnen der Elemente auf dem Canvas, die Gesten
+/// (Tap-Auswahl, Drag mit 0,5-mm-Raster) und der Zoom (reine Darstellungsgröße, kein Modell-Zustand).
+/// </summary>
 public partial class DesignerPage : ContentView, IShellSectionView
 {
-	const double PixelsPerMm = LabelCanvasRenderer.PixelsPerMm;
+	static readonly double[] ZoomLevels = [0.5, 0.75, 1.0, 1.5, 2.0, 3.0];
 
-	readonly ILabelTemplateStore _store;
-	readonly IPrinterService _printerService;
-	readonly IPrinterSettingsStore _settingsStore;
-	readonly INavigationService _navigationService;
-	readonly IAlertService _alertService;
+	readonly DesignerViewModel _vm;
+	readonly Dictionary<LabelElement, Border> _elementViews = [];
+	int _zoomIndex = 2; // 100 %
 
-	LabelTemplate _template = null!;
-	LabelElement? _selectedElement;
-	Border? _selectedBorder;
-	bool _suppressPropertyChanged;
+	double PixelsPerMm => LabelCanvasRenderer.PixelsPerMm * ZoomLevels[_zoomIndex];
 
-	public DesignerPage(
-		ILabelTemplateStore store,
-		IPrinterService printerService,
-		IPrinterSettingsStore settingsStore,
-		INavigationService navigationService,
-		IAlertService alertService)
+	public DesignerPage(DesignerViewModel viewModel)
 	{
 		InitializeComponent();
-		_store = store;
-		_printerService = printerService;
-		_settingsStore = settingsStore;
-		_navigationService = navigationService;
-		_alertService = alertService;
+		BindingContext = _vm = viewModel;
 
-		LoadTemplate(null);
-	}
-
-	/// <summary>Lädt eine bestehende Vorlage in den (dauerhaften) Designer, oder – bei <c>null</c> – eine neue leere Vorlage.</summary>
-	public void LoadTemplate(LabelTemplate? template)
-	{
-		if (template is not null)
-		{
-			_template = template;
-		}
-		else
-		{
-			var settings = _settingsStore.Load();
-			_template = new LabelTemplate
-			{
-				Name = "Neue Vorlage",
-				WidthMm = settings.LabelWidthMm,
-				HeightMm = settings.LabelHeightMm,
-				Dpi = settings.Dpi,
-			};
-		}
+		_vm.CanvasResetRequested += RenderCanvas;
+		_vm.ElementAdded += OnElementAdded;
+		_vm.ElementRemoved += OnElementRemoved;
+		_vm.SelectedElementVisualChanged += OnElementVisualChanged;
+		_vm.SelectionChanged += OnSelectionChanged;
 
 		RenderCanvas();
 	}
 
-	public Task OnActivatedAsync()
-	{
-		// Nach Rückkehr von "Medium" kann sich die Labelgröße geändert haben.
-		UpdateCanvasSize();
+	/// <summary>Einstieg für AppShell/Vorlagenverwaltung („Im Designer öffnen“).</summary>
+	public void LoadTemplate(LabelTemplate? template) => _vm.LoadTemplate(template);
 
-		// Nach Rückkehr von "Platzhalter verwalten" könnten sich Keys geändert haben.
-		if (_selectedElement is not null && _selectedBorder is not null)
-			ShowPropertiesFor(_selectedElement);
-
-		return Task.CompletedTask;
-	}
+	public Task OnActivatedAsync() => _vm.OnActivatedAsync();
 
 	// ---------- Canvas-Aufbau ----------
-
-	void UpdateCanvasSize()
-	{
-		CanvasLayout.WidthRequest = Math.Max(10, _template.WidthMm * PixelsPerMm);
-		CanvasLayout.HeightRequest = Math.Max(10, _template.HeightMm * PixelsPerMm);
-		TitleLabel.Text = $"Label-Designer – {_template.Name} ({_template.WidthMm:0.#}×{_template.HeightMm:0.#} mm)";
-	}
 
 	void RenderCanvas()
 	{
 		CanvasLayout.Children.Clear();
-		_selectedElement = null;
-		_selectedBorder = null;
-		PropertiesPanel.IsVisible = false;
+		_elementViews.Clear();
 
-		UpdateCanvasSize();
+		CanvasLayout.WidthRequest = Math.Max(10, _vm.Template.WidthMm * PixelsPerMm);
+		CanvasLayout.HeightRequest = Math.Max(10, _vm.Template.HeightMm * PixelsPerMm);
 
-		foreach (var element in _template.Elements)
-			CanvasLayout.Children.Add(CreateElementView(element));
+		foreach (var element in _vm.Template.Elements)
+			AddElementView(element);
+
+		UpdateSelectionStrokes(_vm.SelectedElement);
 	}
 
-	Border CreateElementView(LabelElement element)
+	void AddElementView(LabelElement element)
 	{
 		var border = new Border
 		{
 			Content = CreateInnerView(element),
 			Padding = 2,
-			StrokeThickness = 2,
-			Stroke = Colors.Transparent,
+			StrokeThickness = 1.5,
+			Stroke = UnselectedStroke(),
+			StrokeDashArray = [2, 2],
 			BackgroundColor = Colors.Transparent,
 		};
 
 		AttachGestures(border, element);
-		PositionOnCanvas(border, element);
-		return border;
+		LabelCanvasRenderer.PositionOnCanvas(border, element, PixelsPerMm);
+		CanvasLayout.Children.Add(border);
+		_elementViews[element] = border;
 	}
 
-	View CreateInnerView(LabelElement element) => LabelCanvasRenderer.CreateView(element, bv => bv.ToString());
+	View CreateInnerView(LabelElement element) =>
+		LabelCanvasRenderer.CreateView(element, bv => bv.ToString(), PixelsPerMm);
 
-	static void PositionOnCanvas(View view, LabelElement element) => LabelCanvasRenderer.PositionOnCanvas(view, element);
+	// ---------- VM-Benachrichtigungen ----------
 
-	// ---------- Auswahl & Ziehen ----------
+	void OnElementAdded(LabelElement element) => AddElementView(element);
+
+	void OnElementRemoved(LabelElement element)
+	{
+		if (_elementViews.Remove(element, out var border))
+			CanvasLayout.Children.Remove(border);
+	}
+
+	void OnElementVisualChanged(LabelElement element)
+	{
+		if (!_elementViews.TryGetValue(element, out var border))
+			return;
+
+		border.Content = CreateInnerView(element);
+		LabelCanvasRenderer.PositionOnCanvas(border, element, PixelsPerMm);
+	}
+
+	void OnSelectionChanged(LabelElement? selected) => UpdateSelectionStrokes(selected);
+
+	void UpdateSelectionStrokes(LabelElement? selected)
+	{
+		foreach (var (element, border) in _elementViews)
+		{
+			bool isSelected = ReferenceEquals(element, selected);
+			border.Stroke = isSelected ? new SolidColorBrush(AccentColor()) : UnselectedStroke();
+			border.StrokeThickness = isSelected ? 2 : 1.5;
+			border.StrokeDashArray = isSelected ? [] : [2, 2];
+		}
+	}
+
+	static Brush UnselectedStroke() => new SolidColorBrush(Color.FromArgb("#26000000"));
+
+	static Color AccentColor() =>
+		Application.Current?.Resources.TryGetValue("AccentColor", out var value) == true && value is Color color
+			? color
+			: Colors.DodgerBlue;
+
+	// ---------- Gesten (Auswahl + Ziehen mit 0,5-mm-Raster) ----------
 
 	void AttachGestures(Border border, LabelElement element)
 	{
@@ -126,493 +127,43 @@ public partial class DesignerPage : ContentView, IShellSectionView
 			{
 				startXmm = element.X;
 				startYmm = element.Y;
-				SelectElement(element, border);
+				_vm.SelectElement(element);
 			}
 			else if (e.StatusType == GestureStatus.Running)
 			{
-				double newX = Math.Clamp(startXmm + e.TotalX / PixelsPerMm, 0, Math.Max(0, _template.WidthMm - 2));
-				double newY = Math.Clamp(startYmm + e.TotalY / PixelsPerMm, 0, Math.Max(0, _template.HeightMm - 2));
-				element.X = newX;
-				element.Y = newY;
-				PositionOnCanvas(border, element);
+				double ppm = PixelsPerMm;
+				double newX = Math.Clamp(startXmm + e.TotalX / ppm, 0, Math.Max(0, _vm.Template.WidthMm - 2));
+				double newY = Math.Clamp(startYmm + e.TotalY / ppm, 0, Math.Max(0, _vm.Template.HeightMm - 2));
 
-				if (ReferenceEquals(_selectedElement, element))
-				{
-					_suppressPropertyChanged = true;
-					XEntry.Text = newX.ToString("0.#");
-					YEntry.Text = newY.ToString("0.#");
-					_suppressPropertyChanged = false;
-				}
+				// 0,5-mm-Raster: verhindert "krumme" Positionen wie 13,37 mm beim Ziehen.
+				newX = Math.Round(newX * 2) / 2;
+				newY = Math.Round(newY * 2) / 2;
+
+				_vm.MoveElement(element, newX, newY);
+				LabelCanvasRenderer.PositionOnCanvas(border, element, ppm);
 			}
 		};
 		border.GestureRecognizers.Add(pan);
 
 		var tap = new TapGestureRecognizer();
-		tap.Tapped += (s, e) => SelectElement(element, border);
+		tap.Tapped += (s, e) => _vm.SelectElement(element);
 		border.GestureRecognizers.Add(tap);
 	}
 
-	void SelectElement(LabelElement element, Border border)
+	// ---------- Zoom ----------
+
+	void OnZoomOutClicked(object? sender, EventArgs e) => SetZoom(_zoomIndex - 1);
+
+	void OnZoomInClicked(object? sender, EventArgs e) => SetZoom(_zoomIndex + 1);
+
+	void SetZoom(int index)
 	{
-		if (_selectedBorder is not null)
-			_selectedBorder.Stroke = Colors.Transparent;
-
-		_selectedElement = element;
-		_selectedBorder = border;
-		border.Stroke = Colors.DodgerBlue;
-
-		ShowPropertiesFor(element);
-	}
-
-	static void RefreshPlaceholderPicker(Picker picker, LabelTemplate template, string currentKey)
-	{
-		var keys = template.Placeholders.Select(p => p.Key).ToList();
-		picker.ItemsSource = keys;
-		picker.SelectedIndex = keys.IndexOf(currentKey);
-	}
-
-	static void SetPlaceholderMode(CheckBox checkBox, Entry literalEntry, Picker picker, bool isPlaceholder)
-	{
-		checkBox.IsChecked = isPlaceholder;
-		literalEntry.IsVisible = !isPlaceholder;
-		picker.IsVisible = isPlaceholder;
-	}
-
-	void UpdateBarcodeSymbologyGroups(BarcodeSymbology symbology)
-	{
-		bool is2D = LabelCanvasRenderer.IsSymbology2D(symbology);
-		Barcode1DPropertiesGroup.IsVisible = !is2D;
-		Barcode2DPropertiesGroup.IsVisible = is2D;
-		BarcodeQrEcGroup.IsVisible = symbology == BarcodeSymbology.QrCode;
-	}
-
-	void ShowPropertiesFor(LabelElement element)
-	{
-		_suppressPropertyChanged = true;
-
-		PropertiesPanel.IsVisible = true;
-		XEntry.Text = element.X.ToString("0.#");
-		YEntry.Text = element.Y.ToString("0.#");
-
-		TextPropertiesGroup.IsVisible = element is TextElement;
-		BarcodePropertiesGroup.IsVisible = element is BarcodeElement;
-		ImagePropertiesGroup.IsVisible = element is ImageElement;
-		FramePropertiesGroup.IsVisible = element is FrameElement;
-		LinePropertiesGroup.IsVisible = element is LineElement;
-
-		switch (element)
-		{
-			case TextElement text:
-				SelectedElementLabel.Text = "Text-Element";
-				TextValueEntry.Text = text.Text.LiteralValue;
-				SetPlaceholderMode(TextIsPlaceholderCheckBox, TextValueEntry, TextPlaceholderPicker, text.Text.IsPlaceholder);
-				RefreshPlaceholderPicker(TextPlaceholderPicker, _template, text.Text.PlaceholderKey);
-				FontSizeEntry.Text = text.FontSizeMm.ToString("0.#");
-				break;
-
-			case BarcodeElement barcode:
-				SelectedElementLabel.Text = "Barcode-Element";
-				BarcodeSymbologyPicker.SelectedIndex = (int)barcode.Symbology;
-				BarcodeDataEntry.Text = barcode.Data.LiteralValue;
-				SetPlaceholderMode(BarcodeIsPlaceholderCheckBox, BarcodeDataEntry, BarcodePlaceholderPicker, barcode.Data.IsPlaceholder);
-				RefreshPlaceholderPicker(BarcodePlaceholderPicker, _template, barcode.Data.PlaceholderKey);
-				BarcodeHeightEntry.Text = barcode.HeightMm.ToString("0.#");
-				BarcodeHrCheckBox.IsChecked = barcode.PrintHumanReadable;
-				BarcodeMagnificationEntry.Text = barcode.Magnification.ToString();
-				QrErrorCorrectionPicker.SelectedIndex = (int)barcode.QrErrorCorrection;
-				UpdateBarcodeSymbologyGroups(barcode.Symbology);
-				break;
-
-			case ImageElement image:
-				SelectedElementLabel.Text = "Bild-Element";
-				ImageWidthEntry.Text = image.WidthMm.ToString("0.#");
-				ImageHeightEntry.Text = image.HeightMm.ToString("0.#");
-				break;
-
-			case FrameElement frame:
-				SelectedElementLabel.Text = "Rahmen-Element";
-				FrameWidthEntry.Text = frame.WidthMm.ToString("0.#");
-				FrameHeightEntry.Text = frame.HeightMm.ToString("0.#");
-				FrameThicknessEntry.Text = frame.ThicknessMm.ToString("0.#");
-				FrameFilledCheckBox.IsChecked = frame.Filled;
-				break;
-
-			case LineElement line:
-				SelectedElementLabel.Text = "Linie-Element";
-				LineLengthEntry.Text = line.LengthMm.ToString("0.#");
-				LineThicknessEntry.Text = line.ThicknessMm.ToString("0.#");
-				LineOrientationPicker.SelectedIndex = line.Orientation == LineOrientation.Horizontal ? 0 : 1;
-				break;
-		}
-
-		_suppressPropertyChanged = false;
-	}
-
-	void OnTextIsPlaceholderChanged(object? sender, EventArgs e)
-	{
-		if (_suppressPropertyChanged || _selectedElement is not TextElement text)
+		int clamped = Math.Clamp(index, 0, ZoomLevels.Length - 1);
+		if (clamped == _zoomIndex)
 			return;
 
-		bool isPlaceholder = TextIsPlaceholderCheckBox.IsChecked;
-		TextValueEntry.IsVisible = !isPlaceholder;
-		TextPlaceholderPicker.IsVisible = isPlaceholder;
-		if (isPlaceholder)
-			RefreshPlaceholderPicker(TextPlaceholderPicker, _template, text.Text.PlaceholderKey);
-
-		OnPropertyChanged(sender, e);
-	}
-
-	void OnBarcodeIsPlaceholderChanged(object? sender, EventArgs e)
-	{
-		if (_suppressPropertyChanged || _selectedElement is not BarcodeElement barcode)
-			return;
-
-		bool isPlaceholder = BarcodeIsPlaceholderCheckBox.IsChecked;
-		BarcodeDataEntry.IsVisible = !isPlaceholder;
-		BarcodePlaceholderPicker.IsVisible = isPlaceholder;
-		if (isPlaceholder)
-			RefreshPlaceholderPicker(BarcodePlaceholderPicker, _template, barcode.Data.PlaceholderKey);
-
-		OnPropertyChanged(sender, e);
-	}
-
-	void OnBarcodeSymbologyChanged(object? sender, EventArgs e)
-	{
-		if (BarcodeSymbologyPicker.SelectedIndex < 0)
-			return;
-
-		UpdateBarcodeSymbologyGroups((BarcodeSymbology)BarcodeSymbologyPicker.SelectedIndex);
-		OnPropertyChanged(sender, e);
-	}
-
-	void OnPropertyChanged(object? sender, EventArgs e)
-	{
-		if (_suppressPropertyChanged || _selectedElement is null || _selectedBorder is null)
-			return;
-
-		if (double.TryParse(XEntry.Text, out double x))
-			_selectedElement.X = x;
-		if (double.TryParse(YEntry.Text, out double y))
-			_selectedElement.Y = y;
-
-		switch (_selectedElement)
-		{
-			case TextElement text:
-				text.Text = TextIsPlaceholderCheckBox.IsChecked
-					? BindableValue.Placeholder(TextPlaceholderPicker.SelectedItem as string ?? string.Empty)
-					: BindableValue.Literal(TextValueEntry.Text ?? string.Empty);
-				if (double.TryParse(FontSizeEntry.Text, out double fontSize))
-					text.FontSizeMm = fontSize;
-				break;
-
-			case BarcodeElement barcode:
-				if (BarcodeSymbologyPicker.SelectedIndex >= 0)
-					barcode.Symbology = (BarcodeSymbology)BarcodeSymbologyPicker.SelectedIndex;
-				barcode.Data = BarcodeIsPlaceholderCheckBox.IsChecked
-					? BindableValue.Placeholder(BarcodePlaceholderPicker.SelectedItem as string ?? string.Empty)
-					: BindableValue.Literal(BarcodeDataEntry.Text ?? string.Empty);
-				if (double.TryParse(BarcodeHeightEntry.Text, out double barcodeHeight))
-					barcode.HeightMm = barcodeHeight;
-				barcode.PrintHumanReadable = BarcodeHrCheckBox.IsChecked;
-				if (int.TryParse(BarcodeMagnificationEntry.Text, out int magnification))
-					barcode.Magnification = magnification;
-				if (QrErrorCorrectionPicker.SelectedIndex >= 0)
-					barcode.QrErrorCorrection = (QrErrorCorrection)QrErrorCorrectionPicker.SelectedIndex;
-				break;
-
-			case ImageElement image:
-				if (double.TryParse(ImageWidthEntry.Text, out double imageWidth))
-					image.WidthMm = imageWidth;
-				if (double.TryParse(ImageHeightEntry.Text, out double imageHeight))
-					image.HeightMm = imageHeight;
-				break;
-
-			case FrameElement frame:
-				if (double.TryParse(FrameWidthEntry.Text, out double frameWidth))
-					frame.WidthMm = frameWidth;
-				if (double.TryParse(FrameHeightEntry.Text, out double frameHeight))
-					frame.HeightMm = frameHeight;
-				if (double.TryParse(FrameThicknessEntry.Text, out double frameThickness))
-					frame.ThicknessMm = frameThickness;
-				frame.Filled = FrameFilledCheckBox.IsChecked;
-				break;
-
-			case LineElement line:
-				if (double.TryParse(LineLengthEntry.Text, out double lineLength))
-					line.LengthMm = lineLength;
-				if (double.TryParse(LineThicknessEntry.Text, out double lineThickness))
-					line.ThicknessMm = lineThickness;
-				line.Orientation = LineOrientationPicker.SelectedIndex == 1 ? LineOrientation.Vertical : LineOrientation.Horizontal;
-				break;
-		}
-
-		_selectedBorder.Content = CreateInnerView(_selectedElement);
-		PositionOnCanvas(_selectedBorder, _selectedElement);
-	}
-
-	// ---------- Elemente hinzufügen/löschen ----------
-
-	void AddElement(LabelElement element)
-	{
-		_template.Elements.Add(element);
-		var border = CreateElementView(element);
-		CanvasLayout.Children.Add(border);
-		SelectElement(element, border);
-	}
-
-	void OnAddTextClicked(object? sender, EventArgs e) => AddElement(new TextElement { X = 10, Y = 10 });
-
-	void OnAddBarcodeClicked(object? sender, EventArgs e) => AddElement(new BarcodeElement { X = 10, Y = 40 });
-
-	void OnAddFrameClicked(object? sender, EventArgs e) => AddElement(new FrameElement { X = 10, Y = 70 });
-
-	void OnAddLineClicked(object? sender, EventArgs e) => AddElement(new LineElement { X = 10, Y = 70 });
-
-	async void OnAddImageClicked(object? sender, EventArgs e)
-	{
-		FileResult? file;
-		try
-		{
-			file = await FilePicker.Default.PickAsync(new PickOptions
-			{
-				PickerTitle = "Bild auswählen",
-				FileTypes = FilePickerFileType.Images,
-			});
-		}
-		catch (Exception ex)
-		{
-			await _alertService.ShowAsync("Fehler", $"Bild konnte nicht ausgewählt werden: {ex.Message}", "OK");
-			return;
-		}
-
-		if (file is null)
-			return;
-
-		using var stream = await file.OpenReadAsync();
-		using var ms = new MemoryStream();
-		await stream.CopyToAsync(ms);
-
-		AddElement(new ImageElement { X = 10, Y = 10, ImageBase64 = Convert.ToBase64String(ms.ToArray()) });
-	}
-
-	void OnDeleteElementClicked(object? sender, EventArgs e)
-	{
-		if (_selectedElement is null || _selectedBorder is null)
-			return;
-
-		_template.Elements.Remove(_selectedElement);
-		CanvasLayout.Children.Remove(_selectedBorder);
-		_selectedElement = null;
-		_selectedBorder = null;
-		PropertiesPanel.IsVisible = false;
-	}
-
-	// ---------- Platzhalter verwalten ----------
-
-	async void OnManagePlaceholdersClicked(object? sender, EventArgs e)
-	{
-		await _navigationService.PushAsync(new PlaceholderManagerPage(_template));
-	}
-
-	// ---------- Medium ----------
-
-	async void OnManageMediaClicked(object? sender, EventArgs e)
-	{
-		await _navigationService.PushAsync(new MediaManagerPage(_template));
-	}
-
-	async void OnPropertiesClicked(object? sender, EventArgs e)
-	{
-		await _navigationService.PushAsync(new TemplatePropertiesPage(_template));
-	}
-
-	// ---------- Neu / Speichern / Laden / Exportieren / Importieren / Drucken ----------
-
-	async void OnNewClicked(object? sender, EventArgs e)
-	{
-		bool confirmed = await _alertService.ConfirmAsync("Neue Vorlage", "Aktuelles Design verwerfen und neu beginnen?", "Ja", "Abbrechen");
-		if (!confirmed)
-			return;
-
-		LoadTemplate(null);
-	}
-
-	async void OnSaveClicked(object? sender, EventArgs e)
-	{
-		string? name = await _alertService.PromptAsync("Vorlage speichern", "Name der Vorlage:", _template.Name);
-		if (string.IsNullOrWhiteSpace(name))
-			return;
-
-		_template.Name = name.Trim();
-		await _store.SaveAsync(_template);
-		TitleLabel.Text = $"Label-Designer – {_template.Name} ({_template.WidthMm:0.#}×{_template.HeightMm:0.#} mm)";
-		await _alertService.ShowAsync("Gespeichert", $"Vorlage \"{_template.Name}\" wurde gespeichert.", "OK");
-	}
-
-	async void OnLoadClicked(object? sender, EventArgs e)
-	{
-		var names = await _store.ListTemplateNamesAsync();
-		if (names.Count == 0)
-		{
-			await _alertService.ShowAsync("Keine Vorlagen", "Es sind noch keine Vorlagen gespeichert.", "OK");
-			return;
-		}
-
-		string choice = await _alertService.ActionSheetAsync("Vorlage laden", "Abbrechen", null, names.ToArray());
-		if (string.IsNullOrEmpty(choice) || choice == "Abbrechen")
-			return;
-
-		var loaded = await _store.LoadAsync(choice);
-		if (loaded is null)
-		{
-			await _alertService.ShowAsync("Fehler", "Vorlage konnte nicht geladen werden.", "OK");
-			return;
-		}
-
-		LoadTemplate(loaded);
-	}
-
-	async void OnExportClicked(object? sender, EventArgs e)
-	{
-		const string saveAsOption = "Speichern unter...";
-		const string shareOption = "Teilen...";
-
-		string choice = await _alertService.ActionSheetAsync("Vorlage exportieren", "Abbrechen", null, saveAsOption, shareOption);
-		if (string.IsNullOrEmpty(choice) || choice == "Abbrechen")
-			return;
-
-		try
-		{
-			string json = System.Text.Json.JsonSerializer.Serialize(_template, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-			string fileName = $"{LabelTemplateStore.SanitizeFileName(_template.Name)}.json";
-
-			if (choice == saveAsOption)
-				await ExportSaveAsAsync(fileName, json);
-			else
-				await ExportShareAsync(fileName, json);
-		}
-		catch (Exception ex)
-		{
-			await _alertService.ShowAsync("Fehler", $"Export fehlgeschlagen: {ex.Message}", "OK");
-		}
-	}
-
-	async Task ExportShareAsync(string fileName, string json)
-	{
-		string tempPath = Path.Combine(FileSystem.Current.CacheDirectory, fileName);
-		await File.WriteAllTextAsync(tempPath, json);
-
-		await Share.Default.RequestAsync(new ShareFileRequest
-		{
-			Title = "Vorlage exportieren",
-			File = new ShareFile(tempPath),
-		});
-	}
-
-	async Task ExportSaveAsAsync(string fileName, string json)
-	{
-#if WINDOWS
-		var nativeWindow = Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault()?.Handler?.PlatformView as Microsoft.UI.Xaml.Window;
-		if (nativeWindow is null)
-		{
-			await ExportShareAsync(fileName, json);
-			return;
-		}
-
-		var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(nativeWindow);
-		var picker = new Windows.Storage.Pickers.FileSavePicker();
-		WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
-		picker.SuggestedFileName = Path.GetFileNameWithoutExtension(fileName);
-		picker.FileTypeChoices.Add("JSON-Vorlage", new List<string> { ".json" });
-
-		var file = await picker.PickSaveFileAsync();
-		if (file is null)
-			return;
-
-		await Windows.Storage.FileIO.WriteTextAsync(file, json);
-		await _alertService.ShowAsync("Gespeichert", $"Vorlage wurde unter \"{file.Path}\" gespeichert.", "OK");
-#else
-		// Android/iOS/MacCatalyst haben ohne Zusatzpaket (z.B. CommunityToolkit.Maui.Storage, aktuell
-		// wegen einer Versionskollision mit Microsoft.Maui.Controls nicht einbindbar) keinen
-		// systemweiten "Speichern unter"-Dialog – dort bleibt Teilen der Weg, um die Datei z.B. direkt
-		// in "Dateien"/Drive/OneDrive abzulegen.
-		await ExportShareAsync(fileName, json);
-#endif
-	}
-
-	async void OnImportClicked(object? sender, EventArgs e)
-	{
-		try
-		{
-			var jsonFileType = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-			{
-				{ DevicePlatform.WinUI, new[] { ".json" } },
-				{ DevicePlatform.Android, new[] { "application/json" } },
-				{ DevicePlatform.iOS, new[] { "public.json" } },
-				{ DevicePlatform.MacCatalyst, new[] { "json" } },
-			});
-
-			var file = await FilePicker.Default.PickAsync(new PickOptions
-			{
-				PickerTitle = "Vorlage importieren",
-				FileTypes = jsonFileType,
-			});
-
-			if (file is null)
-				return;
-
-			string json = await File.ReadAllTextAsync(file.FullPath);
-			var imported = System.Text.Json.JsonSerializer.Deserialize<LabelTemplate>(json);
-			if (imported is null)
-			{
-				await _alertService.ShowAsync("Fehler", "Datei enthält keine gültige Vorlage.", "OK");
-				return;
-			}
-
-			LoadTemplate(imported);
-			await _alertService.ShowAsync("Importiert", $"Vorlage \"{_template.Name}\" wurde importiert.", "OK");
-		}
-		catch (Exception ex)
-		{
-			await _alertService.ShowAsync("Fehler", $"Import fehlgeschlagen: {ex.Message}", "OK");
-		}
-	}
-
-	async void OnPrintClicked(object? sender, EventArgs e)
-	{
-		var settings = _settingsStore.Load();
-		if (string.IsNullOrWhiteSpace(settings.IpAddress))
-		{
-			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
-			return;
-		}
-
-		if (_template.Elements.Count == 0)
-		{
-			await _alertService.ShowAsync("Leeres Label", "Bitte zuerst mindestens ein Element hinzufügen.", "OK");
-			return;
-		}
-
-		if (_template.Placeholders.Count > 0)
-		{
-			bool goToTest = await _alertService.ConfirmAsync(
-				"Vorlage mit Platzhaltern",
-				"Diese Vorlage enthält Platzhalter. Zum Befüllen und Drucken bitte den Test-Modus verwenden.",
-				"Zum Test-Modus",
-				"Abbrechen");
-
-			if (goToTest)
-				await _navigationService.PushAsync(new TemplateTestPage(_template));
-
-			return;
-		}
-
-		string zpl = LabelTemplateRenderer.ToZpl(_template);
-		var result = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, zpl);
-
-		await _alertService.ShowAsync(
-			result.Success ? "Gesendet" : "Fehler",
-			result.Success ? "Label wurde an den Drucker gesendet." : result.ErrorMessage ?? "Unbekannter Fehler",
-			"OK");
+		_zoomIndex = clamped;
+		ZoomLabel.Text = $"{ZoomLevels[_zoomIndex] * 100:0} %";
+		RenderCanvas();
 	}
 }
