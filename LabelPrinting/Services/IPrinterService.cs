@@ -36,6 +36,23 @@ public interface IPrinterService
 	/// </summary>
 	Task<PrinterStatus> GetDetailedStatusAsync(string ipAddress, int port, CancellationToken cancellationToken = default);
 
+	/// <summary>
+	/// Liest eine SGD-Variable (ZPL "! U1 getvar", z.B. "device.friendly_name" oder "ip.addr") vom
+	/// Drucker – Grundlage für Geräteeinstellungen wie Name/Netzwerkkonfiguration. Wrapper um
+	/// <see cref="QueryAsync(string, int, string, CancellationToken)"/>, der die rohe Antwort bereits
+	/// über <see cref="SgdResponseParser"/> entpackt.
+	/// </summary>
+	Task<PrinterQueryResult> GetVariableAsync(string ipAddress, int port, string variableName, CancellationToken cancellationToken = default);
+
+	/// <summary>Setzt eine SGD-Variable (ZPL "! U1 setvar") am Drucker, z.B. um Name/IP/Netzwerk zu ändern.</summary>
+	Task<PrinterResult> SetVariableAsync(string ipAddress, int port, string variableName, string value, CancellationToken cancellationToken = default);
+
+	/// <summary>
+	/// Startet den Drucker neu (ZPL SGD "! U1 do device.reset"). Viele Netzwerkänderungen (IP, DHCP)
+	/// werden erst nach einem Neustart wirksam.
+	/// </summary>
+	Task<PrinterResult> RestartAsync(string ipAddress, int port, CancellationToken cancellationToken = default);
+
 	// ---------- Transportunabhängige Überladungen (TCP/IP, seriell, künftig USB/Bluetooth) ----------
 
 	/// <summary>Wie <see cref="SendZplAsync(string, int, string, CancellationToken)"/>, aber über eine beliebige, bereits konfigurierte <see cref="IPrinterConnection"/>.</summary>
@@ -46,4 +63,13 @@ public interface IPrinterService
 
 	/// <summary>Wie <see cref="QueryAsync(string, int, string, CancellationToken)"/>, aber über eine beliebige, bereits konfigurierte <see cref="IPrinterConnection"/>.</summary>
 	Task<PrinterQueryResult> QueryAsync(IPrinterConnection connection, string command, CancellationToken cancellationToken = default);
+
+	/// <summary>Wie <see cref="GetVariableAsync(string, int, string, CancellationToken)"/>, aber über eine beliebige, bereits konfigurierte <see cref="IPrinterConnection"/>.</summary>
+	Task<PrinterQueryResult> GetVariableAsync(IPrinterConnection connection, string variableName, CancellationToken cancellationToken = default);
+
+	/// <summary>Wie <see cref="SetVariableAsync(string, int, string, string, CancellationToken)"/>, aber über eine beliebige, bereits konfigurierte <see cref="IPrinterConnection"/>.</summary>
+	Task<PrinterResult> SetVariableAsync(IPrinterConnection connection, string variableName, string value, CancellationToken cancellationToken = default);
+
+	/// <summary>Wie <see cref="RestartAsync(string, int, CancellationToken)"/>, aber über eine beliebige, bereits konfigurierte <see cref="IPrinterConnection"/>.</summary>
+	Task<PrinterResult> RestartAsync(IPrinterConnection connection, CancellationToken cancellationToken = default);
 }

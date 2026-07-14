@@ -10,6 +10,7 @@
             <Label Text="Versandlabel-Druck" FontSize="22" FontAttributes="Bold" />
 
             <Button x:Name="SettingsBtn" Text="Drucker-Einstellungen" Clicked="OnSettingsClicked" />
+            <Button x:Name="OpenDeviceSettingsBtn" Text="Geräteeinstellungen (USB/Seriell anlernen)" Clicked="OnOpenDeviceSettingsClicked" />
             <Label x:Name="PrinterStatusLabel" FontSize="13" TextColor="Gray" />
 
             <BoxView HeightRequest="1" BackgroundColor="LightGray" Margin="0,10" />

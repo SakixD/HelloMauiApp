@@ -35,6 +35,7 @@ public partial class MainPage : ContentPage
 		BusyIndicator.IsVisible = busy;
 		BusyIndicator.IsRunning = busy;
 		SettingsBtn.IsEnabled = !busy;
+		OpenDeviceSettingsBtn.IsEnabled = !busy;
 		TestConnectionBtn.IsEnabled = !busy;
 		PrintTestLabelBtn.IsEnabled = !busy;
 		PickImageBtn.IsEnabled = !busy;
@@ -57,6 +58,11 @@ public partial class MainPage : ContentPage
 	{
 		await Navigation.PushAsync(new PrinterSettingsPage());
 		UpdatePrinterStatusLabel();
+	}
+
+	async void OnOpenDeviceSettingsClicked(object? sender, EventArgs e)
+	{
+		await Navigation.PushAsync(new PrinterDeviceSettingsPage());
 	}
 
 	async void OnOpenDesignerClicked(object? sender, EventArgs e)

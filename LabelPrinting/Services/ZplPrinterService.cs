@@ -75,6 +75,18 @@ public class ZplPrinterService : IPrinterService
 			: PrinterStatus.Fail(result.ErrorMessage ?? "Unbekannter Fehler");
 	}
 
+	public async Task<PrinterQueryResult> GetVariableAsync(string ipAddress, int port, string variableName, CancellationToken cancellationToken = default)
+	{
+		var result = await QueryAsync(ipAddress, port, BuildGetVarCommand(variableName), cancellationToken).ConfigureAwait(false);
+		return result.Success ? PrinterQueryResult.Ok(SgdResponseParser.Parse(result.ResponseText)) : result;
+	}
+
+	public Task<PrinterResult> SetVariableAsync(string ipAddress, int port, string variableName, string value, CancellationToken cancellationToken = default)
+		=> SendZplAsync(ipAddress, port, BuildSetVarCommand(variableName, value), cancellationToken);
+
+	public Task<PrinterResult> RestartAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
+		=> SendZplAsync(ipAddress, port, RestartCommand, cancellationToken);
+
 	// ---------- IPrinterConnection-Überladungen (transportunabhängig, z.B. seriell) ----------
 
 	public Task<PrinterResult> SendZplAsync(IPrinterConnection connection, string zpl, CancellationToken cancellationToken = default)
@@ -99,6 +111,26 @@ public class ZplPrinterService : IPrinterService
 			"Zeitüberschreitung: Drucker nicht erreichbar.",
 			cancellationToken);
 	}
+
+	public async Task<PrinterQueryResult> GetVariableAsync(IPrinterConnection connection, string variableName, CancellationToken cancellationToken = default)
+	{
+		var result = await QueryAsync(connection, BuildGetVarCommand(variableName), cancellationToken).ConfigureAwait(false);
+		return result.Success ? PrinterQueryResult.Ok(SgdResponseParser.Parse(result.ResponseText)) : result;
+	}
+
+	public Task<PrinterResult> SetVariableAsync(IPrinterConnection connection, string variableName, string value, CancellationToken cancellationToken = default)
+		=> SendZplAsync(connection, BuildSetVarCommand(variableName, value), cancellationToken);
+
+	public Task<PrinterResult> RestartAsync(IPrinterConnection connection, CancellationToken cancellationToken = default)
+		=> SendZplAsync(connection, RestartCommand, cancellationToken);
+
+	const string RestartCommand = "! U1 do \"device.reset\" \"\"\r\n";
+
+	static string BuildGetVarCommand(string variableName) => $"! U1 getvar \"{SanitizeSgdToken(variableName)}\"\r\n";
+
+	static string BuildSetVarCommand(string variableName, string value) => $"! U1 setvar \"{SanitizeSgdToken(variableName)}\" \"{SanitizeSgdToken(value)}\"\r\n";
+
+	static string SanitizeSgdToken(string token) => token.Replace("\"", string.Empty);
 
 	static byte[] ToZplPayloadBytes(string zpl)
 	{
