@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="HelloMauiApp.MainPage">
+             xmlns:viewmodels="clr-namespace:HelloMauiApp.ViewModels"
+             x:Class="HelloMauiApp.MainPage"
+             x:DataType="viewmodels:MainPageViewModel">
 
     <ScrollView>
         <VerticalStackLayout Padding="32,28" Spacing="24" MaximumWidthRequest="1080" HorizontalOptions="Center">
@@ -17,10 +19,10 @@
                     <Label Text="Alle SDK-Funktionen an einem Ort — vom visuellen Label-Designer über Platzhalter und Vorlagen bis zur direkten ZPL-Kommunikation mit deinem Drucker."
                            FontSize="14" TextColor="{DynamicResource ColorText2}" Margin="0,8,0,0" MaximumWidthRequest="520" />
                     <HorizontalStackLayout Spacing="12" Margin="0,18,0,0">
-                        <Button Text="Neues Label entwerfen" Clicked="OnOpenDesignerClicked"
+                        <Button Text="Neues Label entwerfen" Command="{Binding OpenDesignerCommand}"
                                 BackgroundColor="{DynamicResource AccentColor}" TextColor="{DynamicResource AccentTextColor}"
                                 FontAttributes="Bold" CornerRadius="6" Padding="20,0" HeightRequest="40" />
-                        <Button Text="ZPL-Konsole öffnen" Clicked="OnOpenZplConsoleClicked"
+                        <Button Text="ZPL-Konsole öffnen" Command="{Binding OpenZplConsoleCommand}"
                                 BackgroundColor="{DynamicResource ColorControl}" TextColor="{DynamicResource ColorText}"
                                 CornerRadius="6" Padding="18,0" HeightRequest="40" />
                     </HorizontalStackLayout>
@@ -36,35 +38,35 @@
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0" Text="Druckerstatus" FontSize="15" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                             <HorizontalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
-                                <Ellipse x:Name="StatusDot" WidthRequest="8" HeightRequest="8" Fill="{DynamicResource ColorText3}" />
-                                <Label x:Name="StatusLabel" Text="Nicht getestet" FontSize="12.5" FontAttributes="Bold" TextColor="{DynamicResource ColorText3}" />
+                                <Ellipse WidthRequest="8" HeightRequest="8" Fill="{Binding StatusBrush}" />
+                                <Label Text="{Binding StatusText}" FontSize="12.5" FontAttributes="Bold" TextColor="{DynamicResource ColorText3}" />
                             </HorizontalStackLayout>
                         </Grid>
 
                         <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" RowSpacing="14" ColumnSpacing="24">
                             <VerticalStackLayout Grid.Row="0" Grid.Column="0">
                                 <Label Text="VERBINDUNG" FontSize="11" TextColor="{DynamicResource ColorText3}" CharacterSpacing="0.5" />
-                                <Label x:Name="IpValueLabel" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                                <Label Text="{Binding IpValue}" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Row="0" Grid.Column="1">
                                 <Label Text="AUFLÖSUNG" FontSize="11" TextColor="{DynamicResource ColorText3}" CharacterSpacing="0.5" />
-                                <Label x:Name="DpiValueLabel" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                                <Label Text="{Binding DpiValue}" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Row="1" Grid.Column="0">
                                 <Label Text="LABELGRÖSSE" FontSize="11" TextColor="{DynamicResource ColorText3}" CharacterSpacing="0.5" />
-                                <Label x:Name="MediaValueLabel" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                                <Label Text="{Binding MediaValue}" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Row="1" Grid.Column="1">
                                 <Label Text="ZULETZT KALIBRIERT" FontSize="11" TextColor="{DynamicResource ColorText3}" CharacterSpacing="0.5" />
-                                <Label x:Name="CalibratedValueLabel" Text="—" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                                <Label Text="{Binding CalibratedValue}" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                             </VerticalStackLayout>
                         </Grid>
 
                         <HorizontalStackLayout Spacing="10">
-                            <Button x:Name="TestConnectionBtn" Text="Verbindung testen" Clicked="OnTestConnectionClicked"
+                            <Button Text="Verbindung testen" Command="{Binding TestConnectionCommand}"
                                     BackgroundColor="{DynamicResource ColorControl}" TextColor="{DynamicResource ColorText}"
                                     FontSize="13" HeightRequest="34" Padding="14,0" />
-                            <Button x:Name="CalibrateBtn" Text="Kalibrieren (~JC)" Clicked="OnCalibrateClicked"
+                            <Button Text="Kalibrieren (~JC)" Command="{Binding CalibrateCommand}"
                                     BackgroundColor="{DynamicResource ColorControl}" TextColor="{DynamicResource ColorText}"
                                     FontSize="13" HeightRequest="34" Padding="14,0" />
                         </HorizontalStackLayout>
@@ -77,19 +79,19 @@
                         <Label Text="Bibliothek" FontSize="15" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                         <HorizontalStackLayout Spacing="26" Margin="0,4,0,0">
                             <VerticalStackLayout>
-                                <Label x:Name="TemplateCountLabel" Text="0" FontSize="28" FontAttributes="Bold" TextColor="{DynamicResource AccentColor}" />
+                                <Label Text="{Binding TemplateCount}" FontSize="28" FontAttributes="Bold" TextColor="{DynamicResource AccentColor}" />
                                 <Label Text="Vorlagen" FontSize="12" TextColor="{DynamicResource ColorText2}" />
                             </VerticalStackLayout>
                             <VerticalStackLayout>
-                                <Label x:Name="MediaCountLabel" Text="0" FontSize="28" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                                <Label Text="{Binding MediaCount}" FontSize="28" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                                 <Label Text="Medien" FontSize="12" TextColor="{DynamicResource ColorText2}" />
                             </VerticalStackLayout>
                             <VerticalStackLayout>
-                                <Label x:Name="PlaceholderCountLabel" Text="0" FontSize="28" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                                <Label Text="{Binding PlaceholderCount}" FontSize="28" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                                 <Label Text="Platzhalter" FontSize="12" TextColor="{DynamicResource ColorText2}" />
                             </VerticalStackLayout>
                         </HorizontalStackLayout>
-                        <Button Text="Alle Vorlagen ansehen" Clicked="OnOpenTemplatesClicked" Margin="0,10,0,0"
+                        <Button Text="Alle Vorlagen ansehen" Command="{Binding OpenTemplatesCommand}" Margin="0,10,0,0"
                                 BackgroundColor="{DynamicResource ColorControl}" TextColor="{DynamicResource ColorText}"
                                 FontSize="13" HeightRequest="34" />
                     </VerticalStackLayout>
@@ -104,7 +106,7 @@
                     <Border StrokeThickness="1" Stroke="{DynamicResource ColorStroke}" BackgroundColor="{DynamicResource ColorLayer}"
                             StrokeShape="RoundRectangle 10" Padding="18" WidthRequest="230" Margin="0,0,14,14">
                         <Border.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnDesignerTileTapped" />
+                            <TapGestureRecognizer Command="{Binding OpenDesignerCommand}" />
                         </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="4">
                             <BoxView WidthRequest="38" HeightRequest="38" CornerRadius="9" BackgroundColor="{DynamicResource AccentSoftColor}" />
@@ -116,7 +118,7 @@
                     <Border StrokeThickness="1" Stroke="{DynamicResource ColorStroke}" BackgroundColor="{DynamicResource ColorLayer}"
                             StrokeShape="RoundRectangle 10" Padding="18" WidthRequest="230" Margin="0,0,14,14">
                         <Border.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnTemplateTestTileTapped" />
+                            <TapGestureRecognizer Command="{Binding OpenTemplateTestCommand}" />
                         </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="4">
                             <BoxView WidthRequest="38" HeightRequest="38" CornerRadius="9" BackgroundColor="{DynamicResource AccentSoftColor}" />
@@ -128,7 +130,7 @@
                     <Border StrokeThickness="1" Stroke="{DynamicResource ColorStroke}" BackgroundColor="{DynamicResource ColorLayer}"
                             StrokeShape="RoundRectangle 10" Padding="18" WidthRequest="230" Margin="0,0,14,14">
                         <Border.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnMediaTileTapped" />
+                            <TapGestureRecognizer Command="{Binding OpenMediaCommand}" />
                         </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="4">
                             <BoxView WidthRequest="38" HeightRequest="38" CornerRadius="9" BackgroundColor="{DynamicResource AccentSoftColor}" />
@@ -140,7 +142,7 @@
                     <Border StrokeThickness="1" Stroke="{DynamicResource ColorStroke}" BackgroundColor="{DynamicResource ColorLayer}"
                             StrokeShape="RoundRectangle 10" Padding="18" WidthRequest="230" Margin="0,0,14,14">
                         <Border.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnPickImageTileTapped" />
+                            <TapGestureRecognizer Command="{Binding PickImageCommand}" />
                         </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="4">
                             <BoxView WidthRequest="38" HeightRequest="38" CornerRadius="9" BackgroundColor="{DynamicResource AccentSoftColor}" />
@@ -152,7 +154,7 @@
                 </FlexLayout>
             </VerticalStackLayout>
 
-            <ActivityIndicator x:Name="BusyIndicator" IsRunning="False" IsVisible="False" />
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
 
         </VerticalStackLayout>
     </ScrollView>

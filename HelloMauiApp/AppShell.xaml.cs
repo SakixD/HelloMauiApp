@@ -1,4 +1,5 @@
 using HelloMauiApp.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 #if WINDOWS
 using Microsoft.UI.Windowing;
@@ -18,18 +19,24 @@ namespace HelloMauiApp;
 public partial class AppShell : ContentPage
 {
 	readonly MainPage _home;
+	readonly AppearanceService _appearanceService;
+	readonly IServiceProvider _serviceProvider;
 	readonly Dictionary<string, (Border Row, Microsoft.Maui.Controls.Shapes.Path Icon, Label Label, BoxView Stripe)> _navRows = [];
 
 	string _activeSection = "home";
 	bool _railCollapsed;
 
-	public AppShell()
+	public AppShell(MainPage home, AppearanceService appearanceService, IServiceProvider serviceProvider)
 	{
 		InitializeComponent();
 		NavigationPage.SetHasNavigationBar(this, false);
 
+		_appearanceService = appearanceService;
+		_serviceProvider = serviceProvider;
+
 		RegisterNavRows();
-		_home = new MainPage(this, section => _ = NavigateTo(section));
+		_home = home;
+		_home.ViewModel.NavigateToSection = section => _ = NavigateTo(section);
 		ContentHost.Content = _home;
 		UpdateRailHighlight();
 
@@ -50,7 +57,7 @@ public partial class AppShell : ContentPage
 		UpdateRailHighlight();
 		TitleBarSectionLabel.Text = "— Start";
 
-		await _home.RefreshAsync();
+		await _home.ViewModel.RefreshAsync();
 	}
 
 	void RegisterNavRows()
@@ -109,7 +116,7 @@ public partial class AppShell : ContentPage
 	void OnThemeToggleClicked(object? sender, EventArgs e)
 	{
 		var next = Application.Current!.RequestedTheme == AppTheme.Dark ? AppThemePreference.Light : AppThemePreference.Dark;
-		AppearanceService.Instance.SetTheme(next);
+		_appearanceService.SetTheme(next);
 	}
 
 	async Task NavigateTo(string section)
@@ -125,7 +132,7 @@ public partial class AppShell : ContentPage
 		{
 			case "home":
 				ContentHost.Content = _home;
-				await _home.RefreshAsync();
+				await _home.ViewModel.RefreshAsync();
 				break;
 
 			case "designer":
@@ -137,7 +144,7 @@ public partial class AppShell : ContentPage
 				break;
 
 			case "settings":
-				await Navigation.PushAsync(new AppearanceSettingsPage());
+				await Navigation.PushAsync(_serviceProvider.GetRequiredService<AppearanceSettingsPage>());
 				break;
 
 			case "media":
@@ -186,6 +193,15 @@ public partial class AppShell : ContentPage
 #if WINDOWS
 	Microsoft.UI.Windowing.AppWindow? _appWindow;
 
+	/// <summary>
+	/// Minimieren/Maximieren/Schließen kommen bewusst von den echten System-Schaltflächen, die
+	/// Windows nach <see cref="Microsoft.UI.Xaml.Window.ExtendsContentIntoTitleBar"/> automatisch
+	/// transparent über den rechten Rand der Titelleiste zeichnet – eigene Buttons dafür würden sich
+	/// mit den System-Buttons überlagern (zwei Bedienelemente für dieselbe Aktion). Dieser Code
+	/// bereitet ihnen nur farblich den Weg (transparenter Hintergrund, zum Theme passende Glyphen)
+	/// und reserviert per <see cref="SystemButtonsColumn"/> den Platz, den Windows dafür braucht,
+	/// damit eigener Inhalt (Theme-Umschalter) nicht darunter verschwindet.
+	/// </summary>
 	void SetupWindowsTitleBar()
 	{
 		if (Window?.Handler?.PlatformView is not Microsoft.UI.Xaml.Window nativeWindow)
@@ -200,37 +216,48 @@ public partial class AppShell : ContentPage
 		if (TitleBarGrid.Handler?.PlatformView is Microsoft.UI.Xaml.FrameworkElement titleBarElement)
 			nativeWindow.SetTitleBar(titleBarElement);
 
-		MinimizeBtn.IsVisible = true;
-		MaximizeBtn.IsVisible = true;
-		CloseBtn.IsVisible = true;
-	}
-#endif
+		ApplyWindowsTitleBarButtonColors();
+		UpdateSystemButtonsReservedWidth();
 
-	void OnMinimizeClicked(object? sender, EventArgs e)
-	{
-#if WINDOWS
-		if (_appWindow?.Presenter is OverlappedPresenter presenter)
-			presenter.Minimize();
-#endif
-	}
-
-	void OnMaximizeClicked(object? sender, EventArgs e)
-	{
-#if WINDOWS
-		if (_appWindow?.Presenter is OverlappedPresenter presenter)
+		if (_appWindow is not null)
 		{
-			if (presenter.State == OverlappedPresenterState.Maximized)
-				presenter.Restore();
-			else
-				presenter.Maximize();
+			_appWindow.Changed += (_, args) =>
+			{
+				if (args.DidSizeChange || args.DidPresenterChange)
+					UpdateSystemButtonsReservedWidth();
+			};
 		}
-#endif
+
+		Application.Current!.RequestedThemeChanged += (_, _) => ApplyWindowsTitleBarButtonColors();
 	}
 
-	void OnCloseClicked(object? sender, EventArgs e)
+	void ApplyWindowsTitleBarButtonColors()
 	{
-#if WINDOWS
-		Application.Current?.Quit();
-#endif
+		var titleBar = _appWindow?.TitleBar;
+		if (titleBar is null)
+			return;
+
+		bool dark = Application.Current!.RequestedTheme == AppTheme.Dark;
+		var foreground = dark ? Windows.UI.Color.FromArgb(255, 168, 168, 179) : Windows.UI.Color.FromArgb(255, 92, 92, 102);
+		var hoverBackground = dark ? Windows.UI.Color.FromArgb(26, 255, 255, 255) : Windows.UI.Color.FromArgb(13, 0, 0, 0);
+
+		titleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+		titleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+		titleBar.ButtonForegroundColor = foreground;
+		titleBar.ButtonInactiveForegroundColor = foreground;
+		titleBar.ButtonHoverForegroundColor = foreground;
+		titleBar.ButtonHoverBackgroundColor = hoverBackground;
+		titleBar.ButtonPressedBackgroundColor = hoverBackground;
 	}
+
+	void UpdateSystemButtonsReservedWidth()
+	{
+		var titleBar = _appWindow?.TitleBar;
+		if (titleBar is null || TitleBarGrid.Handler?.PlatformView is not Microsoft.UI.Xaml.FrameworkElement element)
+			return;
+
+		double scale = element.XamlRoot?.RasterizationScale ?? 1.0;
+		SystemButtonsColumn.Width = new GridLength(Math.Max(0, titleBar.RightInset / scale));
+	}
+#endif
 }

@@ -18,8 +18,6 @@ public enum AppThemePreference
 /// </summary>
 public class AppearanceService
 {
-	public static AppearanceService Instance { get; } = new();
-
 	const string ThemeKey = "appearance_theme";
 	const string AccentIndexKey = "appearance_accent_index";
 
@@ -40,10 +38,6 @@ public class AppearanceService
 	public AppThemePreference Theme { get; private set; } = AppThemePreference.System;
 	public int AccentIndex { get; private set; } = DefaultAccentIndex;
 	public Color AccentColor => AccentPresets[AccentIndex];
-
-	AppearanceService()
-	{
-	}
 
 	/// <summary>Muss vor der ersten Fenster-/Seitenerzeugung aufgerufen werden (siehe App-Konstruktor), damit kein falsch eingefärbter erster Frame sichtbar wird.</summary>
 	public void Initialize()

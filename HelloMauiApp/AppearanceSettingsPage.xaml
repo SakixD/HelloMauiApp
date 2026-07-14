@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:HelloMauiApp.ViewModels"
+             xmlns:services="clr-namespace:HelloMauiApp.Services"
              x:Class="HelloMauiApp.AppearanceSettingsPage"
+             x:DataType="viewmodels:AppearanceSettingsViewModel"
              Title="Einstellungen"
              BackgroundColor="{DynamicResource ColorBg}">
 
@@ -13,28 +16,56 @@
 
             <Border StrokeThickness="1" Stroke="{DynamicResource ColorStroke}" BackgroundColor="{DynamicResource ColorLayer}"
                     StrokeShape="RoundRectangle 12" Padding="20">
-                <VerticalStackLayout Spacing="14">
+                <VerticalStackLayout Spacing="14" RadioButtonGroup.GroupName="Theme"
+                                     RadioButtonGroup.SelectedValue="{Binding SelectedTheme, Mode=TwoWay}">
 
                     <Label Text="Theme" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
-                    <RadioButton x:Name="ThemeSystemRadio" Content="System" GroupName="Theme" CheckedChanged="OnThemeRadioChanged"
-                                 TextColor="{DynamicResource ColorText}" />
-                    <RadioButton x:Name="ThemeLightRadio" Content="Hell" GroupName="Theme" CheckedChanged="OnThemeRadioChanged"
-                                 TextColor="{DynamicResource ColorText}" />
-                    <RadioButton x:Name="ThemeDarkRadio" Content="Dunkel" GroupName="Theme" CheckedChanged="OnThemeRadioChanged"
-                                 TextColor="{DynamicResource ColorText}" />
+                    <RadioButton Content="System" TextColor="{DynamicResource ColorText}">
+                        <RadioButton.Value>
+                            <services:AppThemePreference>System</services:AppThemePreference>
+                        </RadioButton.Value>
+                    </RadioButton>
+                    <RadioButton Content="Hell" TextColor="{DynamicResource ColorText}">
+                        <RadioButton.Value>
+                            <services:AppThemePreference>Light</services:AppThemePreference>
+                        </RadioButton.Value>
+                    </RadioButton>
+                    <RadioButton Content="Dunkel" TextColor="{DynamicResource ColorText}">
+                        <RadioButton.Value>
+                            <services:AppThemePreference>Dark</services:AppThemePreference>
+                        </RadioButton.Value>
+                    </RadioButton>
 
                     <BoxView HeightRequest="1" BackgroundColor="{DynamicResource ColorStroke}" Margin="0,8" />
 
                     <Label Text="Akzentfarbe" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
-                    <HorizontalStackLayout x:Name="AccentSwatchLayout" Spacing="12" />
+                    <HorizontalStackLayout Spacing="12" BindableLayout.ItemsSource="{Binding AccentSwatches}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="{x:Null}">
+                                <Border WidthRequest="36" HeightRequest="36" StrokeShape="RoundRectangle 18"
+                                        BackgroundColor="{Binding Color}" Stroke="White" StrokeThickness="0">
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
+                                            <Setter Property="StrokeThickness" Value="3" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectAccentCommand}"
+                                            CommandParameter="{Binding}" />
+                                    </Border.GestureRecognizers>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </HorizontalStackLayout>
 
                 </VerticalStackLayout>
             </Border>
 
             <Label Text="Drucker" FontSize="16" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" Margin="0,20,0,0" />
-            <Button Text="Drucker-Einstellungen öffnen" Clicked="OnOpenPrinterSettingsClicked"
+            <Button Text="Drucker-Einstellungen öffnen" Command="{Binding OpenPrinterSettingsCommand}"
                     BackgroundColor="{DynamicResource ColorControl}" TextColor="{DynamicResource ColorText}" />
-            <Button Text="Geräteeinstellungen öffnen (USB/Seriell anlernen)" Clicked="OnOpenDeviceSettingsClicked"
+            <Button Text="Geräteeinstellungen öffnen (USB/Seriell anlernen)" Command="{Binding OpenDeviceSettingsCommand}"
                     BackgroundColor="{DynamicResource ColorControl}" TextColor="{DynamicResource ColorText}" />
 
         </VerticalStackLayout>

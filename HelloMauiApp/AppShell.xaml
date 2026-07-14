@@ -6,10 +6,23 @@
 
     <Grid RowDefinitions="Auto,*">
 
-        <!-- TITLE BAR (Fensterchrome nur unter Windows aktiv, siehe code-behind) -->
+        <!--
+        TITLE BAR: Unter Windows per ExtendsContentIntoTitleBar zur echten Fenster-Titelleiste gemacht
+        (siehe SetupWindowsTitleBar). Minimieren/Maximieren/Schließen kommen bewusst NICHT als eigene
+        Buttons, sondern von den echten System-Schaltflächen, die Windows transparent über den
+        reservierten Bereich rechts (SystemButtonsColumn) zeichnet – zwei Bedienelemente für dieselbe
+        Aktion (eigene + System-Buttons) sind verwirrend, deshalb nur eins.
+        -->
         <Grid x:Name="TitleBarGrid" Grid.Row="0" HeightRequest="48" ColumnSpacing="8"
-              ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto,Auto,Auto"
               BackgroundColor="{DynamicResource ColorTitlebar}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="SystemButtonsColumn" Width="0" />
+            </Grid.ColumnDefinitions>
 
             <BoxView Grid.Column="0" WidthRequest="22" HeightRequest="22" CornerRadius="6"
                      Background="{DynamicResource BrandGradientBrush}" Margin="16,0,0,0" VerticalOptions="Center" />
@@ -22,18 +35,7 @@
 
             <Button x:Name="ThemeToggleBtn" Grid.Column="4" Text="◐" FontSize="16" WidthRequest="40" HeightRequest="32"
                     Padding="0" BackgroundColor="Transparent" TextColor="{DynamicResource ColorText2}"
-                    Clicked="OnThemeToggleClicked" VerticalOptions="Center" />
-
-            <!-- Fenstersteuerung: nur unter Windows sichtbar (siehe code-behind SetupWindowsTitleBar) -->
-            <Button x:Name="MinimizeBtn" Grid.Column="5" Text="—" FontSize="12" WidthRequest="44" HeightRequest="32"
-                    Padding="0" BackgroundColor="Transparent" TextColor="{DynamicResource ColorText3}"
-                    Clicked="OnMinimizeClicked" IsVisible="False" VerticalOptions="Center" />
-            <Button x:Name="MaximizeBtn" Grid.Column="6" Text="▢" FontSize="11" WidthRequest="44" HeightRequest="32"
-                    Padding="0" BackgroundColor="Transparent" TextColor="{DynamicResource ColorText3}"
-                    Clicked="OnMaximizeClicked" IsVisible="False" VerticalOptions="Center" />
-            <Button x:Name="CloseBtn" Grid.Column="7" Text="✕" FontSize="12" WidthRequest="44" HeightRequest="32"
-                    Padding="0" BackgroundColor="Transparent" TextColor="{DynamicResource ColorText3}"
-                    Clicked="OnCloseClicked" IsVisible="False" Margin="0,0,8,0" VerticalOptions="Center" />
+                    Clicked="OnThemeToggleClicked" VerticalOptions="Center" Margin="0,0,8,0" />
         </Grid>
 
         <!-- BODY: RAIL + CONTENT -->

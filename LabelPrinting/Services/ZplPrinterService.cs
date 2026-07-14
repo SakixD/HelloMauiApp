@@ -15,6 +15,18 @@ public class ZplPrinterService : IPrinterService
 	static readonly TimeSpan InitialResponseTimeout = TimeSpan.FromSeconds(3);
 	static readonly TimeSpan FollowupResponseTimeout = TimeSpan.FromMilliseconds(400);
 
+	readonly Func<string, int, IPrinterConnection> _tcpConnectionFactory;
+
+	/// <param name="tcpConnectionFactory">
+	/// Baut die Verbindung für die ip/port-Überladungen (Standard: <see cref="TcpPrinterConnection"/>).
+	/// Austauschbar, damit Konsumenten/Tests die ip/port-API nutzen können, ohne einen echten
+	/// TCP-Socket zu öffnen (z.B. eine Fake-<see cref="IPrinterConnection"/> für Unit-Tests).
+	/// </param>
+	public ZplPrinterService(Func<string, int, IPrinterConnection>? tcpConnectionFactory = null)
+	{
+		_tcpConnectionFactory = tcpConnectionFactory ?? ((ip, port) => new TcpPrinterConnection(ip, port));
+	}
+
 	// ---------- IP/Port-Überladungen (TCP/IP, der bisherige Standardweg) ----------
 
 	public Task<PrinterResult> TestConnectionAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
@@ -23,7 +35,7 @@ public class ZplPrinterService : IPrinterService
 			return Task.FromResult(PrinterResult.Fail("Keine Drucker-IP konfiguriert."));
 
 		return RunAsync(
-			new TcpPrinterConnection(ipAddress, port),
+			_tcpConnectionFactory(ipAddress, port),
 			static (_, _) => Task.FromResult(PrinterResult.Ok()),
 			PrinterResult.Fail,
 			$"Zeitüberschreitung: Drucker unter {ipAddress}:{port} nicht erreichbar.",
@@ -41,7 +53,7 @@ public class ZplPrinterService : IPrinterService
 			return Task.FromResult(PrinterResult.Fail("Keine Drucker-IP konfiguriert."));
 
 		return RunAsync(
-			new TcpPrinterConnection(ipAddress, port),
+			_tcpConnectionFactory(ipAddress, port),
 			(connection, ct) => WriteAsync(connection, data, ct),
 			PrinterResult.Fail,
 			$"Zeitüberschreitung: Drucker unter {ipAddress}:{port} nicht erreichbar.",
@@ -54,7 +66,7 @@ public class ZplPrinterService : IPrinterService
 			return Task.FromResult(PrinterQueryResult.Fail("Keine Drucker-IP konfiguriert."));
 
 		return RunAsync(
-			new TcpPrinterConnection(ipAddress, port),
+			_tcpConnectionFactory(ipAddress, port),
 			(connection, ct) => QueryCoreAsync(connection, command, ct),
 			PrinterQueryResult.Fail,
 			$"Zeitüberschreitung: Drucker unter {ipAddress}:{port} nicht erreichbar.",

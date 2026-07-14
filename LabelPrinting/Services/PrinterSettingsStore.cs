@@ -3,7 +3,7 @@ using LabelPrinting.Models;
 namespace LabelPrinting.Services;
 
 /// <summary>Speichert/lädt die Druckerkonfiguration app-weit über <see cref="Preferences"/>.</summary>
-public class PrinterSettingsStore
+public class PrinterSettingsStore : IPrinterSettingsStore
 {
 	const string IpKey = "printer_ip";
 	const string PortKey = "printer_port";

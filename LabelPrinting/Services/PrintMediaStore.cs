@@ -8,7 +8,7 @@ namespace LabelPrinting.Services;
 /// stabilen <see cref="PrintMedia.Id"/> (nicht nach dem änderbaren Namen), damit Vorlagen ein Medium
 /// dauerhaft per Id referenzieren können.
 /// </summary>
-public class PrintMediaStore
+public class PrintMediaStore : IPrintMediaStore
 {
 	static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 

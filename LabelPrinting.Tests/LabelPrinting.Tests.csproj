@@ -35,6 +35,7 @@
 		<Compile Include="..\LabelPrinting\Models\LabelTemplateMetadata.cs" Link="Models\LabelTemplateMetadata.cs" />
 		<Compile Include="..\LabelPrinting\Models\LabelPrintParameters.cs" Link="Models\LabelPrintParameters.cs" />
 		<Compile Include="..\LabelPrinting\Models\PlaceholderDefinition.cs" Link="Models\PlaceholderDefinition.cs" />
+		<Compile Include="..\LabelPrinting\Models\PrinterSettings.cs" Link="Models\PrinterSettings.cs" />
 		<Compile Include="..\LabelPrinting\Services\ZplGraphic.cs" Link="Services\ZplGraphic.cs" />
 		<Compile Include="..\LabelPrinting\Services\ZplLabelBuilder.cs" Link="Services\ZplLabelBuilder.cs" />
 		<Compile Include="..\LabelPrinting\Services\ZplImageConverter.cs" Link="Services\ZplImageConverter.cs" />
@@ -42,6 +43,11 @@
 		<Compile Include="..\LabelPrinting\Services\LabelTemplateRenderer.cs" Link="Services\LabelTemplateRenderer.cs" />
 		<Compile Include="..\LabelPrinting\Services\LabelTemplateFillService.cs" Link="Services\LabelTemplateFillService.cs" />
 		<Compile Include="..\LabelPrinting\Services\TemplateFillResult.cs" Link="Services\TemplateFillResult.cs" />
+		<Compile Include="..\LabelPrinting\Services\PrinterStatus.cs" Link="Services\PrinterStatus.cs" />
+		<Compile Include="..\LabelPrinting\Services\ZplStatusParser.cs" Link="Services\ZplStatusParser.cs" />
+		<Compile Include="..\LabelPrinting\Services\LabelSamples.cs" Link="Services\LabelSamples.cs" />
+		<Compile Include="..\LabelPrinting\Services\IPrinterConnection.cs" Link="Services\IPrinterConnection.cs" />
+		<Compile Include="..\LabelPrinting\Services\TcpPrinterConnection.cs" Link="Services\TcpPrinterConnection.cs" />
 	</ItemGroup>
 
 </Project>

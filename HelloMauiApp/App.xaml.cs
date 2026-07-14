@@ -1,18 +1,20 @@
-﻿using HelloMauiApp.Services;
-using Microsoft.Extensions.DependencyInjection;
+using HelloMauiApp.Services;
 
 namespace HelloMauiApp;
 
 public partial class App : Application
 {
-	public App()
+	readonly AppShell _shell;
+
+	public App(AppShell shell, AppearanceService appearanceService)
 	{
 		InitializeComponent();
-		AppearanceService.Instance.Initialize();
+		appearanceService.Initialize();
+		_shell = shell;
 	}
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		return new Window(new NavigationPage(new AppShell()));
+		return new Window(new NavigationPage(_shell));
 	}
 }

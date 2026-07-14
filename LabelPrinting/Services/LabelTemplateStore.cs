@@ -4,7 +4,7 @@ using LabelPrinting.Models;
 namespace LabelPrinting.Services;
 
 /// <summary>Speichert/lädt Label-Vorlagen als JSON-Dateien im App-Datenverzeichnis.</summary>
-public class LabelTemplateStore
+public class LabelTemplateStore : ILabelTemplateStore
 {
 	static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
