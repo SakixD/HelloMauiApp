@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HelloMauiApp.Services;
+using HelloMauiApp.Services.Api;
 using LabelPrinting.Services;
 
 namespace HelloMauiApp.ViewModels;
@@ -13,6 +14,7 @@ public partial class MainPageViewModel : ViewModelBase
 	readonly ILabelTemplateStore _templateStore;
 	readonly IPrintMediaStore _mediaStore;
 	readonly IAlertService _alertService;
+	readonly LocalApiServer _apiServer;
 
 	/// <summary>Von <see cref="AppShell"/> nach dem Auflösen aus DI gesetzt (Rail-Navigation ist Shell-Orchestrierung, kein Konstruktor-Abhängigkeit).</summary>
 	public Action<string>? NavigateToSection { get; set; }
@@ -26,19 +28,22 @@ public partial class MainPageViewModel : ViewModelBase
 	[ObservableProperty] string templateCount = "0";
 	[ObservableProperty] string mediaCount = "0";
 	[ObservableProperty] string placeholderCount = "0";
+	[ObservableProperty] string apiValue = "—";
 
 	public MainPageViewModel(
 		IPrinterService printerService,
 		IPrinterSettingsStore settingsStore,
 		ILabelTemplateStore templateStore,
 		IPrintMediaStore mediaStore,
-		IAlertService alertService)
+		IAlertService alertService,
+		LocalApiServer apiServer)
 	{
 		_printerService = printerService;
 		_settingsStore = settingsStore;
 		_templateStore = templateStore;
 		_mediaStore = mediaStore;
 		_alertService = alertService;
+		_apiServer = apiServer;
 	}
 
 	public async Task RefreshAsync()
@@ -49,6 +54,9 @@ public partial class MainPageViewModel : ViewModelBase
 		IpValue = configured ? $"{settings.IpAddress}:{settings.Port}" : "Nicht konfiguriert";
 		DpiValue = $"{settings.Dpi} dpi · {settings.Dpi / 25.4:0.#} Dots/mm";
 		MediaValue = $"{settings.LabelWidthMm:0.#} × {settings.LabelHeightMm:0.#} mm";
+		ApiValue = _apiServer.IsRunning
+			? $"{_apiServer.BaseUrl}api"
+			: $"Nicht aktiv ({_apiServer.LastError ?? "unbekannter Grund"})";
 
 		if (!configured)
 		{

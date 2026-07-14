@@ -1,4 +1,5 @@
 using HelloMauiApp.Services;
+using HelloMauiApp.Services.Api;
 using HelloMauiApp.ViewModels;
 using LabelPrinting.Services;
 using Microsoft.Extensions.Logging;
@@ -33,6 +34,10 @@ public static class MauiProgram
 		builder.Services.AddSingleton<INavigationService, NavigationService>();
 		builder.Services.AddSingleton<IAlertService, AlertService>();
 		builder.Services.AddSingleton<IFileDialogService, FileDialogService>();
+
+		// ---------- Lokale App-API (Kommando-Dispatcher + HTTP-Transport, siehe Services/Api) ----------
+		builder.Services.AddSingleton<IAppApi, AppApi>();
+		builder.Services.AddSingleton<LocalApiServer>();
 
 		// ---------- Shell + Rail-Ziele (dauerhaft, je ein Exemplar für die App-Laufzeit – siehe AppShell) ----------
 		builder.Services.AddSingleton<AppShell>();

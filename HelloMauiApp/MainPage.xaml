@@ -43,7 +43,7 @@
                             </HorizontalStackLayout>
                         </Grid>
 
-                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" RowSpacing="14" ColumnSpacing="24">
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="14" ColumnSpacing="24">
                             <VerticalStackLayout Grid.Row="0" Grid.Column="0">
                                 <Label Text="VERBINDUNG" FontSize="11" TextColor="{DynamicResource ColorText3}" CharacterSpacing="0.5" />
                                 <Label Text="{Binding IpValue}" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
@@ -59,6 +59,10 @@
                             <VerticalStackLayout Grid.Row="1" Grid.Column="1">
                                 <Label Text="ZULETZT KALIBRIERT" FontSize="11" TextColor="{DynamicResource ColorText3}" CharacterSpacing="0.5" />
                                 <Label Text="{Binding CalibratedValue}" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
+                                <Label Text="LOKALE API (TERMINAL/ANDERE APPS)" FontSize="11" TextColor="{DynamicResource ColorText3}" CharacterSpacing="0.5" />
+                                <Label Text="{Binding ApiValue}" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                             </VerticalStackLayout>
                         </Grid>
 
