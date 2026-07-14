@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:HelloMauiApp.ViewModels"
              xmlns:services="clr-namespace:HelloMauiApp.Services"
              x:Class="HelloMauiApp.AppearanceSettingsPage"
              x:DataType="viewmodels:AppearanceSettingsViewModel"
-             Title="Einstellungen"
              BackgroundColor="{DynamicResource ColorBg}">
 
     <ScrollView>
@@ -51,7 +50,7 @@
                                     </Border.Triggers>
                                     <Border.GestureRecognizers>
                                         <TapGestureRecognizer
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectAccentCommand}"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentView}}, Path=BindingContext.SelectAccentCommand}"
                                             CommandParameter="{Binding}" />
                                     </Border.GestureRecognizers>
                                 </Border>
@@ -71,4 +70,4 @@
         </VerticalStackLayout>
     </ScrollView>
 
-</ContentPage>
+</ContentView>

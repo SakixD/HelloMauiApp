@@ -15,6 +15,6 @@ public partial class App : Application
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		return new Window(new NavigationPage(_shell));
+		return new Window(new NavigationPage(_shell)) { Title = "Label Printing SDK" };
 	}
 }

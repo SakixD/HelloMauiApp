@@ -1,43 +1,64 @@
 using HelloMauiApp.Services;
-using Microsoft.Extensions.DependencyInjection;
-
-#if WINDOWS
-using Microsoft.UI.Windowing;
-using WinRT.Interop;
-#endif
+using LabelPrinting.Models;
 
 namespace HelloMauiApp;
 
 /// <summary>
-/// Hauptfenster im neuen Design: eigene Titelleiste (Windows: echte Fenstersteuerung, siehe unten) +
-/// einklappbare Nav-Rail links + Inhaltsbereich. "Start" läuft dauerhaft als <see cref="MainPage"/>
-/// (ContentView) im Inhaltsbereich; alle anderen Rail-Ziele sind in Phase 1 eine Brücke auf die
-/// bestehenden, unveränderten Seiten via <c>Navigation.PushAsync</c> (siehe NavigateTo). Läuft in
-/// einer <see cref="NavigationPage"/> (siehe App.xaml.cs), deren eigene Navigationsleiste hier bewusst
-/// ausgeblendet wird – nur damit Push/Pop überhaupt zur Verfügung steht.
+/// Hauptfenster: Titelleiste (normale Inhalts-Zeile, keine native Einbindung – Windows zeichnet seine
+/// eigene Standard-Titelleiste) + einklappbare Nav-Rail links + Inhaltsbereich. Alle 7 Rail-Ziele sind
+/// dauerhaft im Shell eingebettete <see cref="IShellSectionView"/>-Instanzen, die beim Klick per
+/// Content-Tausch aktiviert werden (kein <c>Navigation.PushAsync</c> mehr für Rail-Ziele – nur echte
+/// Drill-downs von innerhalb einer Sektion bleiben gepushte Seiten, siehe <see cref="INavigationService"/>).
+/// Läuft in einer <see cref="NavigationPage"/> (siehe App.xaml.cs), deren eigene Navigationsleiste hier
+/// bewusst ausgeblendet wird – nur damit Push/Pop für Drill-downs überhaupt zur Verfügung steht.
 /// </summary>
 public partial class AppShell : ContentPage
 {
-	readonly MainPage _home;
 	readonly AppearanceService _appearanceService;
-	readonly IServiceProvider _serviceProvider;
+	readonly INavigationService _navigationService;
 	readonly Dictionary<string, (Border Row, Microsoft.Maui.Controls.Shapes.Path Icon, Label Label, BoxView Stripe)> _navRows = [];
+	readonly Dictionary<string, View> _sections = [];
 
 	string _activeSection = "home";
 	bool _railCollapsed;
 
-	public AppShell(MainPage home, AppearanceService appearanceService, IServiceProvider serviceProvider)
+	public AppShell(
+		MainPage home,
+		DesignerPage designer,
+		TemplateManagerPage templateManager,
+		ZplConsolePage zplConsole,
+		AppearanceSettingsPage appearanceSettings,
+		AppearanceService appearanceService,
+		INavigationService navigationService)
 	{
 		InitializeComponent();
 		NavigationPage.SetHasNavigationBar(this, false);
 
 		_appearanceService = appearanceService;
-		_serviceProvider = serviceProvider;
+		_navigationService = navigationService;
 
 		RegisterNavRows();
-		_home = home;
-		_home.ViewModel.NavigateToSection = section => _ = NavigateTo(section);
-		ContentHost.Content = _home;
+
+		home.ViewModel.NavigateToSection = section => _ = NavigateTo(section);
+		templateManager.OpenInDesigner = template => { designer.LoadTemplate(template); _ = NavigateTo("designer"); };
+
+		_sections["home"] = home;
+		_sections["designer"] = designer;
+		_sections["templates"] = templateManager;
+		_sections["zpl"] = zplConsole;
+		_sections["settings"] = appearanceSettings;
+		_sections["media"] = new ComingSoonPage(
+			"Medien",
+			"Medien-Presets werden aktuell im Kontext einer Vorlage verwaltet (Label-Designer → Medium/Größe). Eine eigenständige Medienverwaltung an dieser Stelle folgt in einer späteren Phase.",
+			"Vorlagen öffnen",
+			() => _ = NavigateTo("templates"));
+		_sections["placeholders"] = new ComingSoonPage(
+			"Platzhalter",
+			"Platzhalter werden aktuell pro Vorlage verwaltet (Label-Designer → Platzhalter verwalten). Eine eigenständige Platzhalterverwaltung an dieser Stelle folgt in einer späteren Phase.",
+			"Label-Designer öffnen",
+			() => _ = NavigateTo("designer"));
+
+		ContentHost.Content = _sections["home"];
 		UpdateRailHighlight();
 
 		if (DeviceInfo.Current.Idiom == DeviceIdiom.Phone)
@@ -45,19 +66,14 @@ public partial class AppShell : ContentPage
 			_railCollapsed = true;
 			ApplyRailCollapsedState();
 		}
-
-		Loaded += OnAppShellLoaded;
 	}
 
 	protected override async void OnAppearing()
 	{
 		base.OnAppearing();
 
-		_activeSection = "home";
-		UpdateRailHighlight();
-		TitleBarSectionLabel.Text = "— Start";
-
-		await _home.ViewModel.RefreshAsync();
+		if (_sections.TryGetValue(_activeSection, out var view) && view is IShellSectionView sectionView)
+			await sectionView.OnActivatedAsync();
 	}
 
 	void RegisterNavRows()
@@ -121,56 +137,20 @@ public partial class AppShell : ContentPage
 
 	async Task NavigateTo(string section)
 	{
-		if (_navRows.ContainsKey(section))
+		if (_sections.TryGetValue(section, out var view))
 		{
 			_activeSection = section;
 			UpdateRailHighlight();
 			TitleBarSectionLabel.Text = "— " + SectionTitle(section);
+
+			ContentHost.Content = view;
+			if (view is IShellSectionView sectionView)
+				await sectionView.OnActivatedAsync();
+			return;
 		}
 
-		switch (section)
-		{
-			case "home":
-				ContentHost.Content = _home;
-				await _home.ViewModel.RefreshAsync();
-				break;
-
-			case "designer":
-				await Navigation.PushAsync(new DesignerPage());
-				break;
-
-			case "templates":
-				await Navigation.PushAsync(new TemplateManagerPage());
-				break;
-
-			case "settings":
-				await Navigation.PushAsync(_serviceProvider.GetRequiredService<AppearanceSettingsPage>());
-				break;
-
-			case "media":
-				await Navigation.PushAsync(new ComingSoonPage(
-					"Medien",
-					"Medien-Presets werden aktuell im Kontext einer Vorlage verwaltet (Label-Designer → Medium/Größe). Eine eigenständige Medienverwaltung an dieser Stelle folgt in einer späteren Phase.",
-					"Vorlagen öffnen",
-					async () => { await Navigation.PopAsync(); await NavigateTo("templates"); }));
-				break;
-
-			case "placeholders":
-				await Navigation.PushAsync(new ComingSoonPage(
-					"Platzhalter",
-					"Platzhalter werden aktuell pro Vorlage verwaltet (Label-Designer → Platzhalter verwalten). Eine eigenständige Platzhalterverwaltung an dieser Stelle folgt in einer späteren Phase.",
-					"Label-Designer öffnen",
-					async () => { await Navigation.PopAsync(); await NavigateTo("designer"); }));
-				break;
-
-			case "zpl":
-				await Navigation.PushAsync(new ZplConsolePage());
-				break;
-
-			case "templatetest":
-				await Navigation.PushAsync(new TemplateTestPage());
-				break;
-		}
+		if (section == "templatetest")
+			await _navigationService.PushAsync(new TemplateTestPage());
 	}
 
 	void OnHomeTapped(object? sender, TappedEventArgs e) => _ = NavigateTo("home");
@@ -180,84 +160,4 @@ public partial class AppShell : ContentPage
 	void OnPlaceholdersTapped(object? sender, TappedEventArgs e) => _ = NavigateTo("placeholders");
 	void OnZplTapped(object? sender, TappedEventArgs e) => _ = NavigateTo("zpl");
 	void OnSettingsTapped(object? sender, TappedEventArgs e) => _ = NavigateTo("settings");
-
-	// ---------- Windows: eigene Titelleiste mit echter Fenstersteuerung ----------
-
-	void OnAppShellLoaded(object? sender, EventArgs e)
-	{
-#if WINDOWS
-		SetupWindowsTitleBar();
-#endif
-	}
-
-#if WINDOWS
-	Microsoft.UI.Windowing.AppWindow? _appWindow;
-
-	/// <summary>
-	/// Minimieren/Maximieren/Schließen kommen bewusst von den echten System-Schaltflächen, die
-	/// Windows nach <see cref="Microsoft.UI.Xaml.Window.ExtendsContentIntoTitleBar"/> automatisch
-	/// transparent über den rechten Rand der Titelleiste zeichnet – eigene Buttons dafür würden sich
-	/// mit den System-Buttons überlagern (zwei Bedienelemente für dieselbe Aktion). Dieser Code
-	/// bereitet ihnen nur farblich den Weg (transparenter Hintergrund, zum Theme passende Glyphen)
-	/// und reserviert per <see cref="SystemButtonsColumn"/> den Platz, den Windows dafür braucht,
-	/// damit eigener Inhalt (Theme-Umschalter) nicht darunter verschwindet.
-	/// </summary>
-	void SetupWindowsTitleBar()
-	{
-		if (Window?.Handler?.PlatformView is not Microsoft.UI.Xaml.Window nativeWindow)
-			return;
-
-		nativeWindow.ExtendsContentIntoTitleBar = true;
-
-		var hwnd = WindowNative.GetWindowHandle(nativeWindow);
-		var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hwnd);
-		_appWindow = AppWindow.GetFromWindowId(windowId);
-
-		if (TitleBarGrid.Handler?.PlatformView is Microsoft.UI.Xaml.FrameworkElement titleBarElement)
-			nativeWindow.SetTitleBar(titleBarElement);
-
-		ApplyWindowsTitleBarButtonColors();
-		UpdateSystemButtonsReservedWidth();
-
-		if (_appWindow is not null)
-		{
-			_appWindow.Changed += (_, args) =>
-			{
-				if (args.DidSizeChange || args.DidPresenterChange)
-					UpdateSystemButtonsReservedWidth();
-			};
-		}
-
-		Application.Current!.RequestedThemeChanged += (_, _) => ApplyWindowsTitleBarButtonColors();
-	}
-
-	void ApplyWindowsTitleBarButtonColors()
-	{
-		var titleBar = _appWindow?.TitleBar;
-		if (titleBar is null)
-			return;
-
-		bool dark = Application.Current!.RequestedTheme == AppTheme.Dark;
-		var foreground = dark ? Windows.UI.Color.FromArgb(255, 168, 168, 179) : Windows.UI.Color.FromArgb(255, 92, 92, 102);
-		var hoverBackground = dark ? Windows.UI.Color.FromArgb(26, 255, 255, 255) : Windows.UI.Color.FromArgb(13, 0, 0, 0);
-
-		titleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
-		titleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
-		titleBar.ButtonForegroundColor = foreground;
-		titleBar.ButtonInactiveForegroundColor = foreground;
-		titleBar.ButtonHoverForegroundColor = foreground;
-		titleBar.ButtonHoverBackgroundColor = hoverBackground;
-		titleBar.ButtonPressedBackgroundColor = hoverBackground;
-	}
-
-	void UpdateSystemButtonsReservedWidth()
-	{
-		var titleBar = _appWindow?.TitleBar;
-		if (titleBar is null || TitleBarGrid.Handler?.PlatformView is not Microsoft.UI.Xaml.FrameworkElement element)
-			return;
-
-		double scale = element.XamlRoot?.RasterizationScale ?? 1.0;
-		SystemButtonsColumn.Width = new GridLength(Math.Max(0, titleBar.RightInset / scale));
-	}
-#endif
 }

@@ -1,3 +1,4 @@
+using HelloMauiApp.Services;
 using LabelPrinting.Models;
 using LabelPrinting.Services;
 
@@ -8,20 +9,22 @@ namespace HelloMauiApp;
 /// dateibasiert (kein Deserialisieren nötig) und funktioniert deshalb auch für Vorlagen, die
 /// wegen eines veralteten Formats nicht mehr geladen werden können.
 /// </summary>
-public partial class TemplateManagerPage : ContentPage
+public partial class TemplateManagerPage : ContentView, IShellSectionView
 {
-	readonly LabelTemplateStore _store = new();
+	readonly ILabelTemplateStore _store;
+	readonly IAlertService _alertService;
 
-	public TemplateManagerPage()
+	/// <summary>Von <see cref="AppShell"/> verdrahtet: öffnet die übergebene Vorlage im (dauerhaften) Designer statt sie zu pushen.</summary>
+	public Action<LabelTemplate>? OpenInDesigner { get; set; }
+
+	public TemplateManagerPage(ILabelTemplateStore store, IAlertService alertService)
 	{
 		InitializeComponent();
+		_store = store;
+		_alertService = alertService;
 	}
 
-	protected override async void OnAppearing()
-	{
-		base.OnAppearing();
-		await RefreshList();
-	}
+	public async Task OnActivatedAsync() => await RefreshList();
 
 	async Task RefreshList()
 	{
@@ -99,7 +102,7 @@ public partial class TemplateManagerPage : ContentPage
 		LabelTemplate? template = await _store.LoadAsync(name);
 		if (template is null)
 		{
-			bool delete = await DisplayAlertAsync(
+			bool delete = await _alertService.ConfirmAsync(
 				"Kann nicht geöffnet werden",
 				$"Vorlage \"{name}\" konnte nicht geladen werden – vermutlich wurde sie mit einer älteren App-Version gespeichert und ist mit dem aktuellen Format nicht mehr kompatibel. Soll sie gelöscht werden?",
 				"Löschen",
@@ -111,12 +114,12 @@ public partial class TemplateManagerPage : ContentPage
 			return;
 		}
 
-		await Navigation.PushAsync(new DesignerPage(template));
+		OpenInDesigner?.Invoke(template);
 	}
 
 	async Task DeleteTemplateAsync(string name)
 	{
-		bool confirmed = await DisplayAlertAsync("Vorlage löschen", $"Vorlage \"{name}\" wirklich löschen?", "Löschen", "Abbrechen");
+		bool confirmed = await _alertService.ConfirmAsync("Vorlage löschen", $"Vorlage \"{name}\" wirklich löschen?", "Löschen", "Abbrechen");
 		if (!confirmed)
 			return;
 

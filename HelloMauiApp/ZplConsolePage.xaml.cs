@@ -1,3 +1,4 @@
+using HelloMauiApp.Services;
 using LabelPrinting.Services;
 
 namespace HelloMauiApp;
@@ -7,15 +8,21 @@ namespace HelloMauiApp;
 /// auf das neue Design umgebaut wurde (siehe AppShell). Noch nicht auf das neue Design gestylt
 /// (folgt in einer späteren Phase); Funktionalität bleibt unverändert erhalten.
 /// </summary>
-public partial class ZplConsolePage : ContentPage
+public partial class ZplConsolePage : ContentView, IShellSectionView
 {
-	readonly IPrinterService _printerService = new ZplPrinterService();
-	readonly PrinterSettingsStore _settingsStore = new();
+	readonly IPrinterService _printerService;
+	readonly IPrinterSettingsStore _settingsStore;
+	readonly IAlertService _alertService;
 
-	public ZplConsolePage()
+	public ZplConsolePage(IPrinterService printerService, IPrinterSettingsStore settingsStore, IAlertService alertService)
 	{
 		InitializeComponent();
+		_printerService = printerService;
+		_settingsStore = settingsStore;
+		_alertService = alertService;
 	}
+
+	public Task OnActivatedAsync() => Task.CompletedTask;
 
 	static string FormatQueryResponse(string raw)
 	{
@@ -43,12 +50,12 @@ public partial class ZplConsolePage : ContentPage
 		var settings = _settingsStore.Load();
 		if (!RequirePrinterConfigured(settings))
 		{
-			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
+			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
 			return;
 		}
 		if (string.IsNullOrWhiteSpace(ZplEditor.Text))
 		{
-			await DisplayAlertAsync("Kein Inhalt", "Bitte ZPL-Code einfügen (z.B. von der Versanddienstleister-API).", "OK");
+			await _alertService.ShowAsync("Kein Inhalt", "Bitte ZPL-Code einfügen (z.B. von der Versanddienstleister-API).", "OK");
 			return;
 		}
 
@@ -56,7 +63,7 @@ public partial class ZplConsolePage : ContentPage
 		var result = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, ZplEditor.Text);
 		SetBusy(false);
 
-		await DisplayAlertAsync(
+		await _alertService.ShowAsync(
 			result.Success ? "Gesendet" : "Fehler",
 			result.Success ? "ZPL wurde an den Drucker gesendet." : result.ErrorMessage ?? "Unbekannter Fehler",
 			"OK");
@@ -67,12 +74,12 @@ public partial class ZplConsolePage : ContentPage
 		var settings = _settingsStore.Load();
 		if (!RequirePrinterConfigured(settings))
 		{
-			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
+			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
 			return;
 		}
 		if (string.IsNullOrWhiteSpace(ZplEditor.Text))
 		{
-			await DisplayAlertAsync("Kein Inhalt", "Bitte einen Befehl eingeben, z.B. ~HS oder ! U1 getvar \"media.type\"", "OK");
+			await _alertService.ShowAsync("Kein Inhalt", "Bitte einen Befehl eingeben, z.B. ~HS oder ! U1 getvar \"media.type\"", "OK");
 			return;
 		}
 
@@ -88,7 +95,7 @@ public partial class ZplConsolePage : ContentPage
 		var settings = _settingsStore.Load();
 		if (!RequirePrinterConfigured(settings))
 		{
-			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
+			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
 			return;
 		}
 
@@ -104,7 +111,7 @@ public partial class ZplConsolePage : ContentPage
 		var settings = _settingsStore.Load();
 		if (!RequirePrinterConfigured(settings))
 		{
-			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
+			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
 			return;
 		}
 
@@ -114,7 +121,7 @@ public partial class ZplConsolePage : ContentPage
 		var result = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, label);
 		SetBusy(false);
 
-		await DisplayAlertAsync(
+		await _alertService.ShowAsync(
 			result.Success ? "Gesendet" : "Fehler",
 			result.Success ? "Testlabel wurde an den Drucker gesendet." : result.ErrorMessage ?? "Unbekannter Fehler",
 			"OK");

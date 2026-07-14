@@ -33,14 +33,15 @@ public static class MauiProgram
 		builder.Services.AddSingleton<INavigationService, NavigationService>();
 		builder.Services.AddSingleton<IAlertService, AlertService>();
 
-		// ---------- Shell + Start (dauerhaft, ein Exemplar für die App-Laufzeit) ----------
+		// ---------- Shell + Rail-Ziele (dauerhaft, je ein Exemplar für die App-Laufzeit – siehe AppShell) ----------
 		builder.Services.AddSingleton<AppShell>();
 		builder.Services.AddSingleton<MainPageViewModel>();
 		builder.Services.AddSingleton<MainPage>();
-
-		// ---------- Einstellungen (frisch pro Navigation) ----------
-		builder.Services.AddTransient<AppearanceSettingsViewModel>();
-		builder.Services.AddTransient<AppearanceSettingsPage>();
+		builder.Services.AddSingleton<DesignerPage>();
+		builder.Services.AddSingleton<TemplateManagerPage>();
+		builder.Services.AddSingleton<ZplConsolePage>();
+		builder.Services.AddSingleton<AppearanceSettingsViewModel>();
+		builder.Services.AddSingleton<AppearanceSettingsPage>();
 
 		return builder.Build();
 	}

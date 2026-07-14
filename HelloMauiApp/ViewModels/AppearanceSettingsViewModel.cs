@@ -30,6 +30,21 @@ public partial class AppearanceSettingsViewModel : ViewModelBase
 
 	partial void OnSelectedThemeChanged(AppThemePreference value) => _appearanceService.SetTheme(value);
 
+	/// <summary>
+	/// Liest Theme/Akzent frisch aus <see cref="AppearanceService"/> ein. Nötig, weil die Seite jetzt
+	/// eine dauerhafte Instanz ist (siehe AppShell) statt bei jedem Öffnen neu gebaut zu werden – ohne
+	/// das würde z.B. der Theme-Umschalter in der Titelleiste (der <see cref="AppearanceService"/>
+	/// direkt ändert) hier nicht ankommen und eine veraltete Auswahl anzeigen.
+	/// </summary>
+	public void Resync()
+	{
+		if (SelectedTheme != _appearanceService.Theme)
+			SelectedTheme = _appearanceService.Theme;
+
+		foreach (var swatch in AccentSwatches)
+			swatch.IsSelected = swatch.Index == _appearanceService.AccentIndex;
+	}
+
 	[RelayCommand]
 	void SelectAccent(AccentSwatch swatch)
 	{

@@ -1,55 +1,74 @@
+using HelloMauiApp.Services;
 using LabelPrinting.Models;
 using LabelPrinting.Services;
 using Microsoft.Maui.Layouts;
 
 namespace HelloMauiApp;
 
-public partial class DesignerPage : ContentPage
+public partial class DesignerPage : ContentView, IShellSectionView
 {
 	const double PixelsPerMm = LabelCanvasRenderer.PixelsPerMm;
 
-	readonly LabelTemplateStore _store = new();
-	readonly IPrinterService _printerService = new ZplPrinterService();
-	readonly PrinterSettingsStore _settingsStore = new();
+	readonly ILabelTemplateStore _store;
+	readonly IPrinterService _printerService;
+	readonly IPrinterSettingsStore _settingsStore;
+	readonly INavigationService _navigationService;
+	readonly IAlertService _alertService;
 
-	LabelTemplate _template;
+	LabelTemplate _template = null!;
 	LabelElement? _selectedElement;
 	Border? _selectedBorder;
 	bool _suppressPropertyChanged;
 
-	public DesignerPage()
+	public DesignerPage(
+		ILabelTemplateStore store,
+		IPrinterService printerService,
+		IPrinterSettingsStore settingsStore,
+		INavigationService navigationService,
+		IAlertService alertService)
 	{
 		InitializeComponent();
+		_store = store;
+		_printerService = printerService;
+		_settingsStore = settingsStore;
+		_navigationService = navigationService;
+		_alertService = alertService;
 
-		var settings = _settingsStore.Load();
-		_template = new LabelTemplate
+		LoadTemplate(null);
+	}
+
+	/// <summary>Lädt eine bestehende Vorlage in den (dauerhaften) Designer, oder – bei <c>null</c> – eine neue leere Vorlage.</summary>
+	public void LoadTemplate(LabelTemplate? template)
+	{
+		if (template is not null)
 		{
-			Name = "Neue Vorlage",
-			WidthMm = settings.LabelWidthMm,
-			HeightMm = settings.LabelHeightMm,
-			Dpi = settings.Dpi,
-		};
+			_template = template;
+		}
+		else
+		{
+			var settings = _settingsStore.Load();
+			_template = new LabelTemplate
+			{
+				Name = "Neue Vorlage",
+				WidthMm = settings.LabelWidthMm,
+				HeightMm = settings.LabelHeightMm,
+				Dpi = settings.Dpi,
+			};
+		}
 
 		RenderCanvas();
 	}
 
-	public DesignerPage(LabelTemplate template)
+	public Task OnActivatedAsync()
 	{
-		InitializeComponent();
-		_template = template;
-		RenderCanvas();
-	}
-
-	protected override void OnAppearing()
-	{
-		base.OnAppearing();
-
 		// Nach Rückkehr von "Medium" kann sich die Labelgröße geändert haben.
 		UpdateCanvasSize();
 
 		// Nach Rückkehr von "Platzhalter verwalten" könnten sich Keys geändert haben.
 		if (_selectedElement is not null && _selectedBorder is not null)
 			ShowPropertiesFor(_selectedElement);
+
+		return Task.CompletedTask;
 	}
 
 	// ---------- Canvas-Aufbau ----------
@@ -362,7 +381,7 @@ public partial class DesignerPage : ContentPage
 		}
 		catch (Exception ex)
 		{
-			await DisplayAlertAsync("Fehler", $"Bild konnte nicht ausgewählt werden: {ex.Message}", "OK");
+			await _alertService.ShowAsync("Fehler", $"Bild konnte nicht ausgewählt werden: {ex.Message}", "OK");
 			return;
 		}
 
@@ -392,50 +411,42 @@ public partial class DesignerPage : ContentPage
 
 	async void OnManagePlaceholdersClicked(object? sender, EventArgs e)
 	{
-		await Navigation.PushAsync(new PlaceholderManagerPage(_template));
+		await _navigationService.PushAsync(new PlaceholderManagerPage(_template));
 	}
 
 	// ---------- Medium ----------
 
 	async void OnManageMediaClicked(object? sender, EventArgs e)
 	{
-		await Navigation.PushAsync(new MediaManagerPage(_template));
+		await _navigationService.PushAsync(new MediaManagerPage(_template));
 	}
 
 	async void OnPropertiesClicked(object? sender, EventArgs e)
 	{
-		await Navigation.PushAsync(new TemplatePropertiesPage(_template));
+		await _navigationService.PushAsync(new TemplatePropertiesPage(_template));
 	}
 
 	// ---------- Neu / Speichern / Laden / Exportieren / Importieren / Drucken ----------
 
 	async void OnNewClicked(object? sender, EventArgs e)
 	{
-		bool confirmed = await DisplayAlertAsync("Neue Vorlage", "Aktuelles Design verwerfen und neu beginnen?", "Ja", "Abbrechen");
+		bool confirmed = await _alertService.ConfirmAsync("Neue Vorlage", "Aktuelles Design verwerfen und neu beginnen?", "Ja", "Abbrechen");
 		if (!confirmed)
 			return;
 
-		var settings = _settingsStore.Load();
-		_template = new LabelTemplate
-		{
-			Name = "Neue Vorlage",
-			WidthMm = settings.LabelWidthMm,
-			HeightMm = settings.LabelHeightMm,
-			Dpi = settings.Dpi,
-		};
-		RenderCanvas();
+		LoadTemplate(null);
 	}
 
 	async void OnSaveClicked(object? sender, EventArgs e)
 	{
-		string? name = await DisplayPromptAsync("Vorlage speichern", "Name der Vorlage:", initialValue: _template.Name);
+		string? name = await _alertService.PromptAsync("Vorlage speichern", "Name der Vorlage:", _template.Name);
 		if (string.IsNullOrWhiteSpace(name))
 			return;
 
 		_template.Name = name.Trim();
 		await _store.SaveAsync(_template);
 		TitleLabel.Text = $"Label-Designer – {_template.Name} ({_template.WidthMm:0.#}×{_template.HeightMm:0.#} mm)";
-		await DisplayAlertAsync("Gespeichert", $"Vorlage \"{_template.Name}\" wurde gespeichert.", "OK");
+		await _alertService.ShowAsync("Gespeichert", $"Vorlage \"{_template.Name}\" wurde gespeichert.", "OK");
 	}
 
 	async void OnLoadClicked(object? sender, EventArgs e)
@@ -443,23 +454,22 @@ public partial class DesignerPage : ContentPage
 		var names = await _store.ListTemplateNamesAsync();
 		if (names.Count == 0)
 		{
-			await DisplayAlertAsync("Keine Vorlagen", "Es sind noch keine Vorlagen gespeichert.", "OK");
+			await _alertService.ShowAsync("Keine Vorlagen", "Es sind noch keine Vorlagen gespeichert.", "OK");
 			return;
 		}
 
-		string choice = await DisplayActionSheetAsync("Vorlage laden", "Abbrechen", null, names.ToArray());
+		string choice = await _alertService.ActionSheetAsync("Vorlage laden", "Abbrechen", null, names.ToArray());
 		if (string.IsNullOrEmpty(choice) || choice == "Abbrechen")
 			return;
 
 		var loaded = await _store.LoadAsync(choice);
 		if (loaded is null)
 		{
-			await DisplayAlertAsync("Fehler", "Vorlage konnte nicht geladen werden.", "OK");
+			await _alertService.ShowAsync("Fehler", "Vorlage konnte nicht geladen werden.", "OK");
 			return;
 		}
 
-		_template = loaded;
-		RenderCanvas();
+		LoadTemplate(loaded);
 	}
 
 	async void OnExportClicked(object? sender, EventArgs e)
@@ -467,7 +477,7 @@ public partial class DesignerPage : ContentPage
 		const string saveAsOption = "Speichern unter...";
 		const string shareOption = "Teilen...";
 
-		string choice = await DisplayActionSheetAsync("Vorlage exportieren", "Abbrechen", null, saveAsOption, shareOption);
+		string choice = await _alertService.ActionSheetAsync("Vorlage exportieren", "Abbrechen", null, saveAsOption, shareOption);
 		if (string.IsNullOrEmpty(choice) || choice == "Abbrechen")
 			return;
 
@@ -483,7 +493,7 @@ public partial class DesignerPage : ContentPage
 		}
 		catch (Exception ex)
 		{
-			await DisplayAlertAsync("Fehler", $"Export fehlgeschlagen: {ex.Message}", "OK");
+			await _alertService.ShowAsync("Fehler", $"Export fehlgeschlagen: {ex.Message}", "OK");
 		}
 	}
 
@@ -520,7 +530,7 @@ public partial class DesignerPage : ContentPage
 			return;
 
 		await Windows.Storage.FileIO.WriteTextAsync(file, json);
-		await DisplayAlertAsync("Gespeichert", $"Vorlage wurde unter \"{file.Path}\" gespeichert.", "OK");
+		await _alertService.ShowAsync("Gespeichert", $"Vorlage wurde unter \"{file.Path}\" gespeichert.", "OK");
 #else
 		// Android/iOS/MacCatalyst haben ohne Zusatzpaket (z.B. CommunityToolkit.Maui.Storage, aktuell
 		// wegen einer Versionskollision mit Microsoft.Maui.Controls nicht einbindbar) keinen
@@ -555,17 +565,16 @@ public partial class DesignerPage : ContentPage
 			var imported = System.Text.Json.JsonSerializer.Deserialize<LabelTemplate>(json);
 			if (imported is null)
 			{
-				await DisplayAlertAsync("Fehler", "Datei enthält keine gültige Vorlage.", "OK");
+				await _alertService.ShowAsync("Fehler", "Datei enthält keine gültige Vorlage.", "OK");
 				return;
 			}
 
-			_template = imported;
-			RenderCanvas();
-			await DisplayAlertAsync("Importiert", $"Vorlage \"{_template.Name}\" wurde importiert.", "OK");
+			LoadTemplate(imported);
+			await _alertService.ShowAsync("Importiert", $"Vorlage \"{_template.Name}\" wurde importiert.", "OK");
 		}
 		catch (Exception ex)
 		{
-			await DisplayAlertAsync("Fehler", $"Import fehlgeschlagen: {ex.Message}", "OK");
+			await _alertService.ShowAsync("Fehler", $"Import fehlgeschlagen: {ex.Message}", "OK");
 		}
 	}
 
@@ -574,26 +583,26 @@ public partial class DesignerPage : ContentPage
 		var settings = _settingsStore.Load();
 		if (string.IsNullOrWhiteSpace(settings.IpAddress))
 		{
-			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
+			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
 			return;
 		}
 
 		if (_template.Elements.Count == 0)
 		{
-			await DisplayAlertAsync("Leeres Label", "Bitte zuerst mindestens ein Element hinzufügen.", "OK");
+			await _alertService.ShowAsync("Leeres Label", "Bitte zuerst mindestens ein Element hinzufügen.", "OK");
 			return;
 		}
 
 		if (_template.Placeholders.Count > 0)
 		{
-			bool goToTest = await DisplayAlertAsync(
+			bool goToTest = await _alertService.ConfirmAsync(
 				"Vorlage mit Platzhaltern",
 				"Diese Vorlage enthält Platzhalter. Zum Befüllen und Drucken bitte den Test-Modus verwenden.",
 				"Zum Test-Modus",
 				"Abbrechen");
 
 			if (goToTest)
-				await Navigation.PushAsync(new TemplateTestPage(_template));
+				await _navigationService.PushAsync(new TemplateTestPage(_template));
 
 			return;
 		}
@@ -601,7 +610,7 @@ public partial class DesignerPage : ContentPage
 		string zpl = LabelTemplateRenderer.ToZpl(_template);
 		var result = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, zpl);
 
-		await DisplayAlertAsync(
+		await _alertService.ShowAsync(
 			result.Success ? "Gesendet" : "Fehler",
 			result.Success ? "Label wurde an den Drucker gesendet." : result.ErrorMessage ?? "Unbekannter Fehler",
 			"OK");

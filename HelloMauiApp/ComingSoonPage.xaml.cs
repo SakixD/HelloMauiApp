@@ -1,25 +1,28 @@
+using HelloMauiApp.Services;
+
 namespace HelloMauiApp;
 
 /// <summary>
-/// Übergangs-Platzhalter für Rail-Bereiche, die im neuen Design (Phase 1) noch keine eigenständige
-/// Seite haben, weil die zugrunde liegende Funktion heute nur im Kontext einer Vorlage existiert
-/// (z.B. Medien/Platzhalter, siehe <see cref="MediaManagerPage"/>/<see cref="PlaceholderManagerPage"/>,
-/// die beide einen <c>LabelTemplate</c>-Konstruktorparameter benötigen). Wird in einer späteren Phase
-/// durch eine echte, ins Shell eingebettete Ansicht ersetzt.
+/// Platzhalter für Rail-Bereiche, die noch keine eigenständige Verwaltung haben, weil die zugrunde
+/// liegende Funktion heute nur im Kontext einer Vorlage existiert (z.B. Medien/Platzhalter, siehe
+/// <see cref="MediaManagerPage"/>/<see cref="PlaceholderManagerPage"/>, die beide einen
+/// <c>LabelTemplate</c>-Konstruktorparameter benötigen). Wird in einer späteren Phase durch eine echte
+/// Verwaltung ersetzt.
 /// </summary>
-public partial class ComingSoonPage : ContentPage
+public partial class ComingSoonPage : ContentView, IShellSectionView
 {
-	public ComingSoonPage(string sectionTitle, string message, string actionLabel, Func<Task> action)
+	public ComingSoonPage(string sectionTitle, string message, string actionLabel, Action action)
 	{
 		InitializeComponent();
-		Title = sectionTitle;
 		TitleLabel.Text = sectionTitle;
 		MessageLabel.Text = message;
 		ActionBtn.Text = actionLabel;
 		_action = action;
 	}
 
-	readonly Func<Task> _action;
+	readonly Action _action;
 
-	async void OnActionClicked(object? sender, EventArgs e) => await _action();
+	void OnActionClicked(object? sender, EventArgs e) => _action();
+
+	public Task OnActivatedAsync() => Task.CompletedTask;
 }
