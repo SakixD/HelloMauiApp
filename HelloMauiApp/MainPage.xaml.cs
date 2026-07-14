@@ -1,91 +1,89 @@
-﻿using LabelPrinting.Models;
 using LabelPrinting.Services;
 
 namespace HelloMauiApp;
 
-public partial class MainPage : ContentPage
+/// <summary>
+/// Startseite ("Start" in der Rail) nach dem importierten Design. Läuft als <see cref="ContentView"/>
+/// im Inhaltsbereich von <see cref="AppShell"/> statt als eigene, gepushte Seite – Navigation zu den
+/// anderen Bereichen läuft daher über den <paramref name="navigate"/>-Rückruf statt über eigene
+/// <c>Navigation.PushAsync</c>-Aufrufe (die einer <see cref="ContentView"/> nicht zur Verfügung stehen).
+/// </summary>
+public partial class MainPage : ContentView
 {
 	readonly IPrinterService _printerService = new ZplPrinterService();
 	readonly PrinterSettingsStore _settingsStore = new();
+	readonly LabelTemplateStore _templateStore = new();
+	readonly PrintMediaStore _mediaStore = new();
+	readonly ContentPage _host;
+	readonly Action<string> _navigate;
 
-	public MainPage()
+	public MainPage(ContentPage host, Action<string> navigate)
 	{
 		InitializeComponent();
+		_host = host;
+		_navigate = navigate;
 	}
 
-	protected override void OnAppearing()
-	{
-		base.OnAppearing();
-		UpdatePrinterStatusLabel();
-	}
-
-	void UpdatePrinterStatusLabel()
+	public async Task RefreshAsync()
 	{
 		var settings = _settingsStore.Load();
-		PrinterStatusLabel.Text = string.IsNullOrWhiteSpace(settings.IpAddress)
-			? "Kein Drucker konfiguriert."
-			: $"Drucker: {settings.IpAddress}:{settings.Port}  •  Label {settings.LabelWidthMm}×{settings.LabelHeightMm} mm @ {settings.Dpi} dpi";
-	}
+		bool configured = !string.IsNullOrWhiteSpace(settings.IpAddress);
 
-	bool RequirePrinterConfigured(PrinterSettings settings)
-		=> !string.IsNullOrWhiteSpace(settings.IpAddress);
+		IpValueLabel.Text = configured ? $"{settings.IpAddress}:{settings.Port}" : "Nicht konfiguriert";
+		DpiValueLabel.Text = $"{settings.Dpi} dpi · {settings.Dpi / 25.4:0.#} Dots/mm";
+		MediaValueLabel.Text = $"{settings.LabelWidthMm:0.#} × {settings.LabelHeightMm:0.#} mm";
+
+		if (!configured)
+		{
+			StatusLabel.Text = "Kein Drucker konfiguriert";
+			StatusDot.Fill = new SolidColorBrush((Color)Application.Current!.Resources["ColorText3"]);
+		}
+
+		var templateNames = await _templateStore.ListTemplateNamesAsync();
+		var mediaList = await _mediaStore.ListAsync();
+
+		int placeholderCount = 0;
+		foreach (var name in templateNames)
+		{
+			var template = await _templateStore.LoadAsync(name);
+			if (template is not null)
+				placeholderCount += template.Placeholders.Count;
+		}
+
+		TemplateCountLabel.Text = templateNames.Count.ToString();
+		MediaCountLabel.Text = mediaList.Count.ToString();
+		PlaceholderCountLabel.Text = placeholderCount.ToString();
+	}
 
 	void SetBusy(bool busy)
 	{
 		BusyIndicator.IsVisible = busy;
 		BusyIndicator.IsRunning = busy;
-		SettingsBtn.IsEnabled = !busy;
-		OpenDeviceSettingsBtn.IsEnabled = !busy;
 		TestConnectionBtn.IsEnabled = !busy;
-		PrintTestLabelBtn.IsEnabled = !busy;
-		PickImageBtn.IsEnabled = !busy;
-		SendZplBtn.IsEnabled = !busy;
-		SendZplQueryBtn.IsEnabled = !busy;
-		QueryStatusBtn.IsEnabled = !busy;
-		CalibrateMediaBtn.IsEnabled = !busy;
+		CalibrateBtn.IsEnabled = !busy;
 	}
 
-	static string FormatQueryResponse(string raw)
-	{
-		if (string.IsNullOrEmpty(raw))
-			return "(keine Antwort empfangen)";
+	bool RequirePrinterConfigured(LabelPrinting.Models.PrinterSettings settings)
+		=> !string.IsNullOrWhiteSpace(settings.IpAddress);
 
-		// Steuerzeichen (STX/ETX etc.) sichtbar machen, damit die Rohantwort les- und kopierbar bleibt.
-		return raw.Replace((char)0x02, '⟨').Replace((char)0x03, '⟩');
-	}
+	void OnOpenDesignerClicked(object? sender, EventArgs e) => _navigate("designer");
 
-	async void OnSettingsClicked(object? sender, EventArgs e)
-	{
-		await Navigation.PushAsync(new PrinterSettingsPage());
-		UpdatePrinterStatusLabel();
-	}
+	void OnOpenZplConsoleClicked(object? sender, EventArgs e) => _navigate("zpl");
 
-	async void OnOpenDeviceSettingsClicked(object? sender, EventArgs e)
-	{
-		await Navigation.PushAsync(new PrinterDeviceSettingsPage());
-	}
+	void OnOpenTemplatesClicked(object? sender, EventArgs e) => _navigate("templates");
 
-	async void OnOpenDesignerClicked(object? sender, EventArgs e)
-	{
-		await Navigation.PushAsync(new DesignerPage());
-	}
+	void OnDesignerTileTapped(object? sender, TappedEventArgs e) => _navigate("designer");
 
-	async void OnOpenTemplateTestClicked(object? sender, EventArgs e)
-	{
-		await Navigation.PushAsync(new TemplateTestPage());
-	}
+	void OnTemplateTestTileTapped(object? sender, TappedEventArgs e) => _navigate("templatetest");
 
-	async void OnOpenTemplateManagerClicked(object? sender, EventArgs e)
-	{
-		await Navigation.PushAsync(new TemplateManagerPage());
-	}
+	void OnMediaTileTapped(object? sender, TappedEventArgs e) => _navigate("media");
 
 	async void OnTestConnectionClicked(object? sender, EventArgs e)
 	{
 		var settings = _settingsStore.Load();
 		if (!RequirePrinterConfigured(settings))
 		{
-			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
+			await _host.DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
 			return;
 		}
 
@@ -93,39 +91,51 @@ public partial class MainPage : ContentPage
 		var result = await _printerService.TestConnectionAsync(settings.IpAddress, settings.Port);
 		SetBusy(false);
 
-		await DisplayAlertAsync(
+		StatusLabel.Text = result.Success ? "Verbunden" : "Nicht erreichbar";
+		StatusDot.Fill = new SolidColorBrush((Color)Application.Current!.Resources[result.Success ? "ColorSuccess" : "ColorDanger"]);
+
+		await _host.DisplayAlertAsync(
 			result.Success ? "Verbindung OK" : "Verbindung fehlgeschlagen",
 			result.Success ? $"Drucker unter {settings.IpAddress}:{settings.Port} ist erreichbar." : result.ErrorMessage ?? "Unbekannter Fehler",
 			"OK");
 	}
 
-	async void OnPrintTestLabelClicked(object? sender, EventArgs e)
+	async void OnCalibrateClicked(object? sender, EventArgs e)
 	{
 		var settings = _settingsStore.Load();
 		if (!RequirePrinterConfigured(settings))
 		{
-			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
+			await _host.DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
 			return;
 		}
 
-		string label = LabelSamples.CreateTestLabelZpl(settings);
+		bool confirmed = await _host.DisplayAlertAsync(
+			"Medium kalibrieren",
+			"Der Drucker zieht dabei mehrere Etiketten durch, um Etikettenlänge sowie Lücken-/Schwarzmarkenposition automatisch zu erkennen. Fortfahren?",
+			"Ja, kalibrieren",
+			"Abbrechen");
+		if (!confirmed)
+			return;
 
 		SetBusy(true);
-		var result = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, label);
+		var result = await _printerService.CalibrateMediaAsync(settings.IpAddress, settings.Port);
 		SetBusy(false);
 
-		await DisplayAlertAsync(
+		if (result.Success)
+			CalibratedValueLabel.Text = DateTime.Now.ToString("HH:mm");
+
+		await _host.DisplayAlertAsync(
 			result.Success ? "Gesendet" : "Fehler",
-			result.Success ? "Testlabel wurde an den Drucker gesendet." : result.ErrorMessage ?? "Unbekannter Fehler",
+			result.Success ? "Kalibrierbefehl wurde gesendet. Der Drucker sollte jetzt Etiketten durchziehen." : result.ErrorMessage ?? "Unbekannter Fehler",
 			"OK");
 	}
 
-	async void OnPickImageClicked(object? sender, EventArgs e)
+	async void OnPickImageTileTapped(object? sender, TappedEventArgs e)
 	{
 		var settings = _settingsStore.Load();
 		if (!RequirePrinterConfigured(settings))
 		{
-			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
+			await _host.DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
 			return;
 		}
 
@@ -140,7 +150,7 @@ public partial class MainPage : ContentPage
 		}
 		catch (Exception ex)
 		{
-			await DisplayAlertAsync("Fehler", $"Bild konnte nicht ausgewählt werden: {ex.Message}", "OK");
+			await _host.DisplayAlertAsync("Fehler", $"Bild konnte nicht ausgewählt werden: {ex.Message}", "OK");
 			return;
 		}
 
@@ -155,116 +165,20 @@ public partial class MainPage : ContentPage
 			await stream.CopyToAsync(ms);
 
 			string label = LabelSamples.CreateImageLabelZpl(settings, ms.ToArray());
-
 			var result = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, label);
 
-			await DisplayAlertAsync(
+			await _host.DisplayAlertAsync(
 				result.Success ? "Gesendet" : "Fehler",
 				result.Success ? "Bild wurde als Label an den Drucker gesendet." : result.ErrorMessage ?? "Unbekannter Fehler",
 				"OK");
 		}
 		catch (Exception ex)
 		{
-			await DisplayAlertAsync("Fehler", $"Bild konnte nicht gedruckt werden: {ex.Message}", "OK");
+			await _host.DisplayAlertAsync("Fehler", $"Bild konnte nicht gedruckt werden: {ex.Message}", "OK");
 		}
 		finally
 		{
 			SetBusy(false);
 		}
-	}
-
-	async void OnSendZplClicked(object? sender, EventArgs e)
-	{
-		var settings = _settingsStore.Load();
-		if (!RequirePrinterConfigured(settings))
-		{
-			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
-			return;
-		}
-
-		if (string.IsNullOrWhiteSpace(ZplEditor.Text))
-		{
-			await DisplayAlertAsync("Kein Inhalt", "Bitte ZPL-Code einfügen (z.B. von der Versanddienstleister-API).", "OK");
-			return;
-		}
-
-		SetBusy(true);
-		var result = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, ZplEditor.Text);
-		SetBusy(false);
-
-		await DisplayAlertAsync(
-			result.Success ? "Gesendet" : "Fehler",
-			result.Success ? "ZPL wurde an den Drucker gesendet." : result.ErrorMessage ?? "Unbekannter Fehler",
-			"OK");
-	}
-
-	async void OnSendZplQueryClicked(object? sender, EventArgs e)
-	{
-		var settings = _settingsStore.Load();
-		if (!RequirePrinterConfigured(settings))
-		{
-			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
-			return;
-		}
-
-		if (string.IsNullOrWhiteSpace(ZplEditor.Text))
-		{
-			await DisplayAlertAsync("Kein Inhalt", "Bitte einen Befehl eingeben, z.B. ~HS oder ! U1 getvar \"media.type\"", "OK");
-			return;
-		}
-
-		SetBusy(true);
-		var result = await _printerService.QueryAsync(settings.IpAddress, settings.Port, ZplEditor.Text);
-		SetBusy(false);
-
-		ResponseEditor.Text = result.Success
-			? FormatQueryResponse(result.ResponseText)
-			: $"Fehler: {result.ErrorMessage}";
-	}
-
-	async void OnQueryStatusClicked(object? sender, EventArgs e)
-	{
-		var settings = _settingsStore.Load();
-		if (!RequirePrinterConfigured(settings))
-		{
-			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
-			return;
-		}
-
-		SetBusy(true);
-		var result = await _printerService.GetStatusAsync(settings.IpAddress, settings.Port);
-		SetBusy(false);
-
-		ResponseEditor.Text = result.Success
-			? FormatQueryResponse(result.ResponseText)
-			: $"Fehler: {result.ErrorMessage}";
-	}
-
-	async void OnCalibrateMediaClicked(object? sender, EventArgs e)
-	{
-		var settings = _settingsStore.Load();
-		if (!RequirePrinterConfigured(settings))
-		{
-			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
-			return;
-		}
-
-		bool confirmed = await DisplayAlertAsync(
-			"Medium kalibrieren",
-			"Der Drucker zieht dabei mehrere Etiketten durch, um Etikettenlänge sowie Lücken-/Schwarzmarkenposition automatisch zu erkennen. Fortfahren?",
-			"Ja, kalibrieren",
-			"Abbrechen");
-
-		if (!confirmed)
-			return;
-
-		SetBusy(true);
-		var result = await _printerService.CalibrateMediaAsync(settings.IpAddress, settings.Port);
-		SetBusy(false);
-
-		await DisplayAlertAsync(
-			result.Success ? "Gesendet" : "Fehler",
-			result.Success ? "Kalibrierbefehl wurde gesendet. Der Drucker sollte jetzt Etiketten durchziehen." : result.ErrorMessage ?? "Unbekannter Fehler",
-			"OK");
 	}
 }

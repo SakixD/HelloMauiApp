@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HelloMauiApp.AppearanceSettingsPage"
+             Title="Einstellungen"
+             BackgroundColor="{DynamicResource ColorBg}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="10" MaximumWidthRequest="560" HorizontalOptions="Center">
+
+            <Label Text="Erscheinungsbild" FontSize="22" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+            <Label Text="Theme und Akzentfarbe der App." FontSize="13" TextColor="{DynamicResource ColorText2}" Margin="0,0,0,10" />
+
+            <Border StrokeThickness="1" Stroke="{DynamicResource ColorStroke}" BackgroundColor="{DynamicResource ColorLayer}"
+                    StrokeShape="RoundRectangle 12" Padding="20">
+                <VerticalStackLayout Spacing="14">
+
+                    <Label Text="Theme" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                    <RadioButton x:Name="ThemeSystemRadio" Content="System" GroupName="Theme" CheckedChanged="OnThemeRadioChanged"
+                                 TextColor="{DynamicResource ColorText}" />
+                    <RadioButton x:Name="ThemeLightRadio" Content="Hell" GroupName="Theme" CheckedChanged="OnThemeRadioChanged"
+                                 TextColor="{DynamicResource ColorText}" />
+                    <RadioButton x:Name="ThemeDarkRadio" Content="Dunkel" GroupName="Theme" CheckedChanged="OnThemeRadioChanged"
+                                 TextColor="{DynamicResource ColorText}" />
+
+                    <BoxView HeightRequest="1" BackgroundColor="{DynamicResource ColorStroke}" Margin="0,8" />
+
+                    <Label Text="Akzentfarbe" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                    <HorizontalStackLayout x:Name="AccentSwatchLayout" Spacing="12" />
+
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="Drucker" FontSize="16" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" Margin="0,20,0,0" />
+            <Button Text="Drucker-Einstellungen öffnen" Clicked="OnOpenPrinterSettingsClicked"
+                    BackgroundColor="{DynamicResource ColorControl}" TextColor="{DynamicResource ColorText}" />
+            <Button Text="Geräteeinstellungen öffnen (USB/Seriell anlernen)" Clicked="OnOpenDeviceSettingsClicked"
+                    BackgroundColor="{DynamicResource ColorControl}" TextColor="{DynamicResource ColorText}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

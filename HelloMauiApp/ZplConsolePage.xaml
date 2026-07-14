@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HelloMauiApp.ZplConsolePage"
+             Title="ZPL-Konsole"
+             BackgroundColor="{DynamicResource ColorBg}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="10">
+
+            <Label Text="ZPL-Konsole" FontSize="22" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+            <Label Text="Rohes ZPL senden oder direkt mit dem Drucker sprechen (~HS, ~JC, getvar)."
+                   FontSize="13" TextColor="{DynamicResource ColorText2}" Margin="0,0,0,10" />
+
+            <Label Text="Eingabe" FontSize="12" TextColor="{DynamicResource ColorText2}" />
+            <Editor x:Name="ZplEditor"
+                    Placeholder="^XA ... ^XZ  oder ein Befehl wie ~HS / ! U1 getvar &quot;media.type&quot;"
+                    AutoSize="TextChanges" MinimumHeightRequest="110"
+                    TextColor="{DynamicResource ColorCodeFg}" BackgroundColor="{DynamicResource ColorCodeBg}" />
+
+            <HorizontalStackLayout Spacing="8">
+                <Button x:Name="SendZplBtn" Text="ZPL senden" Clicked="OnSendZplClicked"
+                        BackgroundColor="{DynamicResource AccentColor}" TextColor="{DynamicResource AccentTextColor}" />
+                <Button x:Name="SendZplQueryBtn" Text="Senden &amp; Antwort lesen" Clicked="OnSendZplQueryClicked"
+                        BackgroundColor="{DynamicResource ColorControl}" TextColor="{DynamicResource ColorText}" />
+            </HorizontalStackLayout>
+
+            <BoxView HeightRequest="1" BackgroundColor="{DynamicResource ColorStroke}" Margin="0,10" />
+
+            <HorizontalStackLayout Spacing="8">
+                <Button x:Name="QueryStatusBtn" Text="Status abfragen (~HS)" Clicked="OnQueryStatusClicked"
+                        BackgroundColor="{DynamicResource ColorControl}" TextColor="{DynamicResource ColorText}" />
+                <Button x:Name="PrintTestLabelBtn" Text="Testlabel drucken" Clicked="OnPrintTestLabelClicked"
+                        BackgroundColor="{DynamicResource ColorControl}" TextColor="{DynamicResource ColorText}" />
+            </HorizontalStackLayout>
+
+            <Label Text="Antwort des Druckers" FontSize="12" TextColor="{DynamicResource ColorText2}" Margin="0,10,0,0" />
+            <Editor x:Name="ResponseEditor" IsReadOnly="True"
+                    Placeholder="Antwort des Druckers erscheint hier..."
+                    AutoSize="TextChanges" MinimumHeightRequest="90"
+                    TextColor="{DynamicResource ColorSuccess}" BackgroundColor="{DynamicResource ColorCodeBg}" />
+
+            <ActivityIndicator x:Name="BusyIndicator" IsRunning="False" IsVisible="False" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="HelloMauiApp.Resources.Styles.TokensLight">
+
+    <!--
+    Helltheme-Farbtokens aus dem Claude-Design "Label Printing SDK UI" (tokens(), light-Zweig).
+    Wird von AppearanceService zur Laufzeit in Application.Current.Resources.MergedDictionaries
+    ein-/ausgehängt (statt statisch in App.xaml gemischt), damit ein Theme-Wechsel ohne Neustart
+    alle {DynamicResource}-Verbraucher sofort neu einfärbt. Akzentfarben (Accent*) sind bewusst NICHT
+    hier definiert, da sie unabhängig vom Hell/Dunkel-Theme vom Nutzer wählbar sind (siehe
+    AppearanceService.ApplyAccent).
+    -->
+
+    <Color x:Key="ColorBg">#F3F3F5</Color>
+    <Color x:Key="ColorDesk">#DEDEE4</Color>
+    <Color x:Key="ColorTitlebar">#FBFBFC</Color>
+    <Color x:Key="ColorNav">#F7F7F9</Color>
+    <Color x:Key="ColorLayer">#FFFFFF</Color>
+    <Color x:Key="ColorLayer2">#FAFAFB</Color>
+    <Color x:Key="ColorLayer3">#F0F0F3</Color>
+
+    <Color x:Key="ColorStroke">#14000000</Color>
+    <Color x:Key="ColorText">#1B1B1F</Color>
+    <Color x:Key="ColorText2">#5C5C66</Color>
+    <Color x:Key="ColorText3">#8E8E98</Color>
+
+    <Color x:Key="ColorControl">#FFFFFF</Color>
+    <Color x:Key="ColorControlHover">#F4F4F6</Color>
+    <Color x:Key="ColorControlStroke">#1F000000</Color>
+
+    <Color x:Key="ColorSuccess">#12996A</Color>
+    <Color x:Key="ColorDanger">#D13340</Color>
+    <Color x:Key="ColorDangerSoft">#14D13340</Color>
+    <Color x:Key="ColorDangerBorder">#4DD13340</Color>
+
+    <Color x:Key="ColorCanvasBg">#E7E7EC</Color>
+    <Color x:Key="ColorCanvasDot">#0F000000</Color>
+    <Color x:Key="ColorCodeBg">#F7F7F9</Color>
+    <Color x:Key="ColorCodeFg">#2A2A32</Color>
+    <Color x:Key="ColorToastBg">#FFFFFF</Color>
+    <Color x:Key="ColorToastFg">#1B1B1F</Color>
+
+    <LinearGradientBrush x:Key="HeroBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFFFFF" Offset="0.0" />
+        <GradientStop Color="#F4F2FF" Offset="1.0" />
+    </LinearGradientBrush>
+
+</ResourceDictionary>

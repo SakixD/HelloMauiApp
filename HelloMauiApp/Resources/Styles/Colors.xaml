@@ -41,4 +41,23 @@
     <SolidColorBrush x:Key="Gray600Brush" Color="{StaticResource Gray600}"/>
     <SolidColorBrush x:Key="Gray900Brush" Color="{StaticResource Gray900}"/>
     <SolidColorBrush x:Key="Gray950Brush" Color="{StaticResource Gray950}"/>
+
+    <!--
+    Fallback-Werte für die von AppearanceService zur Laufzeit verwalteten Akzentfarb-Ressourcen
+    (siehe Services/AppearanceService.cs). Werden unmittelbar nach dem App-Start durch die
+    tatsächlich gespeicherte Nutzerwahl überschrieben; die Fallbacks hier verhindern nur, dass
+    {DynamicResource AccentColor} etc. beim allerersten XAML-Parse-Durchlauf ins Leere greift.
+    Entsprechen dem Standard-Akzent Türkis (#2DD4BF) im Dark-Theme aus dem Design.
+    -->
+    <Color x:Key="AccentColor">#2DD4BF</Color>
+    <Color x:Key="AccentHoverColor">#2DD4BF</Color>
+    <Color x:Key="AccentSoftColor">#1AFFFFFF</Color>
+    <Color x:Key="AccentTextColor">#151221</Color>
+
+    <LinearGradientBrush x:Key="BrandGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FF5D8F" Offset="0.0" />
+        <GradientStop Color="#8B5CF6" Offset="0.34" />
+        <GradientStop Color="#4F7CFF" Offset="0.66" />
+        <GradientStop Color="#2DD4BF" Offset="1.0" />
+    </LinearGradientBrush>
 </ResourceDictionary>

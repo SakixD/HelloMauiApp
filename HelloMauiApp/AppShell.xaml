@@ -1,14 +1,162 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<Shell
-    x:Class="HelloMauiApp.AppShell"
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:HelloMauiApp"
-    Title="HelloMauiApp">
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="HelloMauiApp.AppShell"
+             BackgroundColor="{DynamicResource ColorDesk}">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <Grid RowDefinitions="Auto,*">
 
-</Shell>
+        <!-- TITLE BAR (Fensterchrome nur unter Windows aktiv, siehe code-behind) -->
+        <Grid x:Name="TitleBarGrid" Grid.Row="0" HeightRequest="48" ColumnSpacing="8"
+              ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto,Auto,Auto"
+              BackgroundColor="{DynamicResource ColorTitlebar}">
+
+            <BoxView Grid.Column="0" WidthRequest="22" HeightRequest="22" CornerRadius="6"
+                     Background="{DynamicResource BrandGradientBrush}" Margin="16,0,0,0" VerticalOptions="Center" />
+
+            <Label Grid.Column="1" Text="Label Printing SDK" FontSize="12.5" FontAttributes="Bold"
+                   TextColor="{DynamicResource ColorText2}" VerticalOptions="Center" />
+
+            <Label x:Name="TitleBarSectionLabel" Grid.Column="2" Text="— Start" FontSize="12"
+                   TextColor="{DynamicResource ColorText3}" VerticalOptions="Center" />
+
+            <Button x:Name="ThemeToggleBtn" Grid.Column="4" Text="◐" FontSize="16" WidthRequest="40" HeightRequest="32"
+                    Padding="0" BackgroundColor="Transparent" TextColor="{DynamicResource ColorText2}"
+                    Clicked="OnThemeToggleClicked" VerticalOptions="Center" />
+
+            <!-- Fenstersteuerung: nur unter Windows sichtbar (siehe code-behind SetupWindowsTitleBar) -->
+            <Button x:Name="MinimizeBtn" Grid.Column="5" Text="—" FontSize="12" WidthRequest="44" HeightRequest="32"
+                    Padding="0" BackgroundColor="Transparent" TextColor="{DynamicResource ColorText3}"
+                    Clicked="OnMinimizeClicked" IsVisible="False" VerticalOptions="Center" />
+            <Button x:Name="MaximizeBtn" Grid.Column="6" Text="▢" FontSize="11" WidthRequest="44" HeightRequest="32"
+                    Padding="0" BackgroundColor="Transparent" TextColor="{DynamicResource ColorText3}"
+                    Clicked="OnMaximizeClicked" IsVisible="False" VerticalOptions="Center" />
+            <Button x:Name="CloseBtn" Grid.Column="7" Text="✕" FontSize="12" WidthRequest="44" HeightRequest="32"
+                    Padding="0" BackgroundColor="Transparent" TextColor="{DynamicResource ColorText3}"
+                    Clicked="OnCloseClicked" IsVisible="False" Margin="0,0,8,0" VerticalOptions="Center" />
+        </Grid>
+
+        <!-- BODY: RAIL + CONTENT -->
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*">
+
+            <Grid x:Name="RailGrid" Grid.Column="0" WidthRequest="248" BackgroundColor="{DynamicResource ColorNav}">
+                <ScrollView>
+                    <VerticalStackLayout Padding="8" Spacing="2">
+                        <Button x:Name="RailToggleBtn" Text="☰" FontSize="16" HeightRequest="44" Padding="12,0"
+                                HorizontalOptions="Start" BackgroundColor="Transparent" TextColor="{DynamicResource ColorText2}"
+                                Clicked="OnToggleRailClicked" Margin="0,0,0,4" />
+                        <VerticalStackLayout Spacing="2">
+
+                            <Border x:Name="HomeRow" StrokeThickness="0" BackgroundColor="Transparent" Padding="0" HeightRequest="40">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnHomeTapped" />
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="3,12,20,14,*" Padding="0,0,12,0">
+                                    <BoxView x:Name="HomeStripe" Grid.Column="0" IsVisible="False" Color="{DynamicResource AccentColor}" />
+                                    <Path x:Name="HomeIcon" Grid.Column="2" Data="M3,9 L10,3 L17,9 L17,17 L11,17 L11,11 L9,11 L9,17 L3,17 Z"
+                                          Stroke="{DynamicResource ColorText2}" StrokeThickness="1.6" Aspect="Uniform"
+                                          WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
+                                    <Label x:Name="HomeLabelText" Grid.Column="4" Text="Start" FontSize="14" FontAttributes="Bold"
+                                           TextColor="{DynamicResource ColorText2}" VerticalOptions="Center" />
+                                </Grid>
+                            </Border>
+
+                            <Border x:Name="DesignerRow" StrokeThickness="0" BackgroundColor="Transparent" Padding="0" HeightRequest="40">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnDesignerTapped" />
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="3,12,20,14,*" Padding="0,0,12,0">
+                                    <BoxView x:Name="DesignerStripe" Grid.Column="0" IsVisible="False" Color="{DynamicResource AccentColor}" />
+                                    <Path x:Name="DesignerIcon" Grid.Column="2" Data="M4,16 L4,12 L13,3 L17,7 L8,16 Z"
+                                          Stroke="{DynamicResource ColorText2}" StrokeThickness="1.6" Aspect="Uniform"
+                                          WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
+                                    <Label x:Name="DesignerLabelText" Grid.Column="4" Text="Label-Designer" FontSize="14" FontAttributes="Bold"
+                                           TextColor="{DynamicResource ColorText2}" VerticalOptions="Center" />
+                                </Grid>
+                            </Border>
+
+                            <Border x:Name="TemplatesRow" StrokeThickness="0" BackgroundColor="Transparent" Padding="0" HeightRequest="40">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnTemplatesTapped" />
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="3,12,20,14,*" Padding="0,0,12,0">
+                                    <BoxView x:Name="TemplatesStripe" Grid.Column="0" IsVisible="False" Color="{DynamicResource AccentColor}" />
+                                    <Path x:Name="TemplatesIcon" Grid.Column="2" Data="M4,4 L16,4 L16,16 L4,16 Z M7,7 L13,7 M7,10 L13,10 M7,13 L11,13"
+                                          Stroke="{DynamicResource ColorText2}" StrokeThickness="1.4" Aspect="Uniform"
+                                          WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
+                                    <Label x:Name="TemplatesLabelText" Grid.Column="4" Text="Vorlagen" FontSize="14" FontAttributes="Bold"
+                                           TextColor="{DynamicResource ColorText2}" VerticalOptions="Center" />
+                                </Grid>
+                            </Border>
+
+                            <Border x:Name="MediaRow" StrokeThickness="0" BackgroundColor="Transparent" Padding="0" HeightRequest="40">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnMediaTapped" />
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="3,12,20,14,*" Padding="0,0,12,0">
+                                    <BoxView x:Name="MediaStripe" Grid.Column="0" IsVisible="False" Color="{DynamicResource AccentColor}" />
+                                    <Path x:Name="MediaIcon" Grid.Column="2" Data="M3,5 L17,5 L17,15 L3,15 Z M3,8 L17,8 M8,5 L8,15"
+                                          Stroke="{DynamicResource ColorText2}" StrokeThickness="1.4" Aspect="Uniform"
+                                          WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
+                                    <Label x:Name="MediaLabelText" Grid.Column="4" Text="Medien" FontSize="14" FontAttributes="Bold"
+                                           TextColor="{DynamicResource ColorText2}" VerticalOptions="Center" />
+                                </Grid>
+                            </Border>
+
+                            <Border x:Name="PlaceholdersRow" StrokeThickness="0" BackgroundColor="Transparent" Padding="0" HeightRequest="40">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnPlaceholdersTapped" />
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="3,12,20,14,*" Padding="0,0,12,0">
+                                    <BoxView x:Name="PlaceholdersStripe" Grid.Column="0" IsVisible="False" Color="{DynamicResource AccentColor}" />
+                                    <Path x:Name="PlaceholdersIcon" Grid.Column="2" Data="M10,3 L17,10 L10,17 L3,10 Z"
+                                          Stroke="{DynamicResource ColorText2}" StrokeThickness="1.6" Aspect="Uniform"
+                                          WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
+                                    <Label x:Name="PlaceholdersLabelText" Grid.Column="4" Text="Platzhalter" FontSize="14" FontAttributes="Bold"
+                                           TextColor="{DynamicResource ColorText2}" VerticalOptions="Center" />
+                                </Grid>
+                            </Border>
+
+                            <Border x:Name="ZplRow" StrokeThickness="0" BackgroundColor="Transparent" Padding="0" HeightRequest="40">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnZplTapped" />
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="3,12,20,14,*" Padding="0,0,12,0">
+                                    <BoxView x:Name="ZplStripe" Grid.Column="0" IsVisible="False" Color="{DynamicResource AccentColor}" />
+                                    <Path x:Name="ZplIcon" Grid.Column="2" Data="M3,4 L17,4 L17,16 L3,16 Z M6,8 L9,10 L6,12 M11,13 L14,13"
+                                          Stroke="{DynamicResource ColorText2}" StrokeThickness="1.4" Aspect="Uniform"
+                                          WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
+                                    <Label x:Name="ZplLabelText" Grid.Column="4" Text="ZPL-Konsole" FontSize="14" FontAttributes="Bold"
+                                           TextColor="{DynamicResource ColorText2}" VerticalOptions="Center" />
+                                </Grid>
+                            </Border>
+
+                        </VerticalStackLayout>
+
+                        <BoxView HeightRequest="1" BackgroundColor="{DynamicResource ColorStroke}" Margin="4,10" />
+
+                        <Border x:Name="SettingsRow" StrokeThickness="0" BackgroundColor="Transparent" Padding="0" HeightRequest="40">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSettingsTapped" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="3,12,20,14,*" Padding="0,0,12,0">
+                                <BoxView x:Name="SettingsStripe" Grid.Column="0" IsVisible="False" Color="{DynamicResource AccentColor}" />
+                                <Path x:Name="SettingsIcon" Grid.Column="2" Data="M4,6 L16,6 M4,10 L16,10 M4,14 L16,14"
+                                      Stroke="{DynamicResource ColorText2}" StrokeThickness="1.6" Aspect="Uniform"
+                                      WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
+                                <Label x:Name="SettingsLabelText" Grid.Column="4" Text="Einstellungen" FontSize="14" FontAttributes="Bold"
+                                       TextColor="{DynamicResource ColorText2}" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+                    </VerticalStackLayout>
+                </ScrollView>
+            </Grid>
+
+            <Grid Grid.Column="1" BackgroundColor="{DynamicResource ColorBg}">
+                <ContentView x:Name="ContentHost" />
+            </Grid>
+
+        </Grid>
+    </Grid>
+
+</ContentPage>
