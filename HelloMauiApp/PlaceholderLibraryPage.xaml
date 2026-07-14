@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:HelloMauiApp.ViewModels"
+             x:Class="HelloMauiApp.PlaceholderLibraryPage"
+             x:Name="Root"
+             x:DataType="viewmodels:PlaceholderLibraryViewModel">
+
+    <ContentView.Resources>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Stroke" Value="{DynamicResource ColorStroke}" />
+            <Setter Property="BackgroundColor" Value="{DynamicResource ColorLayer}" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        </Style>
+
+        <Style x:Key="ChipButton" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{DynamicResource ColorControl}" />
+            <Setter Property="TextColor" Value="{DynamicResource ColorText}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HeightRequest" Value="34" />
+            <Setter Property="MinimumHeightRequest" Value="34" />
+            <Setter Property="MinimumWidthRequest" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="12,0" />
+        </Style>
+    </ContentView.Resources>
+
+    <Grid RowDefinitions="Auto,*" Padding="24,20" RowSpacing="14">
+
+        <!-- KOPFZEILE -->
+        <VerticalStackLayout Grid.Row="0" Spacing="2">
+            <Label Text="Platzhalter" FontSize="22" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+            <Label Text="{Binding CountText}" FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
+        </VerticalStackLayout>
+
+        <!-- INHALT -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="12" MaximumWidthRequest="860" HorizontalOptions="Fill">
+
+                <Label Text="Platzhalter gehören im SDK-Modell zur Vorlage. Hier siehst du alle Platzhalter deiner gespeicherten Vorlagen; „Bearbeiten“ öffnet den Platzhalter-Editor der Vorlage (Änderungen werden beim Zurückkehren gespeichert)."
+                       FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
+
+                <Border IsVisible="{Binding HasNoGroups}" Style="{StaticResource Card}" Padding="24,22">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Noch keine Vorlagen gespeichert" FontSize="15" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                        <Label Text="Erstelle im Label-Designer eine Vorlage und lege dort über „Platzhalter“ Felder an, die beim Drucken mit Daten befüllt werden."
+                               FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <VerticalStackLayout Spacing="12" BindableLayout.ItemsSource="{Binding Groups}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="viewmodels:TemplatePlaceholderGroup">
+                            <Border StrokeThickness="1" Stroke="{DynamicResource ColorStroke}"
+                                    BackgroundColor="{DynamicResource ColorLayer}"
+                                    StrokeShape="RoundRectangle 12" Padding="18,16">
+                                <VerticalStackLayout Spacing="10">
+
+                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="1">
+                                            <Label Text="{Binding TemplateName}" FontSize="14.5" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                                            <Label Text="{Binding Subtitle}" FontSize="12" TextColor="{DynamicResource ColorText3}" />
+                                        </VerticalStackLayout>
+                                        <Button Grid.Column="1" Text="Bearbeiten"
+                                                BackgroundColor="{DynamicResource ColorControl}" TextColor="{DynamicResource ColorText}"
+                                                FontSize="13" HeightRequest="34" MinimumHeightRequest="34" MinimumWidthRequest="0" CornerRadius="6" Padding="12,0"
+                                                Command="{Binding Source={x:Reference Root}, Path=BindingContext.EditCommand}"
+                                                CommandParameter="{Binding .}" />
+                                        <Button Grid.Column="2" Text="Im Designer öffnen"
+                                                BackgroundColor="{DynamicResource ColorControl}" TextColor="{DynamicResource ColorText}"
+                                                FontSize="13" HeightRequest="34" MinimumHeightRequest="34" MinimumWidthRequest="0" CornerRadius="6" Padding="12,0"
+                                                Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenDesignerCommand}"
+                                                CommandParameter="{Binding .}" />
+                                    </Grid>
+
+                                    <VerticalStackLayout Spacing="6" IsVisible="{Binding HasRows}" BindableLayout.ItemsSource="{Binding Rows}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="viewmodels:PlaceholderRow">
+                                                <Border StrokeThickness="0" BackgroundColor="{DynamicResource ColorLayer3}"
+                                                        StrokeShape="RoundRectangle 8" Padding="12,8">
+                                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                                        <Label Grid.Column="0" Text="{Binding Key}" FontSize="13" FontAttributes="Bold"
+                                                               TextColor="{DynamicResource AccentColor}" VerticalOptions="Center" />
+                                                        <Label Grid.Column="1" Text="{Binding Details}" FontSize="12"
+                                                               TextColor="{DynamicResource ColorText2}" VerticalOptions="Center" />
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </VerticalStackLayout>
+
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+
+</ContentView>

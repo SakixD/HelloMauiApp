@@ -41,6 +41,10 @@ public static class MauiProgram
 		builder.Services.AddSingleton<DesignerViewModel>();
 		builder.Services.AddSingleton<DesignerPage>();
 		builder.Services.AddSingleton<TemplateManagerPage>();
+		builder.Services.AddSingleton<MediaLibraryViewModel>();
+		builder.Services.AddSingleton<MediaLibraryPage>();
+		builder.Services.AddSingleton<PlaceholderLibraryViewModel>();
+		builder.Services.AddSingleton<PlaceholderLibraryPage>();
 		builder.Services.AddSingleton<ZplConsolePage>();
 		builder.Services.AddSingleton<AppearanceSettingsViewModel>();
 		builder.Services.AddSingleton<AppearanceSettingsPage>();

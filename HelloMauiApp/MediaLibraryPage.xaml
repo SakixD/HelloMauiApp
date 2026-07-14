@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:HelloMauiApp.ViewModels"
+             x:Class="HelloMauiApp.MediaLibraryPage"
+             x:Name="Root"
+             x:DataType="viewmodels:MediaLibraryViewModel">
+
+    <ContentView.Resources>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Stroke" Value="{DynamicResource ColorStroke}" />
+            <Setter Property="BackgroundColor" Value="{DynamicResource ColorLayer}" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        </Style>
+
+        <Style x:Key="ChipButton" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{DynamicResource ColorControl}" />
+            <Setter Property="TextColor" Value="{DynamicResource ColorText}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HeightRequest" Value="34" />
+            <Setter Property="MinimumHeightRequest" Value="34" />
+            <Setter Property="MinimumWidthRequest" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="12,0" />
+        </Style>
+
+        <Style x:Key="AccentChipButton" TargetType="Button" BasedOn="{StaticResource ChipButton}">
+            <Setter Property="BackgroundColor" Value="{DynamicResource AccentColor}" />
+            <Setter Property="TextColor" Value="{DynamicResource AccentTextColor}" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
+
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource ChipButton}">
+            <Setter Property="BackgroundColor" Value="{DynamicResource ColorDangerSoft}" />
+            <Setter Property="TextColor" Value="{DynamicResource ColorDanger}" />
+        </Style>
+
+        <Style x:Key="FieldLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="TextColor" Value="{DynamicResource ColorText3}" />
+            <Setter Property="CharacterSpacing" Value="0.5" />
+            <Setter Property="Margin" Value="0,10,0,2" />
+        </Style>
+    </ContentView.Resources>
+
+    <Grid RowDefinitions="Auto,*" Padding="24,20" RowSpacing="14">
+
+        <!-- KOPFZEILE -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                <Label Text="Medien" FontSize="22" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                <Label Text="{Binding CountText}" FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
+            </VerticalStackLayout>
+            <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                <Button Text="Vom Drucker erkennen" Style="{StaticResource ChipButton}" Command="{Binding DetectCommand}" />
+                <Button Text="+ Neues Medium" Style="{StaticResource AccentChipButton}" Command="{Binding AddNewCommand}" />
+            </HorizontalStackLayout>
+        </Grid>
+
+        <!-- INHALT: Liste links, Editor rechts -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,330" ColumnSpacing="16">
+
+            <ScrollView Grid.Column="0">
+                <VerticalStackLayout Spacing="10">
+
+                    <Label IsVisible="{Binding HasDetectResult}" Text="{Binding DetectResult}"
+                           FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
+
+                    <Border IsVisible="{Binding HasNoMedia}" Style="{StaticResource Card}" Padding="24,22">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Noch keine Medien gespeichert" FontSize="15" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                            <Label Text="Lege ein Medium (Etikettenrolle/Material) an oder lass Etikettenlänge und Sensorstatus direkt vom Drucker erkennen. Gespeicherte Medien lassen sich im Label-Designer über „Medium“ auf Vorlagen anwenden."
+                                   FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding MediaItems}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="viewmodels:MediaListItem">
+                                <Border StrokeThickness="1" Stroke="{DynamicResource ColorStroke}"
+                                        BackgroundColor="{DynamicResource ColorLayer}"
+                                        StrokeShape="RoundRectangle 10" Padding="16,12">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.EditCommand}"
+                                                              CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <Label Text="{Binding Name}" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                                            <Label Text="{Binding Details}" FontSize="12" TextColor="{DynamicResource ColorText2}" />
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="1" Text="Bearbeiten" FontSize="12.5" FontAttributes="Bold"
+                                               TextColor="{DynamicResource AccentColor}" VerticalOptions="Center" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <!-- EDITOR -->
+            <ScrollView Grid.Column="1">
+                <VerticalStackLayout Spacing="14">
+
+                    <Border IsVisible="{Binding IsNotEditing}" Style="{StaticResource Card}" Padding="18,16">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Medium" FontSize="15" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                            <Label Text="Ein Medium in der Liste antippen, um es zu bearbeiten, oder oben ein neues anlegen."
+                                   FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border IsVisible="{Binding IsEditing}" Style="{StaticResource Card}" Padding="18,16">
+                        <VerticalStackLayout Spacing="0">
+                            <Label Text="{Binding EditorTitle}" FontSize="15" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+
+                            <Label Text="NAME" Style="{StaticResource FieldLabel}" />
+                            <Entry Text="{Binding EditName}" />
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <VerticalStackLayout Grid.Column="0" Spacing="0">
+                                    <Label Text="BREITE (MM)" Style="{StaticResource FieldLabel}" />
+                                    <Entry Text="{Binding EditWidthText}" Keyboard="Numeric" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="0">
+                                    <Label Text="HÖHE (MM)" Style="{StaticResource FieldLabel}" />
+                                    <Entry Text="{Binding EditHeightText}" Keyboard="Numeric" />
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <Label Text="LÜCKE/MARKE (MM)" Style="{StaticResource FieldLabel}" />
+                            <Entry Text="{Binding EditGapText}" Keyboard="Numeric" />
+
+                            <Label Text="SENSOR (ETIKETTENERKENNUNG)" Style="{StaticResource FieldLabel}" />
+                            <Picker SelectedIndex="{Binding SensorIndex}">
+                                <Picker.ItemsSource>
+                                    <x:Array Type="{x:Type x:String}">
+                                        <x:String>Lücke zwischen Etiketten</x:String>
+                                        <x:String>Schwarzmarke</x:String>
+                                        <x:String>Endlosmaterial</x:String>
+                                    </x:Array>
+                                </Picker.ItemsSource>
+                            </Picker>
+
+                            <Label Text="MATERIAL (OPTIONAL)" Style="{StaticResource FieldLabel}" />
+                            <Entry Text="{Binding EditMaterial}" Placeholder="z.B. Thermodirekt, PET" />
+
+                            <HorizontalStackLayout Spacing="8" Margin="0,16,0,0">
+                                <Button Text="Speichern" Style="{StaticResource AccentChipButton}" Command="{Binding SaveEditCommand}" />
+                                <Button Text="Abbrechen" Style="{StaticResource ChipButton}" Command="{Binding CancelEditCommand}" />
+                            </HorizontalStackLayout>
+                            <Button Text="Medium löschen" Style="{StaticResource DangerButton}" Command="{Binding DeleteCommand}"
+                                    IsVisible="{Binding CanDelete}" Margin="0,8,0,0" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+
+    </Grid>
+
+</ContentView>

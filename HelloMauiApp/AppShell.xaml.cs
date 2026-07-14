@@ -26,6 +26,8 @@ public partial class AppShell : ContentPage
 		MainPage home,
 		DesignerPage designer,
 		TemplateManagerPage templateManager,
+		MediaLibraryPage mediaLibrary,
+		PlaceholderLibraryPage placeholderLibrary,
 		ZplConsolePage zplConsole,
 		AppearanceSettingsPage appearanceSettings,
 		AppearanceService appearanceService,
@@ -41,22 +43,15 @@ public partial class AppShell : ContentPage
 
 		home.ViewModel.NavigateToSection = section => _ = NavigateTo(section);
 		templateManager.OpenInDesigner = template => { designer.LoadTemplate(template); _ = NavigateTo("designer"); };
+		placeholderLibrary.ViewModel.OpenInDesigner = template => { designer.LoadTemplate(template); _ = NavigateTo("designer"); };
 
 		_sections["home"] = home;
 		_sections["designer"] = designer;
 		_sections["templates"] = templateManager;
 		_sections["zpl"] = zplConsole;
 		_sections["settings"] = appearanceSettings;
-		_sections["media"] = new ComingSoonPage(
-			"Medien",
-			"Medien-Presets werden aktuell im Kontext einer Vorlage verwaltet (Label-Designer → Medium/Größe). Eine eigenständige Medienverwaltung an dieser Stelle folgt in einer späteren Phase.",
-			"Vorlagen öffnen",
-			() => _ = NavigateTo("templates"));
-		_sections["placeholders"] = new ComingSoonPage(
-			"Platzhalter",
-			"Platzhalter werden aktuell pro Vorlage verwaltet (Label-Designer → Platzhalter verwalten). Eine eigenständige Platzhalterverwaltung an dieser Stelle folgt in einer späteren Phase.",
-			"Label-Designer öffnen",
-			() => _ = NavigateTo("designer"));
+		_sections["media"] = mediaLibrary;
+		_sections["placeholders"] = placeholderLibrary;
 
 		ContentHost.Content = _sections["home"];
 		UpdateRailHighlight();
