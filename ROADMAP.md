@@ -175,9 +175,24 @@ dahin gilt: Device SDK klein, hardwarenah und geschäftslogikfrei halten.
 
 ---
 
-## Arbeitsweise pro Session
+## Arbeitsweise — zwei getrennte Rollen
 
-1. In `PROJECT.md` das Zielbild und die aktuelle Phase abgleichen.
-2. Die **eine** nächste offene Aufgabe aus dieser Roadmap nehmen (nicht mehrere Phasen mischen).
-3. Umsetzen, bauen, verifizieren; Status hier von `[ ]`/`[~]` auf `[x]` setzen.
-4. Commit mit klarer Nachricht; bei Bedarf `PROJECT.md`-Snapshot (Abschnitt 10) aktualisieren.
+Diese Roadmap wird **nicht** dort umgesetzt, wo sie geschrieben wird. Es gibt zwei
+getrennte Sessions:
+
+- **Planungs-Session (Web):** kann **nicht** bauen oder testen. Ihre Aufgabe ist,
+  pro Phase einen **self-contained Arbeitsauftrag-Prompt** zu schreiben — im Stil
+  von `PRINTER_ARCHITECTURE_PLAN.md` (vollständiger Kontext, Zieltypen, Reihenfolge
+  mit Build-Checks, Verifikation). Kein Code, nur die ausführbare Spezifikation.
+- **Umsetzungs-Session (Claude Code in VS Code):** bekommt genau diesen Prompt,
+  **schreibt den Code, baut (`dotnet build`) und testet** ihn lokal, committet und
+  pusht. Hier passieren die „bauen/verifizieren"-Schritte aus den DoD.
+
+**Ablauf pro Phase:**
+1. Planungs-Session: `PROJECT.md` + aktuelle Phase abgleichen, die **eine** nächste
+   offene Aufgabe wählen (nicht mehrere Phasen mischen).
+2. Planungs-Session: dafür einen Arbeitsauftrag-Prompt schreiben (eigene Datei,
+   z.B. `prompts/phase-1a-....md`) und committen.
+3. Umsetzungs-Session (VS Code): Prompt ausführen — Code, Build, Test, Commit, Push.
+4. Danach Status hier von `[ ]`/`[~]` auf `[x]` setzen und bei Bedarf den
+   `PROJECT.md`-Snapshot (Abschnitt 10) aktualisieren.
