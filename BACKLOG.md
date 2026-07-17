@@ -122,7 +122,11 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
   Änderungen am Dashboard bestätigt sein.
 - **Lösungsskizze:** `dotnet build` + App starten, Dashboard → „Verbindung
   testen"/„Kalibrieren" mit vorhandenem Profil prüfen.
-- **Priorität:** Hoch · **Aufwand/Risiko:** S · **Status:** `[ ]`
+- **Priorität:** Hoch · **Aufwand/Risiko:** S · **Status:** `[x]`
+- **Ergebnis (2026-07-17):** Build 0 Fehler · 65/65 Tests grün · App-Start stabil,
+  API nach 1 s erreichbar · `printer.status` end-to-end gegen 192.168.1.251 sauber
+  geparst · UI-Klick Dashboard → „Verbindung testen" vom Nutzer mit
+  „Verbindung OK" bestätigt. Keine Code-Änderung nötig.
 
 ### BUG-02 — „Speichern unter neuem Namen" hinterlässt Alt-Datei mit derselben Id
 - **Fundstelle:** `ViewModels/DesignerViewModel.cs:486-496`,
