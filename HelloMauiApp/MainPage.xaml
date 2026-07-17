@@ -43,6 +43,13 @@
                             </HorizontalStackLayout>
                         </Grid>
 
+                        <VerticalStackLayout>
+                            <Label Text="AKTIVER DRUCKER" FontSize="11" TextColor="{DynamicResource ColorText3}" CharacterSpacing="0.5" />
+                            <Picker ItemsSource="{Binding Profiles}" ItemDisplayBinding="{Binding Name}"
+                                    SelectedItem="{Binding SelectedProfile}" Title="Kein Druckerprofil angelegt"
+                                    FontSize="14" TextColor="{DynamicResource ColorText}" />
+                        </VerticalStackLayout>
+
                         <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="14" ColumnSpacing="24">
                             <VerticalStackLayout Grid.Row="0" Grid.Column="0">
                                 <Label Text="VERBINDUNG" FontSize="11" TextColor="{DynamicResource ColorText3}" CharacterSpacing="0.5" />

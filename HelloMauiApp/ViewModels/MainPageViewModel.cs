@@ -1,16 +1,18 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HelloMauiApp.Services;
 using HelloMauiApp.Services.Api;
+using LabelPrinting.Models;
 using LabelPrinting.Services;
 
 namespace HelloMauiApp.ViewModels;
 
-/// <summary>ViewModel der Startseite (Rail-Ziel "Start"): Druckerstatus, Bibliotheks-Statistik, Schnellzugriff.</summary>
+/// <summary>Startseiten-ViewModel (Rail-Ziel "Start"): Druckerauswahl/-status, Bibliotheks-Statistik, Schnellzugriff.</summary>
 public partial class MainPageViewModel : ViewModelBase
 {
 	readonly IPrinterService _printerService;
-	readonly IPrinterSettingsStore _settingsStore;
+	readonly IPrinterProfileStore _profileStore;
 	readonly ILabelTemplateStore _templateStore;
 	readonly IPrintMediaStore _mediaStore;
 	readonly IAlertService _alertService;
@@ -19,6 +21,10 @@ public partial class MainPageViewModel : ViewModelBase
 	/// <summary>Von <see cref="AppShell"/> nach dem Auflösen aus DI gesetzt (Rail-Navigation ist Shell-Orchestrierung, kein Konstruktor-Abhängigkeit).</summary>
 	public Action<string>? NavigateToSection { get; set; }
 
+	/// <summary>Alle Profile für den Drucker-Picker; die Auswahl macht das Profil zum app-weiten Default.</summary>
+	public ObservableCollection<PrinterProfile> Profiles { get; } = [];
+
+	[ObservableProperty] PrinterProfile? selectedProfile;
 	[ObservableProperty] string ipValue = "Nicht konfiguriert";
 	[ObservableProperty] string dpiValue = string.Empty;
 	[ObservableProperty] string mediaValue = string.Empty;
@@ -30,16 +36,19 @@ public partial class MainPageViewModel : ViewModelBase
 	[ObservableProperty] string placeholderCount = "0";
 	[ObservableProperty] string apiValue = "—";
 
+	/// <summary>Während RefreshAsync die Auswahl setzt, darf OnSelectedProfileChanged nicht zurück in den Store schreiben.</summary>
+	bool _suppressProfileSelection;
+
 	public MainPageViewModel(
 		IPrinterService printerService,
-		IPrinterSettingsStore settingsStore,
+		IPrinterProfileStore profileStore,
 		ILabelTemplateStore templateStore,
 		IPrintMediaStore mediaStore,
 		IAlertService alertService,
 		LocalApiServer apiServer)
 	{
 		_printerService = printerService;
-		_settingsStore = settingsStore;
+		_profileStore = profileStore;
 		_templateStore = templateStore;
 		_mediaStore = mediaStore;
 		_alertService = alertService;
@@ -48,17 +57,22 @@ public partial class MainPageViewModel : ViewModelBase
 
 	public async Task RefreshAsync()
 	{
-		var settings = _settingsStore.Load();
-		bool configured = !string.IsNullOrWhiteSpace(settings.IpAddress);
+		var profiles = _profileStore.GetAll();
 
-		IpValue = configured ? $"{settings.IpAddress}:{settings.Port}" : "Nicht konfiguriert";
-		DpiValue = $"{settings.Dpi} dpi · {settings.Dpi / 25.4:0.#} Dots/mm";
-		MediaValue = $"{settings.LabelWidthMm:0.#} × {settings.LabelHeightMm:0.#} mm";
+		_suppressProfileSelection = true;
+		Profiles.Clear();
+		foreach (var profile in profiles)
+			Profiles.Add(profile);
+		SelectedProfile = Profiles.FirstOrDefault(p => p.IsDefault) ?? Profiles.FirstOrDefault();
+		_suppressProfileSelection = false;
+
+		UpdatePrinterCard();
+
 		ApiValue = _apiServer.IsRunning
 			? $"{_apiServer.BaseUrl}api"
 			: $"Nicht aktiv ({_apiServer.LastError ?? "unbekannter Grund"})";
 
-		if (!configured)
+		if (SelectedProfile is null)
 		{
 			StatusText = "Kein Drucker konfiguriert";
 			StatusBrush = new SolidColorBrush((Color)Application.Current!.Resources["ColorText3"]);
@@ -80,20 +94,50 @@ public partial class MainPageViewModel : ViewModelBase
 		PlaceholderCount = placeholders.ToString();
 	}
 
-	bool RequirePrinterConfigured(LabelPrinting.Models.PrinterSettings settings) => !string.IsNullOrWhiteSpace(settings.IpAddress);
+	partial void OnSelectedProfileChanged(PrinterProfile? value)
+	{
+		if (_suppressProfileSelection || value is null)
+			return;
+
+		// Die Picker-Auswahl IST die app-weite Druckerwahl: als Default persistieren, damit
+		// alle anderen Seiten und die lokale API denselben aktiven Drucker sehen.
+		_profileStore.SetDefault(value.Id);
+		UpdatePrinterCard();
+	}
+
+	void UpdatePrinterCard()
+	{
+		if (SelectedProfile is not { } profile)
+		{
+			IpValue = "Nicht konfiguriert";
+			DpiValue = string.Empty;
+			MediaValue = string.Empty;
+			return;
+		}
+
+		IpValue = profile.ConnectionSummary;
+		DpiValue = $"{profile.Dpi} dpi · {profile.Dpi / 25.4:0.#} Dots/mm";
+		MediaValue = $"{profile.LabelWidthMm:0.#} × {profile.LabelHeightMm:0.#} mm";
+	}
+
+	/// <summary>Liefert das aktive Profil oder zeigt den einheitlichen "kein Drucker"-Hinweis.</summary>
+	async Task<PrinterProfile?> RequireProfileAsync()
+	{
+		if (SelectedProfile is { } profile)
+			return profile;
+
+		await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ ein Druckerprofil anlegen.", "OK");
+		return null;
+	}
 
 	[RelayCommand]
 	async Task TestConnectionAsync()
 	{
-		var settings = _settingsStore.Load();
-		if (!RequirePrinterConfigured(settings))
-		{
-			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
+		if (await RequireProfileAsync() is not { } profile)
 			return;
-		}
 
 		IsBusy = true;
-		var result = await _printerService.TestConnectionAsync(settings.IpAddress, settings.Port);
+		var result = await _printerService.TestConnectionAsync(profile);
 		IsBusy = false;
 
 		StatusText = result.Success ? "Verbunden" : "Nicht erreichbar";
@@ -101,19 +145,15 @@ public partial class MainPageViewModel : ViewModelBase
 
 		await _alertService.ShowAsync(
 			result.Success ? "Verbindung OK" : "Verbindung fehlgeschlagen",
-			result.Success ? $"Drucker unter {settings.IpAddress}:{settings.Port} ist erreichbar." : result.ErrorMessage ?? "Unbekannter Fehler",
+			result.Success ? $"Drucker „{profile.Name}“ ({profile.ConnectionSummary}) ist erreichbar." : result.ErrorMessage ?? "Unbekannter Fehler",
 			"OK");
 	}
 
 	[RelayCommand]
 	async Task CalibrateAsync()
 	{
-		var settings = _settingsStore.Load();
-		if (!RequirePrinterConfigured(settings))
-		{
-			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
+		if (await RequireProfileAsync() is not { } profile)
 			return;
-		}
 
 		bool confirmed = await _alertService.ConfirmAsync(
 			"Medium kalibrieren",
@@ -124,7 +164,7 @@ public partial class MainPageViewModel : ViewModelBase
 			return;
 
 		IsBusy = true;
-		var result = await _printerService.CalibrateMediaAsync(settings.IpAddress, settings.Port);
+		var result = await _printerService.CalibrateMediaAsync(profile);
 		IsBusy = false;
 
 		if (result.Success)
@@ -139,12 +179,8 @@ public partial class MainPageViewModel : ViewModelBase
 	[RelayCommand]
 	async Task PickImageAsync()
 	{
-		var settings = _settingsStore.Load();
-		if (!RequirePrinterConfigured(settings))
-		{
-			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
+		if (await RequireProfileAsync() is not { } profile)
 			return;
-		}
 
 		FileResult? file;
 		try
@@ -171,8 +207,8 @@ public partial class MainPageViewModel : ViewModelBase
 			using var ms = new MemoryStream();
 			await stream.CopyToAsync(ms);
 
-			string label = LabelSamples.CreateImageLabelZpl(settings, ms.ToArray());
-			var result = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, label);
+			string label = LabelSamples.CreateImageLabelZpl(profile, ms.ToArray());
+			var result = await _printerService.SendZplAsync(profile, label);
 
 			await _alertService.ShowAsync(
 				result.Success ? "Gesendet" : "Fehler",

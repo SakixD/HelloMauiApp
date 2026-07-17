@@ -8,10 +8,10 @@ namespace LabelPrinting.Services;
 /// </summary>
 public static class LabelSamples
 {
-	/// <summary>Einfaches Testlabel mit Text, Zeitstempel und Barcode in der konfigurierten Labelgröße.</summary>
-	public static string CreateTestLabelZpl(PrinterSettings settings)
+	/// <summary>Einfaches Testlabel mit Text, Zeitstempel und Barcode in der Labelgröße des Profils.</summary>
+	public static string CreateTestLabelZpl(PrinterProfile profile)
 	{
-		return new ZplLabelBuilder(settings.LabelWidthMm, settings.LabelHeightMm, settings.Dpi)
+		return new ZplLabelBuilder(profile.LabelWidthMm, profile.LabelHeightMm, profile.Dpi)
 			.AddText(40, 40, "Testlabel", fontHeight: 50, fontWidth: 50)
 			.AddText(40, 110, DateTime.Now.ToString("dd.MM.yyyy HH:mm"), fontHeight: 30, fontWidth: 30)
 			.AddBarcode128(40, 170, "123456789012")
@@ -19,13 +19,13 @@ public static class LabelSamples
 	}
 
 	/// <summary>Wandelt ein Bild (Logo/Symbol) in ein Label um, das das Bild formatfüllend platziert.</summary>
-	public static string CreateImageLabelZpl(PrinterSettings settings, byte[] imageBytes)
+	public static string CreateImageLabelZpl(PrinterProfile profile, byte[] imageBytes)
 	{
-		int labelWidthDots = ZplLabelBuilder.MmToDots(settings.LabelWidthMm, settings.Dpi);
-		int labelHeightDots = ZplLabelBuilder.MmToDots(settings.LabelHeightMm, settings.Dpi);
+		int labelWidthDots = ZplLabelBuilder.MmToDots(profile.LabelWidthMm, profile.Dpi);
+		int labelHeightDots = ZplLabelBuilder.MmToDots(profile.LabelHeightMm, profile.Dpi);
 		var graphic = ZplImageConverter.Convert(imageBytes, maxWidthDots: labelWidthDots - 40, maxHeightDots: labelHeightDots - 40);
 
-		return new ZplLabelBuilder(settings.LabelWidthMm, settings.LabelHeightMm, settings.Dpi)
+		return new ZplLabelBuilder(profile.LabelWidthMm, profile.LabelHeightMm, profile.Dpi)
 			.AddImage(20, 20, graphic)
 			.Build();
 	}

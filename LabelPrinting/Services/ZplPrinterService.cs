@@ -22,7 +22,6 @@ public class ZplPrinterService : IPrinterService
 	const string RemoteUnavailableMessage = "Remote-Druck ist in dieser Version noch nicht verfügbar.";
 	const string RemoteQueryUnavailableMessage = "Statusabfragen sind für Remote-Drucker noch nicht verfügbar.";
 
-	readonly Func<string, int, IPrinterConnection> _tcpConnectionFactory;
 	readonly IPrinterConnectionFactory _connectionFactory;
 	readonly IRemotePrintClient? _remoteClient;
 
@@ -31,18 +30,11 @@ public class ZplPrinterService : IPrinterService
 	/// Optionaler Client für Profile mit <see cref="PrinterConnectionMode.Remote"/>. Solange es keinen
 	/// Server gibt, bleibt er null – Remote-Aufrufe liefern dann ein Fail-Ergebnis statt zu drucken.
 	/// </param>
-	/// <param name="tcpConnectionFactory">
-	/// Baut die Verbindung für die ip/port-Überladungen (Standard: <see cref="TcpPrinterConnection"/>).
-	/// Austauschbar, damit Konsumenten/Tests die ip/port-API nutzen können, ohne einen echten
-	/// TCP-Socket zu öffnen (z.B. eine Fake-<see cref="IPrinterConnection"/> für Unit-Tests).
-	/// </param>
 	public ZplPrinterService(
 		IPrinterConnectionFactory? connectionFactory = null,
-		IRemotePrintClient? remoteClient = null,
-		Func<string, int, IPrinterConnection>? tcpConnectionFactory = null)
+		IRemotePrintClient? remoteClient = null)
 	{
-		_tcpConnectionFactory = tcpConnectionFactory ?? ((ip, port) => new TcpPrinterConnection(ip, port));
-		_connectionFactory = connectionFactory ?? new PrinterConnectionFactory(tcpConnectionFactory);
+		_connectionFactory = connectionFactory ?? new PrinterConnectionFactory();
 		_remoteClient = remoteClient;
 	}
 
@@ -165,78 +157,6 @@ public class ZplPrinterService : IPrinterService
 
 	static string UnreachableMessage(PrinterProfile profile)
 		=> $"Zeitüberschreitung: Drucker \"{profile.Name}\" ({profile.ConnectionSummary}) nicht erreichbar.";
-
-	// ---------- IP/Port-Überladungen (TCP/IP, der bisherige Standardweg) ----------
-
-	public Task<PrinterResult> TestConnectionAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
-	{
-		if (string.IsNullOrWhiteSpace(ipAddress))
-			return Task.FromResult(PrinterResult.Fail("Keine Drucker-IP konfiguriert."));
-
-		return RunAsync(
-			_tcpConnectionFactory(ipAddress, port),
-			static (_, _) => Task.FromResult(PrinterResult.Ok()),
-			PrinterResult.Fail,
-			$"Zeitüberschreitung: Drucker unter {ipAddress}:{port} nicht erreichbar.",
-			cancellationToken);
-	}
-
-	public async Task<PrinterResult> SendZplAsync(string ipAddress, int port, string zpl, CancellationToken cancellationToken = default)
-	{
-		return await SendRawAsync(ipAddress, port, ToZplPayloadBytes(zpl), cancellationToken).ConfigureAwait(false);
-	}
-
-	public Task<PrinterResult> SendRawAsync(string ipAddress, int port, byte[] data, CancellationToken cancellationToken = default)
-	{
-		if (string.IsNullOrWhiteSpace(ipAddress))
-			return Task.FromResult(PrinterResult.Fail("Keine Drucker-IP konfiguriert."));
-
-		return RunAsync(
-			_tcpConnectionFactory(ipAddress, port),
-			(connection, ct) => WriteAsync(connection, data, ct),
-			PrinterResult.Fail,
-			$"Zeitüberschreitung: Drucker unter {ipAddress}:{port} nicht erreichbar.",
-			cancellationToken);
-	}
-
-	public Task<PrinterQueryResult> QueryAsync(string ipAddress, int port, string command, CancellationToken cancellationToken = default)
-	{
-		if (string.IsNullOrWhiteSpace(ipAddress))
-			return Task.FromResult(PrinterQueryResult.Fail("Keine Drucker-IP konfiguriert."));
-
-		return RunAsync(
-			_tcpConnectionFactory(ipAddress, port),
-			(connection, ct) => QueryCoreAsync(connection, command, ct),
-			PrinterQueryResult.Fail,
-			$"Zeitüberschreitung: Drucker unter {ipAddress}:{port} nicht erreichbar.",
-			cancellationToken);
-	}
-
-	public Task<PrinterQueryResult> GetStatusAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
-		=> QueryAsync(ipAddress, port, "~HS", cancellationToken);
-
-	public Task<PrinterResult> CalibrateMediaAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
-		=> SendZplAsync(ipAddress, port, "~JC", cancellationToken);
-
-	public async Task<PrinterStatus> GetDetailedStatusAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
-	{
-		var result = await GetStatusAsync(ipAddress, port, cancellationToken).ConfigureAwait(false);
-		return result.Success
-			? ZplStatusParser.Parse(result.ResponseText)
-			: PrinterStatus.Fail(result.ErrorMessage ?? "Unbekannter Fehler");
-	}
-
-	public async Task<PrinterQueryResult> GetVariableAsync(string ipAddress, int port, string variableName, CancellationToken cancellationToken = default)
-	{
-		var result = await QueryAsync(ipAddress, port, BuildGetVarCommand(variableName), cancellationToken).ConfigureAwait(false);
-		return result.Success ? PrinterQueryResult.Ok(SgdResponseParser.Parse(result.ResponseText)) : result;
-	}
-
-	public Task<PrinterResult> SetVariableAsync(string ipAddress, int port, string variableName, string value, CancellationToken cancellationToken = default)
-		=> SendZplAsync(ipAddress, port, BuildSetVarCommand(variableName, value), cancellationToken);
-
-	public Task<PrinterResult> RestartAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
-		=> SendZplAsync(ipAddress, port, RestartCommand, cancellationToken);
 
 	// ---------- IPrinterConnection-Überladungen (transportunabhängig, z.B. seriell) ----------
 

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HelloMauiApp.Services;
+using LabelPrinting.Services;
 
 namespace HelloMauiApp.ViewModels;
 
@@ -9,16 +10,30 @@ public partial class AppearanceSettingsViewModel : ViewModelBase
 {
 	readonly AppearanceService _appearanceService;
 	readonly INavigationService _navigationService;
+	readonly IPrinterProfileStore _profileStore;
+	readonly IPrinterService _printerService;
+	readonly IPrintMediaStore _mediaStore;
+	readonly IAlertService _alertService;
 
 	[ObservableProperty]
 	AppThemePreference selectedTheme;
 
 	public ObservableCollection<AccentSwatch> AccentSwatches { get; }
 
-	public AppearanceSettingsViewModel(AppearanceService appearanceService, INavigationService navigationService)
+	public AppearanceSettingsViewModel(
+		AppearanceService appearanceService,
+		INavigationService navigationService,
+		IPrinterProfileStore profileStore,
+		IPrinterService printerService,
+		IPrintMediaStore mediaStore,
+		IAlertService alertService)
 	{
 		_appearanceService = appearanceService;
 		_navigationService = navigationService;
+		_profileStore = profileStore;
+		_printerService = printerService;
+		_mediaStore = mediaStore;
+		_alertService = alertService;
 
 		// Direkt ins Feld statt in die Property, damit der Konstruktor nicht selbst schon
 		// OnSelectedThemeChanged (und damit einen redundanten SetTheme-Aufruf) auslöst.
@@ -54,7 +69,8 @@ public partial class AppearanceSettingsViewModel : ViewModelBase
 	}
 
 	[RelayCommand]
-	Task OpenPrinterSettingsAsync() => _navigationService.PushAsync(new PrinterSettingsPage());
+	Task OpenPrinterSettingsAsync() => _navigationService.PushAsync(
+		new PrinterProfilesPage(new PrinterProfilesViewModel(_profileStore, _printerService, _mediaStore, _alertService)));
 
 	[RelayCommand]
 	Task OpenDeviceSettingsAsync() => _navigationService.PushAsync(new PrinterDeviceSettingsPage());

@@ -26,18 +26,18 @@ public class AppApi : IAppApi
 
 	readonly ILabelTemplateStore _templateStore;
 	readonly IPrintMediaStore _mediaStore;
-	readonly IPrinterSettingsStore _settingsStore;
+	readonly IPrinterProfileStore _profileStore;
 	readonly IPrinterService _printerService;
 
 	public AppApi(
 		ILabelTemplateStore templateStore,
 		IPrintMediaStore mediaStore,
-		IPrinterSettingsStore settingsStore,
+		IPrinterProfileStore profileStore,
 		IPrinterService printerService)
 	{
 		_templateStore = templateStore;
 		_mediaStore = mediaStore;
-		_settingsStore = settingsStore;
+		_profileStore = profileStore;
 		_printerService = printerService;
 
 		Register("app.info", "Name, Version und Kommandoanzahl der laufenden App.", null, AppInfoAsync);
@@ -46,10 +46,11 @@ public class AppApi : IAppApi
 		Register("templates.save", "Vorlage speichern/überschreiben (Payload = Vorlagen-JSON).", "{ \"name\": \"...\", \"widthMm\": 100, ... }", TemplatesSaveAsync);
 		Register("templates.delete", "Vorlage löschen.", "{ \"name\": \"...\" }", TemplatesDeleteAsync);
 		Register("templates.render", "Vorlage mit Daten befüllen und als ZPL zurückgeben (druckt nicht).", "{ \"name\": \"...\", \"data\": { \"Key\": \"Wert\" } }", TemplatesRenderAsync);
-		Register("print.template", "Vorlage befüllen und auf dem konfigurierten Drucker drucken.", "{ \"name\": \"...\", \"data\": { \"Key\": \"Wert\" } }", PrintTemplateAsync);
-		Register("zpl.send", "Rohen ZPL-Code an den konfigurierten Drucker senden.", "{ \"zpl\": \"^XA...^XZ\" }", ZplSendAsync);
-		Register("printer.status", "Druckerstatus abfragen (~HS, ausgewertete Felder).", null, PrinterStatusAsync);
-		Register("printer.settings", "Konfigurierte Druckerverbindung und Labelmaße (nur lesen).", null, PrinterSettingsAsync);
+		Register("print.template", "Vorlage befüllen und drucken (Standardprofil oder \"printer\").", "{ \"name\": \"...\", \"data\": { \"Key\": \"Wert\" }, \"printer\": \"Name oder Id (optional)\" }", PrintTemplateAsync);
+		Register("zpl.send", "Rohen ZPL-Code drucken (Standardprofil oder \"printer\").", "{ \"zpl\": \"^XA...^XZ\", \"printer\": \"Name oder Id (optional)\" }", ZplSendAsync);
+		Register("printer.status", "Druckerstatus abfragen (~HS, ausgewertete Felder).", "{ \"printer\": \"Name oder Id (optional)\" }", PrinterStatusAsync);
+		Register("printer.settings", "Aktives Druckerprofil (Standard bzw. \"printer\", nur lesen).", "{ \"printer\": \"Name oder Id (optional)\" }", PrinterSettingsAsync);
+		Register("printers.list", "Alle Druckerprofile (Name, Anbindung, Default-Flag).", null, PrintersListAsync);
 		Register("media.list", "Alle gespeicherten Druckmedien-Presets.", null, MediaListAsync);
 	}
 
@@ -174,13 +175,13 @@ public class AppApi : IAppApi
 		if (rendered.Error is not null)
 			return ApiResult.Fail(rendered.Error);
 
-		var (settings, settingsError) = LoadConfiguredPrinter();
-		if (settings is null)
-			return ApiResult.Fail(settingsError!);
+		var (profile, profileError) = ResolvePrinter(payload);
+		if (profile is null)
+			return ApiResult.Fail(profileError!);
 
-		var result = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, rendered.Zpl!, ct);
+		var result = await _printerService.SendZplAsync(profile, rendered.Zpl!, ct);
 		return result.Success
-			? ApiResult.Ok(new { Printed = rendered.Template!.Name, Printer = $"{settings.IpAddress}:{settings.Port}" })
+			? ApiResult.Ok(new { Printed = rendered.Template!.Name, Printer = profile.Name, Connection = profile.ConnectionSummary })
 			: ApiResult.Fail(result.ErrorMessage ?? "Unbekannter Druckerfehler.");
 	}
 
@@ -190,28 +191,45 @@ public class AppApi : IAppApi
 		if (string.IsNullOrWhiteSpace(zpl))
 			return ApiResult.Fail("Parameter \"zpl\" fehlt.");
 
-		var (settings, settingsError) = LoadConfiguredPrinter();
-		if (settings is null)
-			return ApiResult.Fail(settingsError!);
+		var (profile, profileError) = ResolvePrinter(payload);
+		if (profile is null)
+			return ApiResult.Fail(profileError!);
 
-		var result = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, zpl, ct);
+		var result = await _printerService.SendZplAsync(profile, zpl, ct);
 		return result.Success
-			? ApiResult.Ok(new { Sent = zpl.Length, Printer = $"{settings.IpAddress}:{settings.Port}" })
+			? ApiResult.Ok(new { Sent = zpl.Length, Printer = profile.Name, Connection = profile.ConnectionSummary })
 			: ApiResult.Fail(result.ErrorMessage ?? "Unbekannter Druckerfehler.");
 	}
 
 	async Task<ApiResult> PrinterStatusAsync(JsonObject? payload, CancellationToken ct)
 	{
-		var (settings, settingsError) = LoadConfiguredPrinter();
-		if (settings is null)
-			return ApiResult.Fail(settingsError!);
+		var (profile, profileError) = ResolvePrinter(payload);
+		if (profile is null)
+			return ApiResult.Fail(profileError!);
 
-		var status = await _printerService.GetDetailedStatusAsync(settings.IpAddress, settings.Port, ct);
+		var status = await _printerService.GetDetailedStatusAsync(profile, ct);
 		return status.Success ? ApiResult.Ok(status) : ApiResult.Fail(status.ErrorMessage ?? "Statusabfrage fehlgeschlagen.");
 	}
 
-	Task<ApiResult> PrinterSettingsAsync(JsonObject? payload, CancellationToken ct) =>
-		Task.FromResult(ApiResult.Ok(_settingsStore.Load()));
+	Task<ApiResult> PrinterSettingsAsync(JsonObject? payload, CancellationToken ct)
+	{
+		var (profile, profileError) = ResolvePrinter(payload);
+		return Task.FromResult(profile is null ? ApiResult.Fail(profileError!) : ApiResult.Ok(profile));
+	}
+
+	Task<ApiResult> PrintersListAsync(JsonObject? payload, CancellationToken ct) =>
+		Task.FromResult(ApiResult.Ok(_profileStore.GetAll().Select(p => new
+		{
+			p.Id,
+			p.Name,
+			p.IsDefault,
+			p.ConnectionMode,
+			p.TransportKind,
+			Connection = p.ConnectionSummary,
+			p.LabelWidthMm,
+			p.LabelHeightMm,
+			p.Dpi,
+		}).ToList()));
 
 	async Task<ApiResult> MediaListAsync(JsonObject? payload, CancellationToken ct) =>
 		ApiResult.Ok(await _mediaStore.ListAsync());
@@ -242,11 +260,26 @@ public class AppApi : IAppApi
 		return (template, zpl, fill.ResolvedData, null);
 	}
 
-	(PrinterSettings? Settings, string? Error) LoadConfiguredPrinter()
+	/// <summary>
+	/// Löst den Zieldrucker eines Kommandos auf: optionaler Parameter "printer" (Profilname oder
+	/// Guid-Id), sonst das Default-Profil – dieselbe app-weite Druckerwahl wie im UI.
+	/// </summary>
+	(PrinterProfile? Profile, string? Error) ResolvePrinter(JsonObject? payload)
 	{
-		var settings = _settingsStore.Load();
-		return string.IsNullOrWhiteSpace(settings.IpAddress)
-			? (null, "Kein Drucker konfiguriert. Bitte in der App unter Drucker-Einstellungen die IP-Adresse eintragen.")
-			: (settings, null);
+		string? key = GetString(payload, "printer");
+		if (!string.IsNullOrWhiteSpace(key))
+		{
+			var all = _profileStore.GetAll();
+			var match = (Guid.TryParse(key, out var id) ? all.FirstOrDefault(p => p.Id == id) : null)
+				?? all.FirstOrDefault(p => string.Equals(p.Name, key, StringComparison.OrdinalIgnoreCase));
+			return match is null
+				? (null, $"Druckerprofil \"{key}\" wurde nicht gefunden. printers.list zeigt alle Profile.")
+				: (match, null);
+		}
+
+		var fallback = _profileStore.GetDefault();
+		return fallback is null
+			? (null, "Kein Druckerprofil vorhanden. Bitte in der App unter Einstellungen ein Profil anlegen.")
+			: (fallback, null);
 	}
 }

@@ -22,6 +22,8 @@ public class PrinterProfileStore : IPrinterProfileStore
 	// Lesen-Ändern-Schreiben auf dem einen JSON-Blob muss über alle Instanzen hinweg atomar sein.
 	static readonly object SyncRoot = new();
 
+	// Die Migration ist der eine legitime Nutzer der als obsolet markierten Legacy-Typen.
+#pragma warning disable CS0618
 	readonly IPrinterSettingsStore _legacyStore;
 
 	/// <param name="legacyStore">Quelle der einmaligen Migration (Standard: <see cref="PrinterSettingsStore"/>). Austauschbar für Tests.</param>
@@ -29,6 +31,7 @@ public class PrinterProfileStore : IPrinterProfileStore
 	{
 		_legacyStore = legacyStore ?? new PrinterSettingsStore();
 	}
+#pragma warning restore CS0618
 
 	public IReadOnlyList<PrinterProfile> GetAll()
 	{

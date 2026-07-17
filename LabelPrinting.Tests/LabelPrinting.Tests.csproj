@@ -35,7 +35,9 @@
 		<Compile Include="..\LabelPrinting\Models\LabelTemplateMetadata.cs" Link="Models\LabelTemplateMetadata.cs" />
 		<Compile Include="..\LabelPrinting\Models\LabelPrintParameters.cs" Link="Models\LabelPrintParameters.cs" />
 		<Compile Include="..\LabelPrinting\Models\PlaceholderDefinition.cs" Link="Models\PlaceholderDefinition.cs" />
-		<Compile Include="..\LabelPrinting\Models\PrinterSettings.cs" Link="Models\PrinterSettings.cs" />
+		<Compile Include="..\LabelPrinting\Models\PrinterProfile.cs" Link="Models\PrinterProfile.cs" />
+		<Compile Include="..\LabelPrinting\Models\PrinterConnectionMode.cs" Link="Models\PrinterConnectionMode.cs" />
+		<Compile Include="..\LabelPrinting\Models\PrinterTransportKind.cs" Link="Models\PrinterTransportKind.cs" />
 		<Compile Include="..\LabelPrinting\Services\ZplGraphic.cs" Link="Services\ZplGraphic.cs" />
 		<Compile Include="..\LabelPrinting\Services\ZplLabelBuilder.cs" Link="Services\ZplLabelBuilder.cs" />
 		<Compile Include="..\LabelPrinting\Services\ZplImageConverter.cs" Link="Services\ZplImageConverter.cs" />
@@ -48,6 +50,22 @@
 		<Compile Include="..\LabelPrinting\Services\LabelSamples.cs" Link="Services\LabelSamples.cs" />
 		<Compile Include="..\LabelPrinting\Services\IPrinterConnection.cs" Link="Services\IPrinterConnection.cs" />
 		<Compile Include="..\LabelPrinting\Services\TcpPrinterConnection.cs" Link="Services\TcpPrinterConnection.cs" />
+		<Compile Include="..\LabelPrinting\Services\IPrinterService.cs" Link="Services\IPrinterService.cs" />
+		<Compile Include="..\LabelPrinting\Services\ZplPrinterService.cs" Link="Services\ZplPrinterService.cs" />
+		<Compile Include="..\LabelPrinting\Services\IPrinterConnectionFactory.cs" Link="Services\IPrinterConnectionFactory.cs" />
+		<Compile Include="..\LabelPrinting\Services\PrinterConnectionFactory.cs" Link="Services\PrinterConnectionFactory.cs" />
+		<Compile Include="..\LabelPrinting\Services\UsbPrinterConnection.cs" Link="Services\UsbPrinterConnection.cs" />
+		<Compile Include="..\LabelPrinting\Services\BluetoothPrinterConnection.cs" Link="Services\BluetoothPrinterConnection.cs" />
+		<Compile Include="..\LabelPrinting\Services\PrinterTransportNotImplementedException.cs" Link="Services\PrinterTransportNotImplementedException.cs" />
+		<Compile Include="..\LabelPrinting\Services\PrinterResult.cs" Link="Services\PrinterResult.cs" />
+		<Compile Include="..\LabelPrinting\Services\PrinterQueryResult.cs" Link="Services\PrinterQueryResult.cs" />
+		<Compile Include="..\LabelPrinting\Remote\IRemotePrintClient.cs" Link="Remote\IRemotePrintClient.cs" />
+		<Compile Include="..\LabelPrinting\Remote\IPrintProviderHost.cs" Link="Remote\IPrintProviderHost.cs" />
+		<Compile Include="..\LabelPrinting\Remote\PrintJobRequest.cs" Link="Remote\PrintJobRequest.cs" />
+		<Compile Include="..\LabelPrinting\Remote\PrintJobResult.cs" Link="Remote\PrintJobResult.cs" />
+		<Compile Include="..\LabelPrinting\Remote\PrintPayloadKind.cs" Link="Remote\PrintPayloadKind.cs" />
+		<Compile Include="..\LabelPrinting\Remote\PrintProviderPrinterInfo.cs" Link="Remote\PrintProviderPrinterInfo.cs" />
+		<Compile Include="..\LabelPrinting\Remote\PrintProviderRegistration.cs" Link="Remote\PrintProviderRegistration.cs" />
 	</ItemGroup>
 
 </Project>

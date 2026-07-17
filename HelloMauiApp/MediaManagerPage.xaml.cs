@@ -12,7 +12,7 @@ public partial class MediaManagerPage : ContentPage
 {
 	readonly LabelTemplate _template;
 	readonly PrintMediaStore _store = new();
-	readonly PrinterSettingsStore _settingsStore = new();
+	readonly PrinterProfileStore _profileStore = new();
 	readonly IPrinterService _printerService = new ZplPrinterService();
 
 	PrintMedia? _editing;
@@ -176,15 +176,14 @@ public partial class MediaManagerPage : ContentPage
 
 	async void OnDetectClicked(object? sender, EventArgs e)
 	{
-		var settings = _settingsStore.Load();
-		if (string.IsNullOrWhiteSpace(settings.IpAddress))
+		if (_profileStore.GetDefault() is not { } profile)
 		{
-			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
+			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ ein Druckerprofil anlegen.", "OK");
 			return;
 		}
 
 		DetectBtn.IsEnabled = false;
-		var status = await _printerService.GetDetailedStatusAsync(settings.IpAddress, settings.Port);
+		var status = await _printerService.GetDetailedStatusAsync(profile);
 		DetectBtn.IsEnabled = true;
 
 		if (!status.Success)
@@ -196,7 +195,7 @@ public partial class MediaManagerPage : ContentPage
 
 		var parts = new List<string>();
 		if (status.LabelLengthDots is int dots)
-			parts.Add($"Etikettenlänge: {ZplLabelBuilder.DotsToMm(dots, settings.Dpi):0.#} mm");
+			parts.Add($"Etikettenlänge: {ZplLabelBuilder.DotsToMm(dots, profile.Dpi):0.#} mm");
 		if (status.PaperOut is bool paperOut)
 			parts.Add(paperOut ? "Kein Papier!" : "Papier OK");
 		if (status.RibbonOut is bool ribbonOut)
@@ -211,7 +210,7 @@ public partial class MediaManagerPage : ContentPage
 
 		if (status.LabelLengthDots is int lengthDots)
 		{
-			_editing = new PrintMedia { HeightMm = Math.Round(ZplLabelBuilder.DotsToMm(lengthDots, settings.Dpi), 1) };
+			_editing = new PrintMedia { HeightMm = Math.Round(ZplLabelBuilder.DotsToMm(lengthDots, profile.Dpi), 1) };
 			_isNew = true;
 			ShowEditPanel(_editing);
 		}

@@ -24,10 +24,13 @@ public static class MauiProgram
 #endif
 
 		// ---------- SDK-Services (LabelPrinting) ----------
-		builder.Services.AddSingleton<IPrinterSettingsStore, PrinterSettingsStore>();
+		// Explizite Fabriken statt offener Konstruktor-Auflösung: Die SDK-Konstruktoren haben
+		// optionale Parameter (Remote-Client, Legacy-Store), die bewusst auf ihren Defaults bleiben.
+		builder.Services.AddSingleton<IPrinterProfileStore>(_ => new PrinterProfileStore());
+		builder.Services.AddSingleton<IPrinterConnectionFactory>(_ => new PrinterConnectionFactory());
+		builder.Services.AddSingleton<IPrinterService>(sp => new ZplPrinterService(sp.GetRequiredService<IPrinterConnectionFactory>()));
 		builder.Services.AddSingleton<IPrintMediaStore, PrintMediaStore>();
 		builder.Services.AddSingleton<ILabelTemplateStore, LabelTemplateStore>();
-		builder.Services.AddSingleton<IPrinterService, ZplPrinterService>();
 
 		// ---------- App-Infrastruktur ----------
 		builder.Services.AddSingleton<AppearanceService>();

@@ -7,7 +7,7 @@ public partial class TemplateTestPage : ContentPage
 {
 	readonly LabelTemplateStore _store = new();
 	readonly IPrinterService _printerService = new ZplPrinterService();
-	readonly PrinterSettingsStore _settingsStore = new();
+	readonly PrinterProfileStore _profileStore = new();
 	readonly Dictionary<string, View> _fieldControls = [];
 
 	LabelTemplate? _template;
@@ -167,17 +167,16 @@ public partial class TemplateTestPage : ContentPage
 		if (result is null)
 			return;
 
-		var settings = _settingsStore.Load();
-		if (string.IsNullOrWhiteSpace(settings.IpAddress))
+		if (_profileStore.GetDefault() is not { } profile)
 		{
-			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
+			await DisplayAlertAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ ein Druckerprofil anlegen.", "OK");
 			return;
 		}
 
 		RenderPreview(result.ResolvedData);
 
 		string zpl = LabelTemplateRenderer.ToZpl(_template, result.ResolvedData);
-		var printResult = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, zpl);
+		var printResult = await _printerService.SendZplAsync(profile, zpl);
 
 		await DisplayAlertAsync(
 			printResult.Success ? "Gesendet" : "Fehler",

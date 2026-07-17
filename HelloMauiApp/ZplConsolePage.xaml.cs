@@ -11,14 +11,14 @@ namespace HelloMauiApp;
 public partial class ZplConsolePage : ContentView, IShellSectionView
 {
 	readonly IPrinterService _printerService;
-	readonly IPrinterSettingsStore _settingsStore;
+	readonly IPrinterProfileStore _profileStore;
 	readonly IAlertService _alertService;
 
-	public ZplConsolePage(IPrinterService printerService, IPrinterSettingsStore settingsStore, IAlertService alertService)
+	public ZplConsolePage(IPrinterService printerService, IPrinterProfileStore profileStore, IAlertService alertService)
 	{
 		InitializeComponent();
 		_printerService = printerService;
-		_settingsStore = settingsStore;
+		_profileStore = profileStore;
 		_alertService = alertService;
 	}
 
@@ -42,17 +42,20 @@ public partial class ZplConsolePage : ContentView, IShellSectionView
 		PrintTestLabelBtn.IsEnabled = !busy;
 	}
 
-	bool RequirePrinterConfigured(LabelPrinting.Models.PrinterSettings settings)
-		=> !string.IsNullOrWhiteSpace(settings.IpAddress);
+	/// <summary>Aktiver Drucker = Default-Profil; ohne Profil gibt es den einheitlichen Hinweis.</summary>
+	async Task<LabelPrinting.Models.PrinterProfile?> RequireProfileAsync()
+	{
+		if (_profileStore.GetDefault() is { } profile)
+			return profile;
+
+		await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ ein Druckerprofil anlegen.", "OK");
+		return null;
+	}
 
 	async void OnSendZplClicked(object? sender, EventArgs e)
 	{
-		var settings = _settingsStore.Load();
-		if (!RequirePrinterConfigured(settings))
-		{
-			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
+		if (await RequireProfileAsync() is not { } profile)
 			return;
-		}
 		if (string.IsNullOrWhiteSpace(ZplEditor.Text))
 		{
 			await _alertService.ShowAsync("Kein Inhalt", "Bitte ZPL-Code einfügen (z.B. von der Versanddienstleister-API).", "OK");
@@ -60,7 +63,7 @@ public partial class ZplConsolePage : ContentView, IShellSectionView
 		}
 
 		SetBusy(true);
-		var result = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, ZplEditor.Text);
+		var result = await _printerService.SendZplAsync(profile, ZplEditor.Text);
 		SetBusy(false);
 
 		await _alertService.ShowAsync(
@@ -71,12 +74,8 @@ public partial class ZplConsolePage : ContentView, IShellSectionView
 
 	async void OnSendZplQueryClicked(object? sender, EventArgs e)
 	{
-		var settings = _settingsStore.Load();
-		if (!RequirePrinterConfigured(settings))
-		{
-			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
+		if (await RequireProfileAsync() is not { } profile)
 			return;
-		}
 		if (string.IsNullOrWhiteSpace(ZplEditor.Text))
 		{
 			await _alertService.ShowAsync("Kein Inhalt", "Bitte einen Befehl eingeben, z.B. ~HS oder ! U1 getvar \"media.type\"", "OK");
@@ -84,7 +83,7 @@ public partial class ZplConsolePage : ContentView, IShellSectionView
 		}
 
 		SetBusy(true);
-		var result = await _printerService.QueryAsync(settings.IpAddress, settings.Port, ZplEditor.Text);
+		var result = await _printerService.QueryAsync(profile, ZplEditor.Text);
 		SetBusy(false);
 
 		ResponseEditor.Text = result.Success ? FormatQueryResponse(result.ResponseText) : $"Fehler: {result.ErrorMessage}";
@@ -92,15 +91,11 @@ public partial class ZplConsolePage : ContentView, IShellSectionView
 
 	async void OnQueryStatusClicked(object? sender, EventArgs e)
 	{
-		var settings = _settingsStore.Load();
-		if (!RequirePrinterConfigured(settings))
-		{
-			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
+		if (await RequireProfileAsync() is not { } profile)
 			return;
-		}
 
 		SetBusy(true);
-		var result = await _printerService.GetStatusAsync(settings.IpAddress, settings.Port);
+		var result = await _printerService.GetStatusAsync(profile);
 		SetBusy(false);
 
 		ResponseEditor.Text = result.Success ? FormatQueryResponse(result.ResponseText) : $"Fehler: {result.ErrorMessage}";
@@ -108,17 +103,13 @@ public partial class ZplConsolePage : ContentView, IShellSectionView
 
 	async void OnPrintTestLabelClicked(object? sender, EventArgs e)
 	{
-		var settings = _settingsStore.Load();
-		if (!RequirePrinterConfigured(settings))
-		{
-			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ die IP-Adresse eintragen.", "OK");
+		if (await RequireProfileAsync() is not { } profile)
 			return;
-		}
 
-		string label = LabelSamples.CreateTestLabelZpl(settings);
+		string label = LabelSamples.CreateTestLabelZpl(profile);
 
 		SetBusy(true);
-		var result = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, label);
+		var result = await _printerService.SendZplAsync(profile, label);
 		SetBusy(false);
 
 		await _alertService.ShowAsync(

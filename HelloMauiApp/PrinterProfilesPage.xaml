@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:HelloMauiApp.ViewModels"
+             x:Class="HelloMauiApp.PrinterProfilesPage"
+             x:Name="Root"
+             x:DataType="viewmodels:PrinterProfilesViewModel"
+             Title="Druckerprofile"
+             BackgroundColor="{DynamicResource ColorBase}">
+
+    <ContentPage.Resources>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Stroke" Value="{DynamicResource ColorStroke}" />
+            <Setter Property="BackgroundColor" Value="{DynamicResource ColorLayer}" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        </Style>
+
+        <Style x:Key="ChipButton" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{DynamicResource ColorControl}" />
+            <Setter Property="TextColor" Value="{DynamicResource ColorText}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HeightRequest" Value="34" />
+            <Setter Property="MinimumHeightRequest" Value="34" />
+            <Setter Property="MinimumWidthRequest" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="12,0" />
+        </Style>
+
+        <Style x:Key="AccentChipButton" TargetType="Button" BasedOn="{StaticResource ChipButton}">
+            <Setter Property="BackgroundColor" Value="{DynamicResource AccentColor}" />
+            <Setter Property="TextColor" Value="{DynamicResource AccentTextColor}" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
+
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource ChipButton}">
+            <Setter Property="BackgroundColor" Value="{DynamicResource ColorDangerSoft}" />
+            <Setter Property="TextColor" Value="{DynamicResource ColorDanger}" />
+        </Style>
+
+        <Style x:Key="FieldLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="TextColor" Value="{DynamicResource ColorText3}" />
+            <Setter Property="CharacterSpacing" Value="0.5" />
+            <Setter Property="Margin" Value="0,10,0,2" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*" Padding="24,20" RowSpacing="14">
+
+        <!-- KOPFZEILE -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                <Label Text="Druckerprofile" FontSize="22" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                <Label Text="{Binding CountText}" FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
+            </VerticalStackLayout>
+            <Button Grid.Column="1" Text="+ Neues Profil" Style="{StaticResource AccentChipButton}"
+                    Command="{Binding AddNewCommand}" VerticalOptions="Center" />
+        </Grid>
+
+        <!-- INHALT: Liste links, Editor rechts -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,330" ColumnSpacing="16">
+
+            <ScrollView Grid.Column="0">
+                <VerticalStackLayout Spacing="10">
+
+                    <Border IsVisible="{Binding HasNoProfiles}" Style="{StaticResource Card}" Padding="24,22">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Noch keine Druckerprofile" FontSize="15" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                            <Label Text="Lege ein Profil je Drucker an (Name, Anbindung, Labelgröße). Das Standard-Profil ist der app-weit aktive Drucker – auswählbar auch über die Startseite."
+                                   FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding ProfileItems}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="viewmodels:PrinterProfileListItem">
+                                <Border StrokeThickness="1" Stroke="{DynamicResource ColorStroke}"
+                                        BackgroundColor="{DynamicResource ColorLayer}"
+                                        StrokeShape="RoundRectangle 10" Padding="16,12">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.EditCommand}"
+                                                              CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                            <HorizontalStackLayout Spacing="8">
+                                                <Label Text="{Binding Name}" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                                                <Border IsVisible="{Binding IsDefault}" StrokeThickness="0" BackgroundColor="{DynamicResource AccentSoftColor}"
+                                                        StrokeShape="RoundRectangle 4" Padding="6,1" VerticalOptions="Center">
+                                                    <Label Text="Standard" FontSize="10.5" FontAttributes="Bold" TextColor="{DynamicResource AccentColor}" />
+                                                </Border>
+                                                <Border StrokeThickness="0" BackgroundColor="{DynamicResource ColorControl}"
+                                                        StrokeShape="RoundRectangle 4" Padding="6,1" VerticalOptions="Center">
+                                                    <Label Text="{Binding TransportLabel}" FontSize="10.5" TextColor="{DynamicResource ColorText2}" />
+                                                </Border>
+                                            </HorizontalStackLayout>
+                                            <Label Text="{Binding Details}" FontSize="12" TextColor="{DynamicResource ColorText2}" />
+                                        </VerticalStackLayout>
+                                        <Button Grid.Column="1" Text="Als Standard" Style="{StaticResource ChipButton}"
+                                                IsVisible="{Binding IsNotDefault}"
+                                                Command="{Binding Source={x:Reference Root}, Path=BindingContext.SetDefaultCommand}"
+                                                CommandParameter="{Binding .}" VerticalOptions="Center" />
+                                        <Label Grid.Column="2" Text="Bearbeiten" FontSize="12.5" FontAttributes="Bold"
+                                               TextColor="{DynamicResource AccentColor}" VerticalOptions="Center" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <!-- EDITOR -->
+            <ScrollView Grid.Column="1">
+                <VerticalStackLayout Spacing="14">
+
+                    <Border IsVisible="{Binding IsNotEditing}" Style="{StaticResource Card}" Padding="18,16">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Profil" FontSize="15" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                            <Label Text="Ein Profil in der Liste antippen, um es zu bearbeiten, oder oben ein neues anlegen."
+                                   FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border IsVisible="{Binding IsEditing}" Style="{StaticResource Card}" Padding="18,16">
+                        <VerticalStackLayout Spacing="0">
+                            <Label Text="{Binding EditorTitle}" FontSize="15" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+
+                            <Label Text="NAME" Style="{StaticResource FieldLabel}" />
+                            <Entry Text="{Binding EditName}" Placeholder="z.B. Lager Zebra ZT230" />
+
+                            <Label Text="ANBINDUNG" Style="{StaticResource FieldLabel}" />
+                            <Picker SelectedIndex="{Binding TransportIndex}">
+                                <Picker.ItemsSource>
+                                    <x:Array Type="{x:Type x:String}">
+                                        <x:String>Netzwerk (TCP/IP)</x:String>
+                                        <x:String>USB (in Vorbereitung)</x:String>
+                                        <x:String>Bluetooth (in Vorbereitung)</x:String>
+                                    </x:Array>
+                                </Picker.ItemsSource>
+                            </Picker>
+
+                            <Label IsVisible="{Binding IsTransportStub}"
+                                   Text="Diese Anbindungsart ist noch nicht implementiert. Das Profil lässt sich speichern, Druckversuche liefern aber einen Hinweis statt eines Drucks."
+                                   FontSize="12" TextColor="{DynamicResource ColorText2}" Margin="0,6,0,0" />
+
+                            <Grid ColumnDefinitions="*,110" ColumnSpacing="10" IsVisible="{Binding IsTcp}">
+                                <VerticalStackLayout Grid.Column="0" Spacing="0">
+                                    <Label Text="IP-ADRESSE" Style="{StaticResource FieldLabel}" />
+                                    <Entry Text="{Binding EditIp}" Placeholder="192.168.0.50" Keyboard="Url" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="0">
+                                    <Label Text="PORT" Style="{StaticResource FieldLabel}" />
+                                    <Entry Text="{Binding EditPortText}" Keyboard="Numeric" />
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <Label Text="MEDIUM ÜBERNEHMEN (OPTIONAL)" Style="{StaticResource FieldLabel}" />
+                            <Picker ItemsSource="{Binding MediaOptions}" SelectedIndex="{Binding SelectedMediaIndex}"
+                                    Title="Gespeichertes Medium wählen" />
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <VerticalStackLayout Grid.Column="0" Spacing="0">
+                                    <Label Text="BREITE (MM)" Style="{StaticResource FieldLabel}" />
+                                    <Entry Text="{Binding EditWidthText}" Keyboard="Numeric" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="0">
+                                    <Label Text="HÖHE (MM)" Style="{StaticResource FieldLabel}" />
+                                    <Entry Text="{Binding EditHeightText}" Keyboard="Numeric" />
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <Label Text="AUFLÖSUNG (DPI)" Style="{StaticResource FieldLabel}" />
+                            <Entry Text="{Binding EditDpiText}" Keyboard="Numeric" />
+
+                            <HorizontalStackLayout Spacing="8" Margin="0,16,0,0">
+                                <Button Text="Speichern" Style="{StaticResource AccentChipButton}" Command="{Binding SaveEditCommand}" />
+                                <Button Text="Abbrechen" Style="{StaticResource ChipButton}" Command="{Binding CancelEditCommand}" />
+                            </HorizontalStackLayout>
+
+                            <Button Text="Verbindung testen" Style="{StaticResource ChipButton}" Command="{Binding TestConnectionCommand}" Margin="0,8,0,0" />
+                            <Label Text="{Binding TestResult}" FontSize="12" TextColor="{DynamicResource ColorText2}" Margin="0,6,0,0" />
+
+                            <Button Text="Profil löschen" Style="{StaticResource DangerButton}" Command="{Binding DeleteCommand}"
+                                    IsVisible="{Binding CanDelete}" Margin="0,8,0,0" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+
+    </Grid>
+
+</ContentPage>

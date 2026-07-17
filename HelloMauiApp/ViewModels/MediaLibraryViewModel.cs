@@ -18,7 +18,7 @@ public record MediaListItem(string Name, string Details, PrintMedia Media);
 public partial class MediaLibraryViewModel : ViewModelBase
 {
 	readonly IPrintMediaStore _mediaStore;
-	readonly IPrinterSettingsStore _settingsStore;
+	readonly IPrinterProfileStore _profileStore;
 	readonly IPrinterService _printerService;
 	readonly IAlertService _alertService;
 
@@ -57,12 +57,12 @@ public partial class MediaLibraryViewModel : ViewModelBase
 
 	public MediaLibraryViewModel(
 		IPrintMediaStore mediaStore,
-		IPrinterSettingsStore settingsStore,
+		IPrinterProfileStore profileStore,
 		IPrinterService printerService,
 		IAlertService alertService)
 	{
 		_mediaStore = mediaStore;
-		_settingsStore = settingsStore;
+		_profileStore = profileStore;
 		_printerService = printerService;
 		_alertService = alertService;
 	}
@@ -175,15 +175,14 @@ public partial class MediaLibraryViewModel : ViewModelBase
 	[RelayCommand]
 	async Task DetectAsync()
 	{
-		var settings = _settingsStore.Load();
-		if (string.IsNullOrWhiteSpace(settings.IpAddress))
+		if (_profileStore.GetDefault() is not { } profile)
 		{
-			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
+			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ ein Druckerprofil anlegen.", "OK");
 			return;
 		}
 
 		IsBusy = true;
-		var status = await _printerService.GetDetailedStatusAsync(settings.IpAddress, settings.Port);
+		var status = await _printerService.GetDetailedStatusAsync(profile);
 		IsBusy = false;
 
 		if (!status.Success)
@@ -194,7 +193,7 @@ public partial class MediaLibraryViewModel : ViewModelBase
 
 		var parts = new List<string>();
 		if (status.LabelLengthDots is int dots)
-			parts.Add($"Etikettenlänge: {ZplLabelBuilder.DotsToMm(dots, settings.Dpi):0.#} mm");
+			parts.Add($"Etikettenlänge: {ZplLabelBuilder.DotsToMm(dots, profile.Dpi):0.#} mm");
 		if (status.PaperOut is bool paperOut)
 			parts.Add(paperOut ? "Kein Papier!" : "Papier OK");
 		if (status.RibbonOut is bool ribbonOut)
@@ -209,7 +208,7 @@ public partial class MediaLibraryViewModel : ViewModelBase
 		if (status.LabelLengthDots is int lengthDots)
 		{
 			StartEditing(
-				new PrintMedia { HeightMm = Math.Round(ZplLabelBuilder.DotsToMm(lengthDots, settings.Dpi), 1) },
+				new PrintMedia { HeightMm = Math.Round(ZplLabelBuilder.DotsToMm(lengthDots, profile.Dpi), 1) },
 				isNew: true,
 				title: "Erkanntes Medium");
 		}

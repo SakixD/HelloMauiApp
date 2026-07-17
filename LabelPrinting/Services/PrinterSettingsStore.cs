@@ -3,6 +3,7 @@ using LabelPrinting.Models;
 namespace LabelPrinting.Services;
 
 /// <summary>Speichert/lädt die Druckerkonfiguration app-weit über <see cref="Preferences"/>.</summary>
+[Obsolete("Ersetzt durch PrinterProfile/IPrinterProfileStore; wird nur noch für die einmalige Migration gelesen.")]
 public class PrinterSettingsStore : IPrinterSettingsStore
 {
 	const string IpKey = "printer_ip";

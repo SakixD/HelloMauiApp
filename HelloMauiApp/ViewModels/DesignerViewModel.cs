@@ -19,7 +19,7 @@ public partial class DesignerViewModel : ViewModelBase
 {
 	readonly ILabelTemplateStore _store;
 	readonly IPrinterService _printerService;
-	readonly IPrinterSettingsStore _settingsStore;
+	readonly IPrinterProfileStore _profileStore;
 	readonly INavigationService _navigationService;
 	readonly IAlertService _alertService;
 	readonly IFileDialogService _fileDialogs;
@@ -160,14 +160,14 @@ public partial class DesignerViewModel : ViewModelBase
 	public DesignerViewModel(
 		ILabelTemplateStore store,
 		IPrinterService printerService,
-		IPrinterSettingsStore settingsStore,
+		IPrinterProfileStore profileStore,
 		INavigationService navigationService,
 		IAlertService alertService,
 		IFileDialogService fileDialogs)
 	{
 		_store = store;
 		_printerService = printerService;
-		_settingsStore = settingsStore;
+		_profileStore = profileStore;
 		_navigationService = navigationService;
 		_alertService = alertService;
 		_fileDialogs = fileDialogs;
@@ -193,13 +193,14 @@ public partial class DesignerViewModel : ViewModelBase
 		}
 		else
 		{
-			var settings = _settingsStore.Load();
+			// Geometrie-Vorgabe aus dem aktiven Profil; ohne Profile greifen die Modell-Defaults (100×150, 203 dpi).
+			var profile = _profileStore.GetDefault() ?? new PrinterProfile();
 			_template = new LabelTemplate
 			{
 				Name = "Neue Vorlage",
-				WidthMm = settings.LabelWidthMm,
-				HeightMm = settings.LabelHeightMm,
-				Dpi = settings.Dpi,
+				WidthMm = profile.LabelWidthMm,
+				HeightMm = profile.LabelHeightMm,
+				Dpi = profile.Dpi,
 			};
 		}
 
@@ -579,10 +580,9 @@ public partial class DesignerViewModel : ViewModelBase
 	[RelayCommand]
 	async Task PrintAsync()
 	{
-		var settings = _settingsStore.Load();
-		if (string.IsNullOrWhiteSpace(settings.IpAddress))
+		if (_profileStore.GetDefault() is not { } profile)
 		{
-			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Drucker-Einstellungen“ die IP-Adresse eintragen.", "OK");
+			await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ ein Druckerprofil anlegen.", "OK");
 			return;
 		}
 
@@ -608,7 +608,7 @@ public partial class DesignerViewModel : ViewModelBase
 
 		IsBusy = true;
 		string zpl = LabelTemplateRenderer.ToZpl(_template);
-		var result = await _printerService.SendZplAsync(settings.IpAddress, settings.Port, zpl);
+		var result = await _printerService.SendZplAsync(profile, zpl);
 		IsBusy = false;
 
 		await _alertService.ShowAsync(

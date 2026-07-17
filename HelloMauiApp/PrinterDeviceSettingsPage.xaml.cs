@@ -12,7 +12,7 @@ namespace HelloMauiApp;
 public partial class PrinterDeviceSettingsPage : ContentPage
 {
 	readonly IPrinterService _printerService = new ZplPrinterService();
-	readonly PrinterSettingsStore _settingsStore = new();
+	readonly PrinterProfileStore _profileStore = new();
 
 	static readonly (string SgdName, Func<PrinterDeviceSettingsPage, Entry> Entry)[] CuratedTextFields =
 	[
@@ -35,9 +35,12 @@ public partial class PrinterDeviceSettingsPage : ContentPage
 
 		RefreshPorts();
 
-		var settings = _settingsStore.Load();
-		NetworkIpEntry.Text = settings.IpAddress;
-		NetworkPortEntry.Text = settings.Port.ToString();
+		// Netzwerkfelder mit dem aktiven TCP-Profil vorbelegen (bei USB/Bluetooth-Profil leer lassen).
+		if (_profileStore.GetDefault() is { TransportKind: LabelPrinting.Models.PrinterTransportKind.Tcp } profile)
+		{
+			NetworkIpEntry.Text = profile.IpAddress;
+			NetworkPortEntry.Text = profile.Port.ToString();
+		}
 
 		ConnectionTypePicker.SelectedIndex = 0;
 	}
