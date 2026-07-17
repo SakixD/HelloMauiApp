@@ -22,10 +22,16 @@
 
 ## Phase 0 — Fundament (ERLEDIGT)
 
-`[x]` Ein-Drucker-App: ZPL-Erzeugung, Bild→ZPL, RAW-Socket-Druck (TCP/9100),
-Status-/SGD-Abfragen, MAUI-Test-UI, Einzeldrucker-Persistenz.
+`[x]` Grundlagen stehen und tragen bereits zentrale SDK-Prinzipien:
+- Library ↔ App getrennt (`LabelPrinting` vs. `HelloMauiApp`) → „UI austauschbar".
+- Interface-Abstraktion `IPrinterService` → Keim des Adapter-Modells.
+- Ergebnistypen ohne Exception-Leak → „App behandelt keine Hardware-Fehler".
+- Bidirektionale Kommunikation (`QueryAsync`/`~HS`/SGD) → Basis fürs Event-Modell.
+- Funktion: ZPL-Erzeugung, Bild→ZPL, RAW-Druck (TCP/9100), MAUI-Test-UI,
+  Einzeldrucker-Persistenz.
 
-**DoD:** erreicht — funktionsfähige Basis in `LabelPrinting` + `HelloMauiApp`.
+**DoD:** erreicht — funktionsfähige, sauber geschichtete Basis. Offen bleibt nur
+die Verallgemeinerung (Profil-/Geräteobjekt statt `ip`/`port`), siehe Phase 1.
 
 ---
 

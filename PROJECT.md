@@ -149,13 +149,26 @@ gebaut wird davon jetzt **nichts**:
 
 ## 10. Aktueller Stand (Snapshot)
 
-**Umgesetzt:**
-- `LabelPrinting`-Library: ZPL-Erzeugung (`ZplLabelBuilder`), Bild→ZPL
+**Umgesetzt — und schon jetzt tragende SDK-Grundlagen (kein Wegwerf-Prototyp):**
+- **Trennung Library ↔ App:** `LabelPrinting` ist als eigenständiges Projekt von
+  `HelloMauiApp` gelöst → das Prinzip „UI austauschbar, Logik in der SDK" ist
+  strukturell bereits realisiert.
+- **Interface-Abstraktion:** `IPrinterService` trennt Kontrakt von Implementierung
+  → der Keim des späteren Adapter-Modells steht.
+- **Saubere Ergebnistypen:** `PrinterResult`/`PrinterQueryResult` kapseln Fehler,
+  es leaken **keine** Exceptions zur UI → das Prinzip „App behandelt keine
+  Hardware-Fehler selbst" ist eingehalten.
+- **Bidirektionale Kommunikation:** `QueryAsync` (`~HS`-Status, SGD `getvar`)
+  liest Antworten der Hardware → die Basis für das spätere Event-Modell existiert.
+- **Konkrete Funktion:** ZPL-Erzeugung (`ZplLabelBuilder`), Bild→ZPL
   (`ZplImageConverter`/SkiaSharp), RAW-Socket-Druck über TCP/9100
-  (`ZplPrinterService`), Status-/SGD-Abfragen (`QueryAsync`).
-- `HelloMauiApp`: Test-UI (Testverbindung, Testlabel, Bilddruck, freier
-  ZPL-Editor, `~HS`-Status, `~JC`-Kalibrierung), Einzeldrucker-Einstellungen.
-- Persistenz eines **einzelnen** Druckers über MAUI `Preferences`.
+  (`ZplPrinterService`), MAUI-Test-UI (Testverbindung, Testlabel, Bilddruck,
+  freier ZPL-Editor, `~JC`-Kalibrierung), Druckerkonfig über MAUI `Preferences`.
+
+**Grenzen des jetzigen Stands (was der nächste Schritt aufhebt):**
+- Abstraktion greift noch **pro Aufruf mit `ip`/`port`**, nicht über ein
+  Geräte-/Profilobjekt; Persistenz kennt genau **einen** Drucker; Transport ist
+  fest TCP. Genau hier setzt Phase 1 an (siehe `ROADMAP.md`).
 
 **Geplant, aber noch nicht im Code** (Detailspec liegt vor):
 - Mehrfach-Drucker-Refactor: Transport-Abstraktion (`IPrinterTransport`,
