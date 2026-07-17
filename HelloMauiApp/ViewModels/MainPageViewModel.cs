@@ -126,6 +126,11 @@ public partial class MainPageViewModel : ViewModelBase
 		if (SelectedProfile is { } profile)
 			return profile;
 
+		// Fallback auf den Store: Der Picker kann (z.B. direkt nach einem ItemsSource-Wechsel auf
+		// Windows) kurzzeitig keine Auswahl haben, obwohl ein Default-Profil existiert.
+		if (_profileStore.GetDefault() is { } fallback)
+			return fallback;
+
 		await _alertService.ShowAsync("Kein Drucker", "Bitte zuerst unter „Einstellungen“ ein Druckerprofil anlegen.", "OK");
 		return null;
 	}
