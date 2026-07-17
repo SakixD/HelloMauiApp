@@ -2,55 +2,88 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="HelloMauiApp.MediaManagerPage"
-             Title="Druckmedium">
+             Title="Druckmedium"
+             BackgroundColor="{DynamicResource ColorBg}">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="12">
+    <!-- Card/ChipButton/FieldLabel kommen zentral aus Resources/Styles/Styles.xaml -->
 
-            <Label Text="Vom Drucker erkennen" FontAttributes="Bold" />
-            <Label Text="Liest die zuletzt kalibrierte Etikettenlänge sowie Papier-/Farbband-/Kopfstatus aus. Die Breite kann der Drucker nicht melden und muss manuell eingetragen werden."
-                   FontSize="12" TextColor="Gray" />
-            <Button x:Name="DetectBtn" Text="Medium vom Drucker erkennen" Clicked="OnDetectClicked" />
-            <Label x:Name="DetectResultLabel" FontSize="12" TextColor="Gray" IsVisible="False" />
+    <Grid RowDefinitions="Auto,*" Padding="24,20" RowSpacing="14">
 
-            <BoxView HeightRequest="1" BackgroundColor="LightGray" Margin="0,8" />
+        <!-- KOPFZEILE -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                <Label Text="Druckmedium" FontSize="22" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                <Label Text="Medien-Presets verwalten oder eines auf diese Vorlage übernehmen"
+                       FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
+            </VerticalStackLayout>
+            <Button Grid.Column="1" Text="+ Neues Medium" Style="{StaticResource AccentChipButton}"
+                    Clicked="OnAddMediaClicked" VerticalOptions="Center" />
+        </Grid>
 
-            <Label Text="Gespeicherte Medien" FontAttributes="Bold" />
-            <VerticalStackLayout x:Name="MediaListLayout" Spacing="8" />
-            <Button Text="Neues Medium" Clicked="OnAddMediaClicked" />
+        <!-- INHALT -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="12" MaximumWidthRequest="860" HorizontalOptions="Fill">
 
-            <Border x:Name="EditPanel" IsVisible="False" Padding="12" StrokeThickness="1" Stroke="LightGray">
-                <VerticalStackLayout Spacing="6">
-                    <Label Text="Name" />
-                    <Entry x:Name="NameEntry" />
-                    <Label Text="Breite (mm)" />
-                    <Entry x:Name="WidthEntry" Keyboard="Numeric" />
-                    <Label Text="Höhe (mm)" />
-                    <Entry x:Name="HeightEntry" Keyboard="Numeric" />
-                    <Label Text="Gap (mm)" />
-                    <Entry x:Name="GapEntry" Keyboard="Numeric" />
-                    <Label Text="Sensor" />
-                    <Picker x:Name="SensorPicker">
-                        <Picker.ItemsSource>
-                            <x:Array Type="{x:Type x:String}">
-                                <x:String>Lücke</x:String>
-                                <x:String>Schwarzmarke</x:String>
-                                <x:String>Endlos</x:String>
-                            </x:Array>
-                        </Picker.ItemsSource>
-                    </Picker>
-                    <Label Text="Material" />
-                    <Entry x:Name="MaterialEntry" Placeholder="z.B. Thermodirekt, Thermotransfer-Papier..." />
+                <Border Style="{StaticResource Card}" Padding="18,16">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Vom Drucker erkennen" Style="{StaticResource SectionTitle}" />
+                        <Label Text="Liest die zuletzt kalibrierte Etikettenlänge sowie Papier-/Farbband-/Kopfstatus aus. Die Breite kann der Drucker nicht melden und muss manuell eingetragen werden."
+                               FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
+                        <Button x:Name="DetectBtn" Text="Medium vom Drucker erkennen" Style="{StaticResource ChipButton}"
+                                Clicked="OnDetectClicked" HorizontalOptions="Start" Margin="0,6,0,0" />
+                        <Label x:Name="DetectResultLabel" FontSize="12" TextColor="{DynamicResource ColorText2}" IsVisible="False" />
+                    </VerticalStackLayout>
+                </Border>
 
-                    <HorizontalStackLayout Spacing="8">
-                        <Button Text="Speichern" Clicked="OnSaveMediaClicked" />
-                        <Button Text="Löschen" BackgroundColor="IndianRed" TextColor="White" Clicked="OnDeleteMediaClicked" />
-                        <Button Text="Abbrechen" Clicked="OnCancelEditClicked" />
-                    </HorizontalStackLayout>
-                </VerticalStackLayout>
-            </Border>
+                <Label Text="Gespeicherte Medien" Style="{StaticResource SectionTitle}" Margin="0,4,0,0" />
+                <VerticalStackLayout x:Name="MediaListLayout" Spacing="8" />
 
-        </VerticalStackLayout>
-    </ScrollView>
+                <Border x:Name="EditPanel" IsVisible="False" Style="{StaticResource Card}" Padding="18,16">
+                    <VerticalStackLayout Spacing="0">
+                        <Label Text="Medium bearbeiten" Style="{StaticResource SectionTitle}" />
+
+                        <Label Text="NAME" Style="{StaticResource FieldLabel}" />
+                        <Entry x:Name="NameEntry" />
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <VerticalStackLayout Grid.Column="0" Spacing="0">
+                                <Label Text="BREITE (MM)" Style="{StaticResource FieldLabel}" />
+                                <Entry x:Name="WidthEntry" Keyboard="Numeric" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="0">
+                                <Label Text="HÖHE (MM)" Style="{StaticResource FieldLabel}" />
+                                <Entry x:Name="HeightEntry" Keyboard="Numeric" />
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <Label Text="GAP (MM)" Style="{StaticResource FieldLabel}" />
+                        <Entry x:Name="GapEntry" Keyboard="Numeric" />
+
+                        <Label Text="SENSOR" Style="{StaticResource FieldLabel}" />
+                        <Picker x:Name="SensorPicker">
+                            <Picker.ItemsSource>
+                                <x:Array Type="{x:Type x:String}">
+                                    <x:String>Lücke</x:String>
+                                    <x:String>Schwarzmarke</x:String>
+                                    <x:String>Endlos</x:String>
+                                </x:Array>
+                            </Picker.ItemsSource>
+                        </Picker>
+
+                        <Label Text="MATERIAL" Style="{StaticResource FieldLabel}" />
+                        <Entry x:Name="MaterialEntry" Placeholder="z.B. Thermodirekt, Thermotransfer-Papier..." />
+
+                        <HorizontalStackLayout Spacing="8" Margin="0,16,0,0">
+                            <Button Text="Speichern" Style="{StaticResource AccentChipButton}" Clicked="OnSaveMediaClicked" />
+                            <Button Text="Löschen" Style="{StaticResource DangerButton}" Clicked="OnDeleteMediaClicked" />
+                            <Button Text="Abbrechen" Style="{StaticResource ChipButton}" Clicked="OnCancelEditClicked" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
 
 </ContentPage>

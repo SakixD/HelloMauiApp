@@ -40,7 +40,9 @@ public partial class MediaManagerPage : ContentPage
 		var mediaList = await _store.ListAsync();
 		if (mediaList.Count == 0)
 		{
-			MediaListLayout.Children.Add(new Label { Text = "Noch keine Medien gespeichert.", TextColor = Colors.Gray });
+			var empty = new Label { Text = "Noch keine Medien gespeichert." };
+			empty.SetDynamicResource(Label.TextColorProperty, "ColorText2");
+			MediaListLayout.Children.Add(empty);
 			return;
 		}
 
@@ -48,6 +50,7 @@ public partial class MediaManagerPage : ContentPage
 			MediaListLayout.Children.Add(CreateRow(media));
 	}
 
+	/// <summary>Listenzeile im Stil der Profilliste – Farben/Styles als Theme-Tokens statt hartcodiert.</summary>
 	View CreateRow(PrintMedia media)
 	{
 		var grid = new Grid { ColumnSpacing = 8 };
@@ -62,9 +65,14 @@ public partial class MediaManagerPage : ContentPage
 			Text = $"{media.Name}  ({media.WidthMm:0.#}×{media.HeightMm:0.#} mm, {SensorLabel(media.SensorType)}){suffix}",
 			VerticalOptions = LayoutOptions.Center,
 			LineBreakMode = LineBreakMode.TailTruncation,
+			FontSize = 13,
 		};
-		var applyButton = new Button { Text = "Übernehmen" };
-		var editButton = new Button { Text = "Bearbeiten" };
+		nameLabel.SetDynamicResource(Label.TextColorProperty, "ColorText");
+
+		var applyButton = new Button { Text = "Übernehmen", VerticalOptions = LayoutOptions.Center };
+		applyButton.SetDynamicResource(VisualElement.StyleProperty, "ChipButton");
+		var editButton = new Button { Text = "Bearbeiten", VerticalOptions = LayoutOptions.Center };
+		editButton.SetDynamicResource(VisualElement.StyleProperty, "ChipButton");
 
 		applyButton.Clicked += (s, e) => ApplyMedia(media);
 		editButton.Clicked += (s, e) => EditMedia(media);
@@ -76,7 +84,16 @@ public partial class MediaManagerPage : ContentPage
 		grid.Children.Add(applyButton);
 		grid.Children.Add(editButton);
 
-		return new Border { Padding = 10, StrokeThickness = 1, Stroke = Colors.LightGray, Content = grid };
+		var border = new Border
+		{
+			Padding = new Thickness(16, 12),
+			StrokeThickness = 1,
+			StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
+			Content = grid,
+		};
+		border.SetDynamicResource(Border.StrokeProperty, "ColorStroke");
+		border.SetDynamicResource(VisualElement.BackgroundColorProperty, "ColorLayer");
+		return border;
 	}
 
 	static string SensorLabel(MediaSensorType type) => type switch
