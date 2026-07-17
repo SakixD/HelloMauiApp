@@ -74,7 +74,17 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
   `PrinterProfilesPage` durch. Aufrufer (`DesignerViewModel:469-471`,
   `AppShell:147-148`, `MainPageViewModel`) entsprechend anpassen.
   Verhalten unverändert.
-- **Priorität:** Hoch · **Aufwand/Risiko:** M · **Status:** `[ ]`
+- **Priorität:** Hoch · **Aufwand/Risiko:** M · **Status:** `[x]`
+- **Ergebnis (2026-07-18):** Alle vier Seiten beziehen die DI-Singletons jetzt
+  per Konstruktor als Interfaces (`ILabelTemplateStore`/`IPrintMediaStore`/
+  `IPrinterProfileStore`/`IPrinterService`); kein `new`-Service-Muster mehr in
+  der App (verifiziert per Suche). Aufrufer angepasst: `DesignerViewModel`
+  (+`IPrintMediaStore`-Abhängigkeit, reicht an drei Seiten durch), `AppShell`
+  (+3 Services für den templatetest-Drill-down), `AppearanceSettingsViewModel`
+  (reicht vorhandene Services weiter). `MainPageViewModel` brauchte keine
+  Änderung (baut keine Seiten). Statischer Lock im `PrinterProfileStore`
+  bewusst noch drin — Rückstufung auf Instanz-Lock als Folgeschritt. Build 0
+  Fehler · 65/65 Tests grün · App-Start + Drill-downs vom Nutzer bestätigt.
 
 ### CLEAN-03 — Duplizierte XAML-Styles zentralisieren
 - **Fundstelle:** `DesignerPage.xaml:8-58`, `PrinterProfilesPage.xaml:11-47`,

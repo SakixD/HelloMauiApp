@@ -73,5 +73,5 @@ public partial class AppearanceSettingsViewModel : ViewModelBase
 		new PrinterProfilesPage(new PrinterProfilesViewModel(_profileStore, _printerService, _mediaStore, _alertService)));
 
 	[RelayCommand]
-	Task OpenDeviceSettingsAsync() => _navigationService.PushAsync(new PrinterDeviceSettingsPage());
+	Task OpenDeviceSettingsAsync() => _navigationService.PushAsync(new PrinterDeviceSettingsPage(_printerService, _profileStore));
 }

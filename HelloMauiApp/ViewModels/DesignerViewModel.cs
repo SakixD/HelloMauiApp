@@ -20,6 +20,7 @@ public partial class DesignerViewModel : ViewModelBase
 	readonly ILabelTemplateStore _store;
 	readonly IPrinterService _printerService;
 	readonly IPrinterProfileStore _profileStore;
+	readonly IPrintMediaStore _mediaStore;
 	readonly INavigationService _navigationService;
 	readonly IAlertService _alertService;
 	readonly IFileDialogService _fileDialogs;
@@ -161,6 +162,7 @@ public partial class DesignerViewModel : ViewModelBase
 		ILabelTemplateStore store,
 		IPrinterService printerService,
 		IPrinterProfileStore profileStore,
+		IPrintMediaStore mediaStore,
 		INavigationService navigationService,
 		IAlertService alertService,
 		IFileDialogService fileDialogs)
@@ -168,6 +170,7 @@ public partial class DesignerViewModel : ViewModelBase
 		_store = store;
 		_printerService = printerService;
 		_profileStore = profileStore;
+		_mediaStore = mediaStore;
 		_navigationService = navigationService;
 		_alertService = alertService;
 		_fileDialogs = fileDialogs;
@@ -467,8 +470,8 @@ public partial class DesignerViewModel : ViewModelBase
 	// ---------- Drill-downs ----------
 
 	[RelayCommand] Task ManagePlaceholdersAsync() => _navigationService.PushAsync(new PlaceholderManagerPage(_template));
-	[RelayCommand] Task ManageMediaAsync() => _navigationService.PushAsync(new MediaManagerPage(_template));
-	[RelayCommand] Task EditPropertiesAsync() => _navigationService.PushAsync(new TemplatePropertiesPage(_template));
+	[RelayCommand] Task ManageMediaAsync() => _navigationService.PushAsync(new MediaManagerPage(_mediaStore, _profileStore, _printerService, _template));
+	[RelayCommand] Task EditPropertiesAsync() => _navigationService.PushAsync(new TemplatePropertiesPage(_mediaStore, _template));
 
 	// ---------- Neu / Speichern / Laden / Export / Import / Drucken ----------
 
@@ -601,7 +604,7 @@ public partial class DesignerViewModel : ViewModelBase
 				"Abbrechen");
 
 			if (goToTest)
-				await _navigationService.PushAsync(new TemplateTestPage(_template));
+				await _navigationService.PushAsync(new TemplateTestPage(_store, _printerService, _profileStore, _template));
 
 			return;
 		}

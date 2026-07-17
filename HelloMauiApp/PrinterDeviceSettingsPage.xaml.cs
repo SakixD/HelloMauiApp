@@ -11,8 +11,8 @@ namespace HelloMauiApp;
 /// </summary>
 public partial class PrinterDeviceSettingsPage : ContentPage
 {
-	readonly IPrinterService _printerService = new ZplPrinterService();
-	readonly PrinterProfileStore _profileStore = new();
+	readonly IPrinterService _printerService;
+	readonly IPrinterProfileStore _profileStore;
 
 	static readonly (string SgdName, Func<PrinterDeviceSettingsPage, Entry> Entry)[] CuratedTextFields =
 	[
@@ -24,9 +24,11 @@ public partial class PrinterDeviceSettingsPage : ContentPage
 
 	const string DhcpVariableName = "ip.dhcp.enable";
 
-	public PrinterDeviceSettingsPage()
+	public PrinterDeviceSettingsPage(IPrinterService printerService, IPrinterProfileStore profileStore)
 	{
 		InitializeComponent();
+		_printerService = printerService;
+		_profileStore = profileStore;
 	}
 
 	protected override void OnAppearing()

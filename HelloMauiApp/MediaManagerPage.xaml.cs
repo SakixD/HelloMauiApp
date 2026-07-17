@@ -11,16 +11,19 @@ namespace HelloMauiApp;
 public partial class MediaManagerPage : ContentPage
 {
 	readonly LabelTemplate _template;
-	readonly PrintMediaStore _store = new();
-	readonly PrinterProfileStore _profileStore = new();
-	readonly IPrinterService _printerService = new ZplPrinterService();
+	readonly IPrintMediaStore _store;
+	readonly IPrinterProfileStore _profileStore;
+	readonly IPrinterService _printerService;
 
 	PrintMedia? _editing;
 	bool _isNew;
 
-	public MediaManagerPage(LabelTemplate template)
+	public MediaManagerPage(IPrintMediaStore store, IPrinterProfileStore profileStore, IPrinterService printerService, LabelTemplate template)
 	{
 		InitializeComponent();
+		_store = store;
+		_profileStore = profileStore;
+		_printerService = printerService;
 		_template = template;
 	}
 

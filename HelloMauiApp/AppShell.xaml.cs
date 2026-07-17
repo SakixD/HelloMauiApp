@@ -1,5 +1,6 @@
 using HelloMauiApp.Services;
 using LabelPrinting.Models;
+using LabelPrinting.Services;
 
 namespace HelloMauiApp;
 
@@ -16,6 +17,9 @@ public partial class AppShell : ContentPage
 {
 	readonly AppearanceService _appearanceService;
 	readonly INavigationService _navigationService;
+	readonly ILabelTemplateStore _templateStore;
+	readonly IPrinterService _printerService;
+	readonly IPrinterProfileStore _profileStore;
 	readonly Dictionary<string, (Border Row, Microsoft.Maui.Controls.Shapes.Path Icon, Label Label, BoxView Stripe)> _navRows = [];
 	readonly Dictionary<string, View> _sections = [];
 
@@ -31,13 +35,19 @@ public partial class AppShell : ContentPage
 		ZplConsolePage zplConsole,
 		AppearanceSettingsPage appearanceSettings,
 		AppearanceService appearanceService,
-		INavigationService navigationService)
+		INavigationService navigationService,
+		ILabelTemplateStore templateStore,
+		IPrinterService printerService,
+		IPrinterProfileStore profileStore)
 	{
 		InitializeComponent();
 		NavigationPage.SetHasNavigationBar(this, false);
 
 		_appearanceService = appearanceService;
 		_navigationService = navigationService;
+		_templateStore = templateStore;
+		_printerService = printerService;
+		_profileStore = profileStore;
 
 		RegisterNavRows();
 
@@ -145,7 +155,7 @@ public partial class AppShell : ContentPage
 		}
 
 		if (section == "templatetest")
-			await _navigationService.PushAsync(new TemplateTestPage());
+			await _navigationService.PushAsync(new TemplateTestPage(_templateStore, _printerService, _profileStore));
 	}
 
 	void OnHomeTapped(object? sender, TappedEventArgs e) => _ = NavigateTo("home");

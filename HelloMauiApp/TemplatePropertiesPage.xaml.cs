@@ -11,11 +11,12 @@ namespace HelloMauiApp;
 public partial class TemplatePropertiesPage : ContentPage
 {
 	readonly LabelTemplate _template;
-	readonly PrintMediaStore _mediaStore = new();
+	readonly IPrintMediaStore _mediaStore;
 
-	public TemplatePropertiesPage(LabelTemplate template)
+	public TemplatePropertiesPage(IPrintMediaStore mediaStore, LabelTemplate template)
 	{
 		InitializeComponent();
+		_mediaStore = mediaStore;
 		_template = template;
 	}
 

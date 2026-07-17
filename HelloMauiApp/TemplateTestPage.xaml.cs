@@ -5,21 +5,24 @@ namespace HelloMauiApp;
 
 public partial class TemplateTestPage : ContentPage
 {
-	readonly LabelTemplateStore _store = new();
-	readonly IPrinterService _printerService = new ZplPrinterService();
-	readonly PrinterProfileStore _profileStore = new();
+	readonly ILabelTemplateStore _store;
+	readonly IPrinterService _printerService;
+	readonly IPrinterProfileStore _profileStore;
 	readonly Dictionary<string, View> _fieldControls = [];
 
 	LabelTemplate? _template;
 
-	public TemplateTestPage()
+	public TemplateTestPage(ILabelTemplateStore store, IPrinterService printerService, IPrinterProfileStore profileStore)
 	{
 		InitializeComponent();
+		_store = store;
+		_printerService = printerService;
+		_profileStore = profileStore;
 	}
 
-	public TemplateTestPage(LabelTemplate template)
+	public TemplateTestPage(ILabelTemplateStore store, IPrinterService printerService, IPrinterProfileStore profileStore, LabelTemplate template)
+		: this(store, printerService, profileStore)
 	{
-		InitializeComponent();
 		_template = template;
 	}
 
