@@ -95,7 +95,12 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
   Abweichungsgefahr.
 - **Lösungsskizze:** Styles einmal in `Resources/Styles/Styles.xaml` definieren,
   lokale Kopien entfernen. Rein additiv/ersetzend, Optik unverändert.
-- **Priorität:** Mittel · **Aufwand/Risiko:** S · **Status:** `[ ]`
+- **Priorität:** Mittel · **Aufwand/Risiko:** S · **Status:** `[x]`
+- **Ergebnis (2026-07-18):** Sieben App-Styles (`Card`, `ChipButton`,
+  `AccentChipButton`, `DangerButton`, `SectionTitle`, `FieldLabel`,
+  `ToolbarSeparator`) zentral in `Resources/Styles/Styles.xaml`; lokale Kopien
+  aus allen vier Seiten entfernt. Die Kopien waren byte-identisch — Optik
+  unverändert. Build 0 Fehler.
 
 ### CLEAN-04 — Doppelte Medienerkennungs-Logik zusammenführen
 - **Fundstelle:** `ViewModels/MediaLibraryViewModel.cs:175-216` vs.

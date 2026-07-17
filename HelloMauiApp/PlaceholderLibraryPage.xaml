@@ -6,25 +6,7 @@
              x:Name="Root"
              x:DataType="viewmodels:PlaceholderLibraryViewModel">
 
-    <ContentView.Resources>
-        <Style x:Key="Card" TargetType="Border">
-            <Setter Property="StrokeThickness" Value="1" />
-            <Setter Property="Stroke" Value="{DynamicResource ColorStroke}" />
-            <Setter Property="BackgroundColor" Value="{DynamicResource ColorLayer}" />
-            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
-        </Style>
-
-        <Style x:Key="ChipButton" TargetType="Button">
-            <Setter Property="BackgroundColor" Value="{DynamicResource ColorControl}" />
-            <Setter Property="TextColor" Value="{DynamicResource ColorText}" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="HeightRequest" Value="34" />
-            <Setter Property="MinimumHeightRequest" Value="34" />
-            <Setter Property="MinimumWidthRequest" Value="0" />
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Padding" Value="12,0" />
-        </Style>
-    </ContentView.Resources>
+    <!-- Card/ChipButton/... kommen zentral aus Resources/Styles/Styles.xaml -->
 
     <Grid RowDefinitions="Auto,*" Padding="24,20" RowSpacing="14">
 

@@ -5,57 +5,7 @@
              x:Class="HelloMauiApp.DesignerPage"
              x:DataType="viewmodels:DesignerViewModel">
 
-    <ContentView.Resources>
-        <Style x:Key="Card" TargetType="Border">
-            <Setter Property="StrokeThickness" Value="1" />
-            <Setter Property="Stroke" Value="{DynamicResource ColorStroke}" />
-            <Setter Property="BackgroundColor" Value="{DynamicResource ColorLayer}" />
-            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
-        </Style>
-
-        <Style x:Key="ChipButton" TargetType="Button">
-            <Setter Property="BackgroundColor" Value="{DynamicResource ColorControl}" />
-            <Setter Property="TextColor" Value="{DynamicResource ColorText}" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="HeightRequest" Value="34" />
-            <Setter Property="MinimumHeightRequest" Value="34" />
-            <Setter Property="MinimumWidthRequest" Value="0" />
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Padding" Value="12,0" />
-        </Style>
-
-        <Style x:Key="AccentChipButton" TargetType="Button" BasedOn="{StaticResource ChipButton}">
-            <Setter Property="BackgroundColor" Value="{DynamicResource AccentColor}" />
-            <Setter Property="TextColor" Value="{DynamicResource AccentTextColor}" />
-            <Setter Property="FontAttributes" Value="Bold" />
-        </Style>
-
-        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource ChipButton}">
-            <Setter Property="BackgroundColor" Value="{DynamicResource ColorDangerSoft}" />
-            <Setter Property="TextColor" Value="{DynamicResource ColorDanger}" />
-        </Style>
-
-        <Style x:Key="SectionTitle" TargetType="Label">
-            <Setter Property="FontSize" Value="15" />
-            <Setter Property="FontAttributes" Value="Bold" />
-            <Setter Property="TextColor" Value="{DynamicResource ColorText}" />
-        </Style>
-
-        <Style x:Key="FieldLabel" TargetType="Label">
-            <Setter Property="FontSize" Value="11" />
-            <Setter Property="TextColor" Value="{DynamicResource ColorText3}" />
-            <Setter Property="CharacterSpacing" Value="0.5" />
-            <Setter Property="Margin" Value="0,10,0,2" />
-        </Style>
-
-        <Style x:Key="ToolbarSeparator" TargetType="BoxView">
-            <Setter Property="WidthRequest" Value="1" />
-            <Setter Property="HeightRequest" Value="22" />
-            <Setter Property="VerticalOptions" Value="Center" />
-            <Setter Property="BackgroundColor" Value="{DynamicResource ColorStroke}" />
-            <Setter Property="Margin" Value="4,0" />
-        </Style>
-    </ContentView.Resources>
+    <!-- Card/ChipButton/... kommen zentral aus Resources/Styles/Styles.xaml -->
 
     <Grid RowDefinitions="Auto,Auto,*" Padding="24,20,24,20" RowSpacing="14">
 
