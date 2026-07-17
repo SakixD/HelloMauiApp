@@ -81,7 +81,9 @@ public partial class TemplateTestPage : ContentPage
 
 		if (_template.Placeholders.Count == 0)
 		{
-			FormLayout.Children.Add(new Label { Text = "Diese Vorlage hat keine Platzhalter.", TextColor = Colors.Gray });
+			var empty = new Label { Text = "Diese Vorlage hat keine Platzhalter." };
+			empty.SetDynamicResource(Label.TextColorProperty, "ColorText2");
+			FormLayout.Children.Add(empty);
 			return;
 		}
 
