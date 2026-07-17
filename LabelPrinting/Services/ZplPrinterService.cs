@@ -1,31 +1,170 @@
 using System.Net.Sockets;
 using System.Text;
+using LabelPrinting.Models;
+using LabelPrinting.Remote;
 
 namespace LabelPrinting.Services;
 
 /// <summary>
 /// Sendet ZPL an Etikettendrucker (Zebra sowie Honeywell-Drucker im Zebra-Emulationsmodus) über eine
-/// austauschbare <see cref="IPrinterConnection"/> – Standardweg ist TCP/IP (RAW-Socket, i.d.R. Port
-/// 9100/JetDirect), wofür die IPrinterService-Methoden mit ipAddress/port-Parametern intern eine
-/// <see cref="TcpPrinterConnection"/> aufbauen. Für andere Transportarten (z.B. seriell) können die
-/// <see cref="IPrinterConnection"/>-Überladungen direkt mit einer eigenen Verbindung genutzt werden.
+/// austauschbare <see cref="IPrinterConnection"/>. Standardweg sind die <see cref="PrinterProfile"/>-
+/// Überladungen: Das Profil beschreibt die Anbindung, die <see cref="IPrinterConnectionFactory"/>
+/// baut daraus die Verbindung. Profile mit <see cref="PrinterConnectionMode.Remote"/> werden an den
+/// optionalen <see cref="IRemotePrintClient"/> delegiert (ohne diesen: sauberes Fail-Ergebnis).
+/// Für Spezialfälle (z.B. seriell) können die <see cref="IPrinterConnection"/>-Überladungen direkt
+/// mit einer eigenen Verbindung genutzt werden.
 /// </summary>
 public class ZplPrinterService : IPrinterService
 {
 	static readonly TimeSpan InitialResponseTimeout = TimeSpan.FromSeconds(3);
 	static readonly TimeSpan FollowupResponseTimeout = TimeSpan.FromMilliseconds(400);
 
-	readonly Func<string, int, IPrinterConnection> _tcpConnectionFactory;
+	const string RemoteUnavailableMessage = "Remote-Druck ist in dieser Version noch nicht verfügbar.";
+	const string RemoteQueryUnavailableMessage = "Statusabfragen sind für Remote-Drucker noch nicht verfügbar.";
 
+	readonly Func<string, int, IPrinterConnection> _tcpConnectionFactory;
+	readonly IPrinterConnectionFactory _connectionFactory;
+	readonly IRemotePrintClient? _remoteClient;
+
+	/// <param name="connectionFactory">Baut die Verbindung für die Profil-Überladungen (Standard: <see cref="PrinterConnectionFactory"/>).</param>
+	/// <param name="remoteClient">
+	/// Optionaler Client für Profile mit <see cref="PrinterConnectionMode.Remote"/>. Solange es keinen
+	/// Server gibt, bleibt er null – Remote-Aufrufe liefern dann ein Fail-Ergebnis statt zu drucken.
+	/// </param>
 	/// <param name="tcpConnectionFactory">
 	/// Baut die Verbindung für die ip/port-Überladungen (Standard: <see cref="TcpPrinterConnection"/>).
 	/// Austauschbar, damit Konsumenten/Tests die ip/port-API nutzen können, ohne einen echten
 	/// TCP-Socket zu öffnen (z.B. eine Fake-<see cref="IPrinterConnection"/> für Unit-Tests).
 	/// </param>
-	public ZplPrinterService(Func<string, int, IPrinterConnection>? tcpConnectionFactory = null)
+	public ZplPrinterService(
+		IPrinterConnectionFactory? connectionFactory = null,
+		IRemotePrintClient? remoteClient = null,
+		Func<string, int, IPrinterConnection>? tcpConnectionFactory = null)
 	{
 		_tcpConnectionFactory = tcpConnectionFactory ?? ((ip, port) => new TcpPrinterConnection(ip, port));
+		_connectionFactory = connectionFactory ?? new PrinterConnectionFactory(tcpConnectionFactory);
+		_remoteClient = remoteClient;
 	}
+
+	// ---------- PrinterProfile-Überladungen (Standardweg der App) ----------
+
+	public Task<PrinterResult> TestConnectionAsync(PrinterProfile profile, CancellationToken cancellationToken = default)
+	{
+		if (profile.ConnectionMode == PrinterConnectionMode.Remote)
+		{
+			return _remoteClient is null
+				? Task.FromResult(PrinterResult.Fail(RemoteUnavailableMessage))
+				: _remoteClient.TestRemotePrinterAsync(profile.RemotePrinterId, cancellationToken);
+		}
+
+		if (!TryCreateConnection(profile, out var connection, out string? error))
+			return Task.FromResult(PrinterResult.Fail(error));
+
+		return RunAsync(
+			connection,
+			static (_, _) => Task.FromResult(PrinterResult.Ok()),
+			PrinterResult.Fail,
+			UnreachableMessage(profile),
+			cancellationToken);
+	}
+
+	public Task<PrinterResult> SendZplAsync(PrinterProfile profile, string zpl, CancellationToken cancellationToken = default)
+		=> SendPayloadAsync(profile, ToZplPayloadBytes(zpl), PrintPayloadKind.Zpl, cancellationToken);
+
+	public Task<PrinterResult> SendRawAsync(PrinterProfile profile, byte[] data, CancellationToken cancellationToken = default)
+		=> SendPayloadAsync(profile, data, PrintPayloadKind.Raw, cancellationToken);
+
+	public Task<PrinterQueryResult> QueryAsync(PrinterProfile profile, string command, CancellationToken cancellationToken = default)
+	{
+		// Die Remote-Verträge kennen bisher nur Druckaufträge und Erreichbarkeitstests – bidirektionale
+		// Abfragen über den Server folgen erst mit dem Backend.
+		if (profile.ConnectionMode == PrinterConnectionMode.Remote)
+			return Task.FromResult(PrinterQueryResult.Fail(RemoteQueryUnavailableMessage));
+
+		if (!TryCreateConnection(profile, out var connection, out string? error))
+			return Task.FromResult(PrinterQueryResult.Fail(error));
+
+		return RunAsync(
+			connection,
+			(conn, ct) => QueryCoreAsync(conn, command, ct),
+			PrinterQueryResult.Fail,
+			UnreachableMessage(profile),
+			cancellationToken);
+	}
+
+	public Task<PrinterQueryResult> GetStatusAsync(PrinterProfile profile, CancellationToken cancellationToken = default)
+		=> QueryAsync(profile, "~HS", cancellationToken);
+
+	public Task<PrinterResult> CalibrateMediaAsync(PrinterProfile profile, CancellationToken cancellationToken = default)
+		=> SendZplAsync(profile, "~JC", cancellationToken);
+
+	public async Task<PrinterStatus> GetDetailedStatusAsync(PrinterProfile profile, CancellationToken cancellationToken = default)
+	{
+		var result = await GetStatusAsync(profile, cancellationToken).ConfigureAwait(false);
+		return result.Success
+			? ZplStatusParser.Parse(result.ResponseText)
+			: PrinterStatus.Fail(result.ErrorMessage ?? "Unbekannter Fehler");
+	}
+
+	public async Task<PrinterQueryResult> GetVariableAsync(PrinterProfile profile, string variableName, CancellationToken cancellationToken = default)
+	{
+		var result = await QueryAsync(profile, BuildGetVarCommand(variableName), cancellationToken).ConfigureAwait(false);
+		return result.Success ? PrinterQueryResult.Ok(SgdResponseParser.Parse(result.ResponseText)) : result;
+	}
+
+	public Task<PrinterResult> SetVariableAsync(PrinterProfile profile, string variableName, string value, CancellationToken cancellationToken = default)
+		=> SendZplAsync(profile, BuildSetVarCommand(variableName, value), cancellationToken);
+
+	public Task<PrinterResult> RestartAsync(PrinterProfile profile, CancellationToken cancellationToken = default)
+		=> SendZplAsync(profile, RestartCommand, cancellationToken);
+
+	/// <summary>Gemeinsamer Sendeweg der Profil-Überladungen: lokal über die Factory-Verbindung, remote als Druckauftrag.</summary>
+	async Task<PrinterResult> SendPayloadAsync(PrinterProfile profile, byte[] payload, PrintPayloadKind payloadKind, CancellationToken cancellationToken)
+	{
+		if (profile.ConnectionMode == PrinterConnectionMode.Remote)
+		{
+			if (_remoteClient is null)
+				return PrinterResult.Fail(RemoteUnavailableMessage);
+
+			var jobResult = await _remoteClient.SubmitJobAsync(new PrintJobRequest
+			{
+				RemotePrinterId = profile.RemotePrinterId,
+				PayloadKind = payloadKind,
+				Payload = payload,
+			}, cancellationToken).ConfigureAwait(false);
+
+			return jobResult.Success
+				? PrinterResult.Ok()
+				: PrinterResult.Fail(jobResult.ErrorMessage ?? "Remote-Druck fehlgeschlagen.");
+		}
+
+		if (!TryCreateConnection(profile, out var connection, out string? error))
+			return PrinterResult.Fail(error);
+
+		return await RunAsync(
+			connection,
+			(conn, ct) => WriteAsync(conn, payload, ct),
+			PrinterResult.Fail,
+			UnreachableMessage(profile),
+			cancellationToken).ConfigureAwait(false);
+	}
+
+	bool TryCreateConnection(PrinterProfile profile, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out IPrinterConnection? connection, [System.Diagnostics.CodeAnalysis.NotNullWhen(false)] out string? error)
+	{
+		if (profile.TransportKind == PrinterTransportKind.Tcp && string.IsNullOrWhiteSpace(profile.IpAddress))
+		{
+			connection = null;
+			error = "Keine Drucker-IP konfiguriert.";
+			return false;
+		}
+
+		connection = _connectionFactory.Create(profile);
+		error = null;
+		return true;
+	}
+
+	static string UnreachableMessage(PrinterProfile profile)
+		=> $"Zeitüberschreitung: Drucker \"{profile.Name}\" ({profile.ConnectionSummary}) nicht erreichbar.";
 
 	// ---------- IP/Port-Überladungen (TCP/IP, der bisherige Standardweg) ----------
 
@@ -191,6 +330,11 @@ public class ZplPrinterService : IPrinterService
 		catch (SocketException ex)
 		{
 			return fail($"Verbindung fehlgeschlagen: {ex.Message}");
+		}
+		catch (PrinterTransportNotImplementedException ex)
+		{
+			// USB/Bluetooth-Stubs: sauberes Fehlerergebnis statt Absturz, exakt wie alle anderen Fehlerwege.
+			return fail(ex.Message);
 		}
 		catch (PlatformNotSupportedException ex)
 		{
