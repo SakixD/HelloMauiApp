@@ -1,4 +1,5 @@
 using LabelPrinting.Models;
+using Microsoft.Maui.Controls.Shapes;
 
 namespace HelloMauiApp;
 
@@ -21,21 +22,55 @@ public partial class PlaceholderManagerPage : ContentPage
 
 		if (_template.Placeholders.Count == 0)
 		{
-			PlaceholderListLayout.Children.Add(new Label { Text = "Noch keine Platzhalter angelegt.", TextColor = Colors.Gray });
+			var empty = new Label { Text = "Noch keine Platzhalter angelegt." };
+			empty.SetDynamicResource(Label.TextColorProperty, "ColorText2");
+			PlaceholderListLayout.Children.Add(empty);
 			return;
 		}
 
 		foreach (var placeholder in _template.Placeholders)
+			PlaceholderListLayout.Children.Add(CreateRow(placeholder));
+	}
+
+	/// <summary>Listenzeile im Stil der Profilliste (Karte mit Tap statt Vollbreiten-Button) – Farben als Theme-Tokens.</summary>
+	View CreateRow(PlaceholderDefinition placeholder)
+	{
+		var nameLabel = new Label { FontSize = 14, FontAttributes = FontAttributes.Bold, Text = placeholder.Key };
+		nameLabel.SetDynamicResource(Label.TextColorProperty, "ColorText");
+
+		var detailLabel = new Label { FontSize = 12, Text = $"{TypeLabel(placeholder.Type)} · {(placeholder.Required ? "Pflichtfeld" : "optional")}" };
+		detailLabel.SetDynamicResource(Label.TextColorProperty, "ColorText2");
+
+		var editLabel = new Label { FontSize = 12.5, FontAttributes = FontAttributes.Bold, Text = "Bearbeiten", VerticalOptions = LayoutOptions.Center };
+		editLabel.SetDynamicResource(Label.TextColorProperty, "AccentColor");
+
+		var textStack = new VerticalStackLayout { Spacing = 2 };
+		textStack.Children.Add(nameLabel);
+		textStack.Children.Add(detailLabel);
+
+		var grid = new Grid { ColumnSpacing = 10 };
+		grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+		grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+		Grid.SetColumn(editLabel, 1);
+		grid.Children.Add(textStack);
+		grid.Children.Add(editLabel);
+
+		var border = new Border
 		{
-			var button = new Button
-			{
-				Text = $"{placeholder.Key}  ({TypeLabel(placeholder.Type)}, {(placeholder.Required ? "Pflicht" : "optional")})",
-				HorizontalOptions = LayoutOptions.Fill,
-			};
-			var captured = placeholder;
-			button.Clicked += (s, e) => EditPlaceholder(captured);
-			PlaceholderListLayout.Children.Add(button);
-		}
+			Padding = new Thickness(16, 12),
+			StrokeThickness = 1,
+			StrokeShape = new RoundRectangle { CornerRadius = 10 },
+			Content = grid,
+		};
+		border.SetDynamicResource(Border.StrokeProperty, "ColorStroke");
+		border.SetDynamicResource(VisualElement.BackgroundColorProperty, "ColorLayer");
+
+		var captured = placeholder;
+		var tap = new TapGestureRecognizer();
+		tap.Tapped += (s, e) => EditPlaceholder(captured);
+		border.GestureRecognizers.Add(tap);
+
+		return border;
 	}
 
 	static string TypeLabel(PlaceholderType type) => type switch
