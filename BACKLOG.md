@@ -121,7 +121,9 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
   Phase 3+4 gelöschte `PrinterSettingsPage`.
 - **Warum:** Irreführend für Leser; verweist auf nicht existierenden Typ.
 - **Lösungsskizze:** Kommentar auf `PrinterProfilesPage` umformulieren.
-- **Priorität:** Niedrig · **Aufwand/Risiko:** S · **Status:** `[ ]`
+- **Priorität:** Niedrig · **Aufwand/Risiko:** S · **Status:** `[x]`
+- **Ergebnis (2026-07-18):** Kommentar auf `PrinterProfilesPage` umformuliert
+  (im Zuge der FEAT-03-Modernisierung von `PrinterDeviceSettingsPage`).
 
 ### CLEAN-06 — Platzhalter-Statistik lädt alle Vorlagen vollständig
 - **Fundstelle:** `ViewModels/MainPageViewModel.cs:84-90`
@@ -234,7 +236,15 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
 - **Warum:** Konsistenz; hartcodierte Farben ignorieren Dark Mode/Akzentfarbe.
 - **Lösungsskizze:** Nach CLEAN-02 seitenweise Token-Styles anwenden; ggf. mit
   FEAT-02 bündeln, aber je Seite ein eigener Commit.
-- **Priorität:** Mittel · **Aufwand/Risiko:** L · **Status:** `[ ]`
+- **Priorität:** Mittel · **Aufwand/Risiko:** L · **Status:** `[x]`
+- **Ergebnis (2026-07-18):** Alle fünf Drill-down-Seiten auf das Token-Design
+  umgestellt (je Seite ein Commit): Kopfzeile + Cards nach
+  PrinterProfilesPage-Muster, zentrale Styles (`Card`/`ChipButton`/
+  `AccentChipButton`/`DangerButton`/`SectionTitle`/`FieldLabel`), dynamisch
+  erzeugte Controls über `SetDynamicResource`-Tokens — keine hartcodierten
+  Farben mehr (Ausnahme: weiße Vorschaufläche in `TemplateTestPage`, die
+  bewusst das physische Etikett darstellt). Nebenbei totes Token `ColorBase`
+  in `PrinterProfilesPage` auf `ColorBg` korrigiert.
 
 ### FEAT-04 — ROADMAP Phase 2: Device-SDK-Kern
 - **Fundstelle:** `ROADMAP.md:61-77`

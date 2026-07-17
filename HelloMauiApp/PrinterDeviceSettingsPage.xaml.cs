@@ -5,9 +5,10 @@ namespace HelloMauiApp;
 
 /// <summary>
 /// Liest/schreibt Einstellungen direkt im Drucker selbst (Name, Netzwerkkonfiguration, ...) – im
-/// Unterschied zu <see cref="PrinterSettingsPage"/>, die nur die App-seitige Verbindungskonfiguration
-/// verwaltet. Typischer Ablauf: neuer Drucker per USB (virtueller COM-Port) anstecken, verbinden,
-/// Name/IP setzen, neu starten, damit er danach über das Netzwerk erreichbar ist.
+/// Unterschied zu <see cref="PrinterProfilesPage"/>, die nur die App-seitigen Druckerprofile
+/// (Verbindungskonfiguration) verwaltet. Typischer Ablauf: neuer Drucker per USB (virtueller
+/// COM-Port) anstecken, verbinden, Name/IP setzen, neu starten, damit er danach über das
+/// Netzwerk erreichbar ist.
 /// </summary>
 public partial class PrinterDeviceSettingsPage : ContentPage
 {

@@ -2,90 +2,122 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="HelloMauiApp.PrinterDeviceSettingsPage"
-             Title="Geräteeinstellungen">
+             Title="Geräteeinstellungen"
+             BackgroundColor="{DynamicResource ColorBg}">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="10">
+    <!-- Card/ChipButton/FieldLabel kommen zentral aus Resources/Styles/Styles.xaml -->
 
-            <Label Text="Geräteeinstellungen (Anlernen)" FontSize="18" FontAttributes="Bold" />
-            <Label Text="Liest/schreibt Einstellungen direkt im Drucker (nicht die App-Verbindungsdaten). Typischer Ablauf beim Anlernen: per USB anstecken (erscheint als COM-Port), verbinden, Name/Netzwerk setzen, Drucker neu starten."
-                   FontSize="12" TextColor="Gray" />
+    <Grid RowDefinitions="Auto,*" Padding="24,20" RowSpacing="14">
 
-            <BoxView HeightRequest="1" BackgroundColor="LightGray" Margin="0,6" />
-
-            <Label Text="Verbindung" FontAttributes="Bold" />
-            <Picker x:Name="ConnectionTypePicker" Title="Verbindungsart" SelectedIndexChanged="OnConnectionTypeChanged">
-                <Picker.ItemsSource>
-                    <x:Array Type="{x:Type x:String}">
-                        <x:String>USB / Seriell</x:String>
-                        <x:String>Netzwerk (IP)</x:String>
-                    </x:Array>
-                </Picker.ItemsSource>
-            </Picker>
-
-            <VerticalStackLayout x:Name="SerialPanel" Spacing="6" IsVisible="True">
-                <HorizontalStackLayout Spacing="8">
-                    <Picker x:Name="ComPortPicker" Title="COM-Port" WidthRequest="200" />
-                    <Button Text="Aktualisieren" Clicked="OnRefreshPortsClicked" />
-                </HorizontalStackLayout>
-                <Label Text="Baudrate" />
-                <Entry x:Name="BaudRateEntry" Text="9600" Keyboard="Numeric" />
-            </VerticalStackLayout>
-
-            <VerticalStackLayout x:Name="NetworkPanel" Spacing="6" IsVisible="False">
-                <Label Text="IP-Adresse" />
-                <Entry x:Name="NetworkIpEntry" Placeholder="z.B. 192.168.1.50" />
-                <Label Text="Port" />
-                <Entry x:Name="NetworkPortEntry" Placeholder="9100" Keyboard="Numeric" />
-            </VerticalStackLayout>
-
-            <Button x:Name="ConnectBtn" Text="Verbinden &amp; Lesen" Clicked="OnConnectClicked" Margin="0,6,0,0" />
-
-            <BoxView HeightRequest="1" BackgroundColor="LightGray" Margin="0,6" />
-
-            <Label Text="Geräteeinstellungen" FontAttributes="Bold" />
-
-            <Label Text="Gerätename  (device.friendly_name)" FontSize="12" TextColor="Gray" />
-            <Entry x:Name="DeviceNameEntry" />
-
-            <HorizontalStackLayout Spacing="10">
-                <Label Text="DHCP aktiv  (ip.dhcp.enable)" FontSize="12" TextColor="Gray" VerticalOptions="Center" />
-                <Switch x:Name="DhcpSwitch" />
-            </HorizontalStackLayout>
-
-            <Label Text="IP-Adresse  (ip.addr)" FontSize="12" TextColor="Gray" />
-            <Entry x:Name="DeviceIpEntry" />
-
-            <Label Text="Subnetzmaske  (ip.netmask)" FontSize="12" TextColor="Gray" />
-            <Entry x:Name="DeviceNetmaskEntry" />
-
-            <Label Text="Gateway  (ip.gateway)" FontSize="12" TextColor="Gray" />
-            <Entry x:Name="DeviceGatewayEntry" />
-
-            <Button x:Name="SaveDeviceSettingsBtn" Text="Speichern" Clicked="OnSaveDeviceSettingsClicked" Margin="0,6,0,0" />
-
-            <BoxView HeightRequest="1" BackgroundColor="LightGray" Margin="0,6" />
-
-            <Label Text="Freie Variable" FontAttributes="Bold" />
-            <Label Text="Falls eine Einstellung oben nicht zum Druckermodell passt: SGD-Variablennamen direkt lesen/schreiben."
-                   FontSize="12" TextColor="Gray" />
-            <Entry x:Name="FreeVariableNameEntry" Placeholder="z.B. device.friendly_name" />
-            <Entry x:Name="FreeVariableValueEntry" Placeholder="Wert" />
-            <HorizontalStackLayout Spacing="8">
-                <Button x:Name="ReadFreeVariableBtn" Text="Lesen" Clicked="OnReadFreeVariableClicked" />
-                <Button x:Name="WriteFreeVariableBtn" Text="Schreiben" Clicked="OnWriteFreeVariableClicked" />
-            </HorizontalStackLayout>
-
-            <BoxView HeightRequest="1" BackgroundColor="LightGray" Margin="0,6" />
-
-            <Button x:Name="RestartBtn" Text="Drucker neu starten" BackgroundColor="IndianRed" TextColor="White" Clicked="OnRestartClicked" />
-            <Label Text="Netzwerkänderungen (IP/DHCP) werden bei vielen Druckern erst nach einem Neustart wirksam."
-                   FontSize="12" TextColor="Gray" />
-
-            <ActivityIndicator x:Name="BusyIndicator" IsRunning="False" IsVisible="False" />
-            <Label x:Name="StatusLabel" FontSize="13" />
-
+        <!-- KOPFZEILE -->
+        <VerticalStackLayout Grid.Row="0" Spacing="2">
+            <Label Text="Geräteeinstellungen (Anlernen)" FontSize="22" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+            <Label Text="Liest/schreibt Einstellungen direkt im Drucker (nicht die App-Verbindungsdaten). Typischer Ablauf: per USB anstecken (erscheint als COM-Port), verbinden, Name/Netzwerk setzen, Drucker neu starten."
+                   FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
         </VerticalStackLayout>
-    </ScrollView>
+
+        <!-- INHALT -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="12" MaximumWidthRequest="860" HorizontalOptions="Fill">
+
+                <Border Style="{StaticResource Card}" Padding="18,16">
+                    <VerticalStackLayout Spacing="0">
+                        <Label Text="Verbindung" Style="{StaticResource SectionTitle}" />
+
+                        <Label Text="VERBINDUNGSART" Style="{StaticResource FieldLabel}" />
+                        <Picker x:Name="ConnectionTypePicker" Title="Verbindungsart" SelectedIndexChanged="OnConnectionTypeChanged">
+                            <Picker.ItemsSource>
+                                <x:Array Type="{x:Type x:String}">
+                                    <x:String>USB / Seriell</x:String>
+                                    <x:String>Netzwerk (IP)</x:String>
+                                </x:Array>
+                            </Picker.ItemsSource>
+                        </Picker>
+
+                        <VerticalStackLayout x:Name="SerialPanel" Spacing="0" IsVisible="True">
+                            <Label Text="COM-PORT" Style="{StaticResource FieldLabel}" />
+                            <HorizontalStackLayout Spacing="8">
+                                <Picker x:Name="ComPortPicker" Title="COM-Port" WidthRequest="200" />
+                                <Button Text="Aktualisieren" Style="{StaticResource ChipButton}" Clicked="OnRefreshPortsClicked" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <Label Text="BAUDRATE" Style="{StaticResource FieldLabel}" />
+                            <Entry x:Name="BaudRateEntry" Text="9600" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout x:Name="NetworkPanel" Spacing="0" IsVisible="False">
+                            <Label Text="IP-ADRESSE" Style="{StaticResource FieldLabel}" />
+                            <Entry x:Name="NetworkIpEntry" Placeholder="z.B. 192.168.1.50" />
+                            <Label Text="PORT" Style="{StaticResource FieldLabel}" />
+                            <Entry x:Name="NetworkPortEntry" Placeholder="9100" Keyboard="Numeric" />
+                        </VerticalStackLayout>
+
+                        <Button x:Name="ConnectBtn" Text="Verbinden &amp; Lesen" Style="{StaticResource AccentChipButton}"
+                                Clicked="OnConnectClicked" HorizontalOptions="Start" Margin="0,14,0,0" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Padding="18,16">
+                    <VerticalStackLayout Spacing="0">
+                        <Label Text="Geräteeinstellungen" Style="{StaticResource SectionTitle}" />
+
+                        <Label Text="GERÄTENAME  (DEVICE.FRIENDLY_NAME)" Style="{StaticResource FieldLabel}" />
+                        <Entry x:Name="DeviceNameEntry" />
+
+                        <HorizontalStackLayout Spacing="10" Margin="0,10,0,0">
+                            <Label Text="DHCP AKTIV  (IP.DHCP.ENABLE)" Style="{StaticResource FieldLabel}" Margin="0" VerticalOptions="Center" />
+                            <Switch x:Name="DhcpSwitch" />
+                        </HorizontalStackLayout>
+
+                        <Label Text="IP-ADRESSE  (IP.ADDR)" Style="{StaticResource FieldLabel}" />
+                        <Entry x:Name="DeviceIpEntry" />
+
+                        <Label Text="SUBNETZMASKE  (IP.NETMASK)" Style="{StaticResource FieldLabel}" />
+                        <Entry x:Name="DeviceNetmaskEntry" />
+
+                        <Label Text="GATEWAY  (IP.GATEWAY)" Style="{StaticResource FieldLabel}" />
+                        <Entry x:Name="DeviceGatewayEntry" />
+
+                        <Button x:Name="SaveDeviceSettingsBtn" Text="Speichern" Style="{StaticResource AccentChipButton}"
+                                Clicked="OnSaveDeviceSettingsClicked" HorizontalOptions="Start" Margin="0,14,0,0" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Padding="18,16">
+                    <VerticalStackLayout Spacing="0">
+                        <Label Text="Freie Variable" Style="{StaticResource SectionTitle}" />
+                        <Label Text="Falls eine Einstellung oben nicht zum Druckermodell passt: SGD-Variablennamen direkt lesen/schreiben."
+                               FontSize="12.5" TextColor="{DynamicResource ColorText2}" Margin="0,4,0,0" />
+
+                        <Label Text="VARIABLENNAME" Style="{StaticResource FieldLabel}" />
+                        <Entry x:Name="FreeVariableNameEntry" Placeholder="z.B. device.friendly_name" />
+                        <Label Text="WERT" Style="{StaticResource FieldLabel}" />
+                        <Entry x:Name="FreeVariableValueEntry" Placeholder="Wert" />
+
+                        <HorizontalStackLayout Spacing="8" Margin="0,14,0,0">
+                            <Button x:Name="ReadFreeVariableBtn" Text="Lesen" Style="{StaticResource ChipButton}" Clicked="OnReadFreeVariableClicked" />
+                            <Button x:Name="WriteFreeVariableBtn" Text="Schreiben" Style="{StaticResource ChipButton}" Clicked="OnWriteFreeVariableClicked" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Padding="18,16">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Wartung" Style="{StaticResource SectionTitle}" />
+                        <Label Text="Netzwerkänderungen (IP/DHCP) werden bei vielen Druckern erst nach einem Neustart wirksam."
+                               FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
+                        <Button x:Name="RestartBtn" Text="Drucker neu starten" Style="{StaticResource DangerButton}"
+                                Clicked="OnRestartClicked" HorizontalOptions="Start" Margin="0,6,0,0" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <HorizontalStackLayout Spacing="10">
+                    <ActivityIndicator x:Name="BusyIndicator" IsRunning="False" IsVisible="False" VerticalOptions="Center" />
+                    <Label x:Name="StatusLabel" FontSize="13" TextColor="{DynamicResource ColorText2}" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
 
 </ContentPage>
