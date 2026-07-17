@@ -6,7 +6,7 @@
              x:Name="Root"
              x:DataType="viewmodels:PrinterProfilesViewModel"
              Title="Druckerprofile"
-             BackgroundColor="{DynamicResource ColorBase}">
+             BackgroundColor="{DynamicResource ColorBg}">
 
     <!-- Card/ChipButton/... kommen zentral aus Resources/Styles/Styles.xaml -->
 
