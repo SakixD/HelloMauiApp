@@ -44,7 +44,18 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
   aktuell führt sie neue Sessions in die Irre (Phase 1 würde doppelt geplant).
 - **Lösungsskizze:** Reine Doku-Änderung, kein Code. Statusliste + Snapshot +
   README-Tabelle nachziehen.
-- **Priorität:** Hoch · **Aufwand/Risiko:** S · **Status:** `[ ]`
+- **Priorität:** Hoch · **Aufwand/Risiko:** S · **Status:** `[x]`
+- **Ergebnis (2026-07-18):** `ROADMAP.md` Phase 1 auf „ERLEDIGT" gesetzt, 1a–1e
+  `[x]` mit den realen Naming-/Umsetzungs-Abweichungen (Transport über
+  `IPrinterConnectionFactory` statt `IPrinterTransport`; `ZplPrinterService`
+  umgestellt statt gelöscht; keine separate Edit-Page) und Verweis auf die
+  Abgleich-Notiz. `PROJECT.md`-Snapshot §10 um den Phase-1-Ist-Stand
+  (Profile/Migration/Factory/Stubs/Remote-Contracts) erweitert, veralteten
+  „geplant"-Block entfernt. `LabelPrinting/README.md`: Transport-/Profil-/
+  Remote-Absätze ergänzt, Bausteine-Tabelle um Profile/Factory/Stubs/Remote
+  erweitert, `PrinterSettings` als Legacy markiert, veraltetes IP/Port-
+  Kurzbeispiel auf den `PrinterProfile`-Weg umgestellt. Kein Code, kein
+  Verhaltensänderung.
 
 ### CLEAN-02 — Altbestand-Seiten auf DI umstellen (kein `new`-Service-Muster mehr)
 - **Fundstelle:** `HelloMauiApp/TemplateTestPage.xaml.cs:8-10`,

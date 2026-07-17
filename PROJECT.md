@@ -163,17 +163,32 @@ gebaut wird davon jetzt **nichts**:
 - **Konkrete Funktion:** ZPL-Erzeugung (`ZplLabelBuilder`), Bild→ZPL
   (`ZplImageConverter`/SkiaSharp), RAW-Socket-Druck über TCP/9100
   (`ZplPrinterService`), MAUI-Test-UI (Testverbindung, Testlabel, Bilddruck,
-  freier ZPL-Editor, `~JC`-Kalibrierung), Druckerkonfig über MAUI `Preferences`.
+  freier ZPL-Editor, `~JC`-Kalibrierung).
 
-**Grenzen des jetzigen Stands (was der nächste Schritt aufhebt):**
-- Abstraktion greift noch **pro Aufruf mit `ip`/`port`**, nicht über ein
-  Geräte-/Profilobjekt; Persistenz kennt genau **einen** Drucker; Transport ist
-  fest TCP. Genau hier setzt Phase 1 an (siehe `ROADMAP.md`).
+**Umgesetzt — Phase 1 (Mehrfach-Drucker & Transport-Abstraktion, erledigt):**
+- **Profile statt Einzeldrucker:** `PrinterProfile` (Liste) mit `IPrinterProfileStore`/
+  `PrinterProfileStore`; genau ein Default-Profil ist der app-weit aktive Drucker.
+  Labelgeometrie/DPI gehören nun zum Profil, nicht mehr global. Die alten
+  Einzeldrucker-Werte werden beim ersten Zugriff **einmalig** migriert
+  (Migrations-Flag), die Legacy-`PrinterSettings`/`PrinterSettingsStore` bleiben nur
+  als Migrationsquelle bestehen.
+- **Transport über Profil:** `IPrinterConnectionFactory`/`PrinterConnectionFactory`
+  bauen aus dem Profil die passende `IPrinterConnection` — TCP implementiert,
+  USB/Bluetooth als ehrliche Stubs (`UsbPrinterConnection`/`BluetoothPrinterConnection`,
+  werfen `PrinterTransportNotImplementedException`). `ZplPrinterService` bekam
+  `PrinterProfile`-Überladungen; Verhalten des TCP-Drucks unverändert.
+- **Remote-Contracts (nur Interfaces):** `LabelPrinting/Remote/` mit `PrintJobRequest`/
+  `PrintJobResult`, `IRemotePrintClient`, `IPrintProviderHost` (+ Registrierungstypen).
+  Kein SignalR, keine Implementierung — Remote-Profile liefern ohne Client ein
+  sauberes Fail-Ergebnis.
+- **UI + DI:** `PrinterProfilesPage` (Profilverwaltung), Services als DI-Singletons in
+  `MauiProgram.cs`. 65 Tests grün, Verhaltensgleichheit des TCP-Drucks verifiziert.
 
-**Geplant, aber noch nicht im Code** (Detailspec liegt vor):
-- Mehrfach-Drucker-Refactor: Transport-Abstraktion (`IPrinterTransport`,
-  `TcpPrinterTransport` + USB/BT-Stubs), `PrinterProfile`-Liste statt
-  Einzeldrucker, Remote-Contracts. Siehe `PRINTER_ARCHITECTURE_PLAN.md`.
+**Grenzen des jetzigen Stands (was die nächsten Schritte aufheben):**
+- Der Drucker ist noch kein abstraktes *Device* mit *Capability*/*Role* — die App
+  spricht weiter den `PrinterService`/das Profil direkt an. Genau hier setzt Phase 2
+  an (siehe `ROADMAP.md`).
+- USB/Bluetooth sind nur Stubs; Remote hat nur Verträge, keinen Server.
 
 **Bewusst noch nicht angefasst:**
 - Device-SDK-Kernbegriffe (Device, Capability, Role, Job) als eigene Schicht.

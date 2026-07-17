@@ -35,26 +35,36 @@ die Verallgemeinerung (Profil-/Geräteobjekt statt `ip`/`port`), siehe Phase 1.
 
 ---
 
-## Phase 1 — Mehrfach-Drucker & Transport-Abstraktion (NÄCHSTE SESSIONS)
+## Phase 1 — Mehrfach-Drucker & Transport-Abstraktion (ERLEDIGT)
 
-Der bereits spezifizierte Umbau. Detailspec: `PRINTER_ARCHITECTURE_PLAN.md`.
+Der spezifizierte Umbau ist auf `master` umgesetzt (Commits `439419b`, `ebc5121`,
+`a974730`; siehe `DEV_BERICHT_2026-07-17.md`). Detailspec: `PRINTER_ARCHITECTURE_PLAN.md`.
 Dies ist die Keimzelle des Device-Modells (Transport = das spätere „Wie").
 
-- `[ ]` **1a** Modelle + Persistenz: `PrinterConnectionMode`, `PrinterTransportKind`,
+- `[x]` **1a** Modelle + Persistenz: `PrinterConnectionMode`, `PrinterTransportKind`,
   `PrinterProfile` (Liste statt Einzeldrucker), `IPrinterProfileStore` inkl.
   Einmal-Migration der Legacy-Preferences. Additiv, App bleibt lauffähig.
-- `[ ]` **1b** Transport-Abstraktion: `IPrinterTransport`, `TcpPrinterTransport`
-  (1:1-Refactor der Socket-Logik, identisches Verhalten), USB/BT-Stubs,
-  `PrinterTransportFactory`. Additiv.
-- `[ ]` **1c** Fassade umstellen: `IPrinterService` auf `PrinterProfile`-Signaturen,
-  neuer `PrinterService`, `ZplPrinterService` entfernen. Breaking — zusammen mit 1d.
-- `[ ]` **1d** UI: `PrinterProfilesPage` + `PrinterProfileEditPage`, `MainPage`
-  mit Drucker-Picker; alte `PrinterSettingsPage` entfernen.
-- `[ ]` **1e** Remote-Contracts (nur Interfaces): `PrintJobRequest/Result`,
-  `IRemotePrintClient`, `IPrintProviderHost`. Kein SignalR, keine Implementierung.
+- `[x]` **1b** Transport-Abstraktion: über die bereits vorhandene
+  `IPrinterConnection`-Abstraktion realisiert — `IPrinterConnectionFactory`/
+  `PrinterConnectionFactory` bauen aus dem Profil die passende `TcpPrinterConnection`
+  (identisches Verhalten), USB/BT-Stubs (`UsbPrinterConnection`/`BluetoothPrinterConnection`).
+- `[x]` **1c** Fassade umstellen: `IPrinterService` um `PrinterProfile`-Überladungen
+  ergänzt. **Abweichung:** `ZplPrinterService` wurde *nicht* gelöscht, sondern auf
+  Profile umgestellt (die Factory baut die Verbindung, Remote-Profile delegieren an
+  den optionalen `IRemotePrintClient`) — siehe Abgleich-Notiz
+  `PRINTER_ARCHITECTURE_PLAN.md:7-23`.
+- `[x]` **1d** UI: `PrinterProfilesPage` (Profilverwaltung mit inline-Editor im
+  `PrinterProfilesViewModel`), `MainPage` mit Drucker-Bezug; alte `PrinterSettingsPage`
+  entfernt. **Abweichung:** keine separate `PrinterProfileEditPage` — siehe Abgleich-Notiz.
+- `[x]` **1e** Remote-Contracts (nur Interfaces): `PrintJobRequest/Result`,
+  `IRemotePrintClient`, `IPrintProviderHost` (+ `PrintProviderRegistration`/
+  `PrintProviderPrinterInfo`/`PrintPayloadKind`) in `LabelPrinting/Remote/`.
+  Kein SignalR, keine Implementierung.
 
-**DoD:** Mehrere Druckerprofile anleg-/wählbar, Verhaltensgleichheit des TCP-Drucks
-verifiziert, Migration greift genau einmal, USB/BT/Remote zeigen sauberen Fehler.
+**DoD:** erreicht — Mehrere Druckerprofile anleg-/wählbar, Verhaltensgleichheit des
+TCP-Drucks verifiziert (65 Tests grün), Migration greift genau einmal, USB/BT/Remote
+zeigen sauberen Fehler. Die Text-Abweichungen zu 1c/1d sind in
+`PRINTER_ARCHITECTURE_PLAN.md:7-23` begründet dokumentiert.
 
 ---
 
