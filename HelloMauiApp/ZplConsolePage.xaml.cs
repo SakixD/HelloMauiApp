@@ -5,8 +5,8 @@ namespace HelloMauiApp;
 
 /// <summary>
 /// Rohes ZPL senden/abfragen – 1:1 aus der alten <c>MainPage</c> hierher verlagert, als die Startseite
-/// auf das neue Design umgebaut wurde (siehe AppShell). Noch nicht auf das neue Design gestylt
-/// (folgt in einer späteren Phase); Funktionalität bleibt unverändert erhalten.
+/// auf das neue Design umgebaut wurde (siehe AppShell). Optik folgt dem Token-Design (Karten +
+/// zentrale Styles); die Umstellung auf ein eigenes ViewModel steht noch aus (FEAT-02-Rest).
 /// </summary>
 public partial class ZplConsolePage : ContentView, IShellSectionView
 {

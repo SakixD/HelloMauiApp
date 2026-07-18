@@ -225,7 +225,13 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
   testbare Logik; im Dev-Bericht als nächster regulärer Schritt notiert.
 - **Lösungsskizze:** Je Seite ein ViewModel nach Muster
   `MediaLibraryViewModel`; XAML auf `DynamicResource`-Tokens; Verhalten identisch.
-- **Priorität:** Mittel · **Aufwand/Risiko:** M · **Status:** `[ ]`
+- **Priorität:** Mittel · **Aufwand/Risiko:** M · **Status:** `[~]`
+- **Zwischenstand (2026-07-18):** **Fluent-Design-Teil erledigt** — beide
+  Rail-Sektionen auf Kopfzeile + Cards + zentrale Token-Styles umgestellt
+  (TemplateManagerPage inkl. Code-behind-Listenzeilen ohne hartcodierte
+  Farben; ZplConsolePage nutzte schon Tokens, jetzt auch Karten/ChipButtons).
+  **Offen: MVVM-Teil** — je Seite ein ViewModel nach Muster
+  `MediaLibraryViewModel` (Logik testbar machen), als eigener Folgeschritt.
 
 ### FEAT-03 — Drill-down-Seiten modernisieren (Fluent + DI)
 - **Fundstelle:** `TemplateTestPage.xaml:13-28`, `MediaManagerPage.xaml:12-47`,
