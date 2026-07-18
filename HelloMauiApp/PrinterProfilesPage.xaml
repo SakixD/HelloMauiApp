@@ -18,7 +18,7 @@
                 <Label Text="Druckerprofile" FontSize="22" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                 <Label Text="{Binding CountText}" FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
             </VerticalStackLayout>
-            <Button Grid.Column="1" Text="+ Neues Profil" Style="{StaticResource AccentChipButton}"
+            <Button Grid.Column="1" Text="+ Neues Profil" Style="{DynamicResource AccentChipButton}"
                     Command="{Binding AddNewCommand}" VerticalOptions="Center" />
         </Grid>
 
@@ -28,7 +28,7 @@
             <ScrollView Grid.Column="0">
                 <VerticalStackLayout Spacing="10">
 
-                    <Border IsVisible="{Binding HasNoProfiles}" Style="{StaticResource Card}" Padding="24,22">
+                    <Border IsVisible="{Binding HasNoProfiles}" Style="{DynamicResource Card}" Padding="24,22">
                         <VerticalStackLayout Spacing="6">
                             <Label Text="Noch keine Druckerprofile" FontSize="15" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                             <Label Text="Lege ein Profil je Drucker an (Name, Anbindung, Labelgröße). Das Standard-Profil ist der app-weit aktive Drucker – auswählbar auch über die Startseite."
@@ -61,7 +61,7 @@
                                             </HorizontalStackLayout>
                                             <Label Text="{Binding Details}" FontSize="12" TextColor="{DynamicResource ColorText2}" />
                                         </VerticalStackLayout>
-                                        <Button Grid.Column="1" Text="Als Standard" Style="{StaticResource ChipButton}"
+                                        <Button Grid.Column="1" Text="Als Standard" Style="{DynamicResource ChipButton}"
                                                 IsVisible="{Binding IsNotDefault}"
                                                 Command="{Binding Source={x:Reference Root}, Path=BindingContext.SetDefaultCommand}"
                                                 CommandParameter="{Binding .}" VerticalOptions="Center" />
@@ -82,7 +82,7 @@
             <ScrollView Grid.Column="1">
                 <VerticalStackLayout Spacing="14">
 
-                    <Border IsVisible="{Binding IsNotEditing}" Style="{StaticResource Card}" Padding="18,16">
+                    <Border IsVisible="{Binding IsNotEditing}" Style="{DynamicResource Card}" Padding="18,16">
                         <VerticalStackLayout Spacing="6">
                             <Label Text="Profil" FontSize="15" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                             <Label Text="Ein Profil in der Liste antippen, um es zu bearbeiten, oder oben ein neues anlegen."
@@ -90,14 +90,14 @@
                         </VerticalStackLayout>
                     </Border>
 
-                    <Border IsVisible="{Binding IsEditing}" Style="{StaticResource Card}" Padding="18,16">
+                    <Border IsVisible="{Binding IsEditing}" Style="{DynamicResource Card}" Padding="18,16">
                         <VerticalStackLayout Spacing="0">
                             <Label Text="{Binding EditorTitle}" FontSize="15" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
 
-                            <Label Text="NAME" Style="{StaticResource FieldLabel}" />
+                            <Label Text="NAME" Style="{DynamicResource FieldLabel}" />
                             <Entry Text="{Binding EditName}" Placeholder="z.B. Lager Zebra ZT230" />
 
-                            <Label Text="ANBINDUNG" Style="{StaticResource FieldLabel}" />
+                            <Label Text="ANBINDUNG" Style="{DynamicResource FieldLabel}" />
                             <Picker SelectedIndex="{Binding TransportIndex}">
                                 <Picker.ItemsSource>
                                     <x:Array Type="{x:Type x:String}">
@@ -114,42 +114,42 @@
 
                             <Grid ColumnDefinitions="*,110" ColumnSpacing="10" IsVisible="{Binding IsTcp}">
                                 <VerticalStackLayout Grid.Column="0" Spacing="0">
-                                    <Label Text="IP-ADRESSE" Style="{StaticResource FieldLabel}" />
+                                    <Label Text="IP-ADRESSE" Style="{DynamicResource FieldLabel}" />
                                     <Entry Text="{Binding EditIp}" Placeholder="192.168.0.50" Keyboard="Url" />
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Grid.Column="1" Spacing="0">
-                                    <Label Text="PORT" Style="{StaticResource FieldLabel}" />
+                                    <Label Text="PORT" Style="{DynamicResource FieldLabel}" />
                                     <Entry Text="{Binding EditPortText}" Keyboard="Numeric" />
                                 </VerticalStackLayout>
                             </Grid>
 
-                            <Label Text="MEDIUM ÜBERNEHMEN (OPTIONAL)" Style="{StaticResource FieldLabel}" />
+                            <Label Text="MEDIUM ÜBERNEHMEN (OPTIONAL)" Style="{DynamicResource FieldLabel}" />
                             <Picker ItemsSource="{Binding MediaOptions}" SelectedIndex="{Binding SelectedMediaIndex}"
                                     Title="Gespeichertes Medium wählen" />
 
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                                 <VerticalStackLayout Grid.Column="0" Spacing="0">
-                                    <Label Text="BREITE (MM)" Style="{StaticResource FieldLabel}" />
+                                    <Label Text="BREITE (MM)" Style="{DynamicResource FieldLabel}" />
                                     <Entry Text="{Binding EditWidthText}" Keyboard="Numeric" />
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Grid.Column="1" Spacing="0">
-                                    <Label Text="HÖHE (MM)" Style="{StaticResource FieldLabel}" />
+                                    <Label Text="HÖHE (MM)" Style="{DynamicResource FieldLabel}" />
                                     <Entry Text="{Binding EditHeightText}" Keyboard="Numeric" />
                                 </VerticalStackLayout>
                             </Grid>
 
-                            <Label Text="AUFLÖSUNG (DPI)" Style="{StaticResource FieldLabel}" />
+                            <Label Text="AUFLÖSUNG (DPI)" Style="{DynamicResource FieldLabel}" />
                             <Entry Text="{Binding EditDpiText}" Keyboard="Numeric" />
 
                             <HorizontalStackLayout Spacing="8" Margin="0,16,0,0">
-                                <Button Text="Speichern" Style="{StaticResource AccentChipButton}" Command="{Binding SaveEditCommand}" />
-                                <Button Text="Abbrechen" Style="{StaticResource ChipButton}" Command="{Binding CancelEditCommand}" />
+                                <Button Text="Speichern" Style="{DynamicResource AccentChipButton}" Command="{Binding SaveEditCommand}" />
+                                <Button Text="Abbrechen" Style="{DynamicResource ChipButton}" Command="{Binding CancelEditCommand}" />
                             </HorizontalStackLayout>
 
-                            <Button Text="Verbindung testen" Style="{StaticResource ChipButton}" Command="{Binding TestConnectionCommand}" Margin="0,8,0,0" />
+                            <Button Text="Verbindung testen" Style="{DynamicResource ChipButton}" Command="{Binding TestConnectionCommand}" Margin="0,8,0,0" />
                             <Label Text="{Binding TestResult}" FontSize="12" TextColor="{DynamicResource ColorText2}" Margin="0,6,0,0" />
 
-                            <Button Text="Profil löschen" Style="{StaticResource DangerButton}" Command="{Binding DeleteCommand}"
+                            <Button Text="Profil löschen" Style="{DynamicResource DangerButton}" Command="{Binding DeleteCommand}"
                                     IsVisible="{Binding CanDelete}" Margin="0,8,0,0" />
                         </VerticalStackLayout>
                     </Border>

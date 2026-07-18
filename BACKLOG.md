@@ -101,6 +101,13 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
   `ToolbarSeparator`) zentral in `Resources/Styles/Styles.xaml`; lokale Kopien
   aus allen vier Seiten entfernt. Die Kopien waren byte-identisch — Optik
   unverändert. Build 0 Fehler.
+- **Wichtige Lektion (Nachtrag):** App-weite Styles müssen von den Seiten per
+  `DynamicResource` referenziert werden, **nicht** per `StaticResource` — die
+  Rail-Sektionen werden beim Start per DI konstruiert, bevor sie im Visual
+  Tree hängen; `StaticResource` findet die App-Ressourcen dann nicht und die
+  App crasht beim Start (stowed exception 0xc000027b, `XamlParseException:
+  StaticResource not found`). Dazu Crash-Logger in
+  `Platforms/Windows/App.xaml.cs` ergänzt (`%TEMP%\hellomaui_crash.txt`).
 
 ### CLEAN-04 — Doppelte Medienerkennungs-Logik zusammenführen
 - **Fundstelle:** `ViewModels/MediaLibraryViewModel.cs:175-216` vs.

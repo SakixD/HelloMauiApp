@@ -16,7 +16,7 @@
                 <Label Text="Platzhalter können in Text- und Barcode-Feldern über „Als Platzhalter“ referenziert werden."
                        FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
             </VerticalStackLayout>
-            <Button Grid.Column="1" Text="+ Neuer Platzhalter" Style="{StaticResource AccentChipButton}"
+            <Button Grid.Column="1" Text="+ Neuer Platzhalter" Style="{DynamicResource AccentChipButton}"
                     Clicked="OnAddPlaceholderClicked" VerticalOptions="Center" />
         </Grid>
 
@@ -26,14 +26,14 @@
 
                 <VerticalStackLayout x:Name="PlaceholderListLayout" Spacing="8" />
 
-                <Border x:Name="EditPanel" IsVisible="False" Style="{StaticResource Card}" Padding="18,16">
+                <Border x:Name="EditPanel" IsVisible="False" Style="{DynamicResource Card}" Padding="18,16">
                     <VerticalStackLayout Spacing="0">
-                        <Label Text="Platzhalter bearbeiten" Style="{StaticResource SectionTitle}" />
+                        <Label Text="Platzhalter bearbeiten" Style="{DynamicResource SectionTitle}" />
 
-                        <Label Text="KEY (EINDEUTIG)" Style="{StaticResource FieldLabel}" />
+                        <Label Text="KEY (EINDEUTIG)" Style="{DynamicResource FieldLabel}" />
                         <Entry x:Name="KeyEntry" Placeholder="z.B. sku, empfaenger, versanddatum" />
 
-                        <Label Text="TYP" Style="{StaticResource FieldLabel}" />
+                        <Label Text="TYP" Style="{DynamicResource FieldLabel}" />
                         <Picker x:Name="TypePicker">
                             <Picker.ItemsSource>
                                 <x:Array Type="{x:Type x:String}">
@@ -49,14 +49,14 @@
                             <Label Text="Pflichtfeld" VerticalOptions="Center" TextColor="{DynamicResource ColorText}" />
                         </HorizontalStackLayout>
 
-                        <Label Text="STANDARDWERT (OPTIONAL)" Style="{StaticResource FieldLabel}" />
+                        <Label Text="STANDARDWERT (OPTIONAL)" Style="{DynamicResource FieldLabel}" />
                         <Label Text="Wird genutzt, wenn beim Drucken kein Wert geliefert wird."
                                FontSize="11" TextColor="{DynamicResource ColorText3}" />
                         <Entry x:Name="DefaultValueEntry" />
 
                         <HorizontalStackLayout Spacing="8" Margin="0,16,0,0">
-                            <Button Text="Speichern" Style="{StaticResource AccentChipButton}" Clicked="OnSavePlaceholderClicked" />
-                            <Button Text="Löschen" Style="{StaticResource DangerButton}" Clicked="OnDeletePlaceholderClicked" />
+                            <Button Text="Speichern" Style="{DynamicResource AccentChipButton}" Clicked="OnSavePlaceholderClicked" />
+                            <Button Text="Löschen" Style="{DynamicResource DangerButton}" Clicked="OnDeletePlaceholderClicked" />
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
                 </Border>

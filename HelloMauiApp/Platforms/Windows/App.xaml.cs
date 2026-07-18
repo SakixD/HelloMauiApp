@@ -16,6 +16,20 @@ public partial class App : MauiWinUIApplication
 	/// </summary>
 	public App()
 	{
+		// Letzte Diagnose-Instanz: WinUI meldet unbehandelte XAML-Fehler (z.B. StaticResource nicht
+		// gefunden) nur als "stowed exception" 0xc000027b ohne Details im Event-Log. Dieser Handler
+		// schreibt die echte Exception nach %TEMP%\hellomaui_crash.txt, bevor die App stirbt.
+		this.UnhandledException += (s, e) =>
+		{
+			try
+			{
+				System.IO.File.WriteAllText(
+					System.IO.Path.Combine(System.IO.Path.GetTempPath(), "hellomaui_crash.txt"),
+					$"{DateTime.Now:O}\n{e.Message}\n\n{e.Exception}");
+			}
+			catch { /* Diagnose darf nie selbst crashen */ }
+		};
+
 		this.InitializeComponent();
 	}
 

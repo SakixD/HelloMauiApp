@@ -17,8 +17,8 @@
                 <Label Text="{Binding CountText}" FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
             </VerticalStackLayout>
             <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
-                <Button Text="Vom Drucker erkennen" Style="{StaticResource ChipButton}" Command="{Binding DetectCommand}" />
-                <Button Text="+ Neues Medium" Style="{StaticResource AccentChipButton}" Command="{Binding AddNewCommand}" />
+                <Button Text="Vom Drucker erkennen" Style="{DynamicResource ChipButton}" Command="{Binding DetectCommand}" />
+                <Button Text="+ Neues Medium" Style="{DynamicResource AccentChipButton}" Command="{Binding AddNewCommand}" />
             </HorizontalStackLayout>
         </Grid>
 
@@ -31,7 +31,7 @@
                     <Label IsVisible="{Binding HasDetectResult}" Text="{Binding DetectResult}"
                            FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
 
-                    <Border IsVisible="{Binding HasNoMedia}" Style="{StaticResource Card}" Padding="24,22">
+                    <Border IsVisible="{Binding HasNoMedia}" Style="{DynamicResource Card}" Padding="24,22">
                         <VerticalStackLayout Spacing="6">
                             <Label Text="Noch keine Medien gespeichert" FontSize="15" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                             <Label Text="Lege ein Medium (Etikettenrolle/Material) an oder lass Etikettenlänge und Sensorstatus direkt vom Drucker erkennen. Gespeicherte Medien lassen sich im Label-Designer über „Medium“ auf Vorlagen anwenden."
@@ -71,7 +71,7 @@
             <ScrollView Grid.Column="1">
                 <VerticalStackLayout Spacing="14">
 
-                    <Border IsVisible="{Binding IsNotEditing}" Style="{StaticResource Card}" Padding="18,16">
+                    <Border IsVisible="{Binding IsNotEditing}" Style="{DynamicResource Card}" Padding="18,16">
                         <VerticalStackLayout Spacing="6">
                             <Label Text="Medium" FontSize="15" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                             <Label Text="Ein Medium in der Liste antippen, um es zu bearbeiten, oder oben ein neues anlegen."
@@ -79,28 +79,28 @@
                         </VerticalStackLayout>
                     </Border>
 
-                    <Border IsVisible="{Binding IsEditing}" Style="{StaticResource Card}" Padding="18,16">
+                    <Border IsVisible="{Binding IsEditing}" Style="{DynamicResource Card}" Padding="18,16">
                         <VerticalStackLayout Spacing="0">
                             <Label Text="{Binding EditorTitle}" FontSize="15" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
 
-                            <Label Text="NAME" Style="{StaticResource FieldLabel}" />
+                            <Label Text="NAME" Style="{DynamicResource FieldLabel}" />
                             <Entry Text="{Binding EditName}" />
 
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                                 <VerticalStackLayout Grid.Column="0" Spacing="0">
-                                    <Label Text="BREITE (MM)" Style="{StaticResource FieldLabel}" />
+                                    <Label Text="BREITE (MM)" Style="{DynamicResource FieldLabel}" />
                                     <Entry Text="{Binding EditWidthText}" Keyboard="Numeric" />
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Grid.Column="1" Spacing="0">
-                                    <Label Text="HÖHE (MM)" Style="{StaticResource FieldLabel}" />
+                                    <Label Text="HÖHE (MM)" Style="{DynamicResource FieldLabel}" />
                                     <Entry Text="{Binding EditHeightText}" Keyboard="Numeric" />
                                 </VerticalStackLayout>
                             </Grid>
 
-                            <Label Text="LÜCKE/MARKE (MM)" Style="{StaticResource FieldLabel}" />
+                            <Label Text="LÜCKE/MARKE (MM)" Style="{DynamicResource FieldLabel}" />
                             <Entry Text="{Binding EditGapText}" Keyboard="Numeric" />
 
-                            <Label Text="SENSOR (ETIKETTENERKENNUNG)" Style="{StaticResource FieldLabel}" />
+                            <Label Text="SENSOR (ETIKETTENERKENNUNG)" Style="{DynamicResource FieldLabel}" />
                             <Picker SelectedIndex="{Binding SensorIndex}">
                                 <Picker.ItemsSource>
                                     <x:Array Type="{x:Type x:String}">
@@ -111,14 +111,14 @@
                                 </Picker.ItemsSource>
                             </Picker>
 
-                            <Label Text="MATERIAL (OPTIONAL)" Style="{StaticResource FieldLabel}" />
+                            <Label Text="MATERIAL (OPTIONAL)" Style="{DynamicResource FieldLabel}" />
                             <Entry Text="{Binding EditMaterial}" Placeholder="z.B. Thermodirekt, PET" />
 
                             <HorizontalStackLayout Spacing="8" Margin="0,16,0,0">
-                                <Button Text="Speichern" Style="{StaticResource AccentChipButton}" Command="{Binding SaveEditCommand}" />
-                                <Button Text="Abbrechen" Style="{StaticResource ChipButton}" Command="{Binding CancelEditCommand}" />
+                                <Button Text="Speichern" Style="{DynamicResource AccentChipButton}" Command="{Binding SaveEditCommand}" />
+                                <Button Text="Abbrechen" Style="{DynamicResource ChipButton}" Command="{Binding CancelEditCommand}" />
                             </HorizontalStackLayout>
-                            <Button Text="Medium löschen" Style="{StaticResource DangerButton}" Command="{Binding DeleteCommand}"
+                            <Button Text="Medium löschen" Style="{DynamicResource DangerButton}" Command="{Binding DeleteCommand}"
                                     IsVisible="{Binding CanDelete}" Margin="0,8,0,0" />
                         </VerticalStackLayout>
                     </Border>

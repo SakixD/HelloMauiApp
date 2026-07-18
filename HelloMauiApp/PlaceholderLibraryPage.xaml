@@ -23,7 +23,7 @@
                 <Label Text="Platzhalter gehören im SDK-Modell zur Vorlage. Hier siehst du alle Platzhalter deiner gespeicherten Vorlagen; „Bearbeiten“ öffnet den Platzhalter-Editor der Vorlage (Änderungen werden beim Zurückkehren gespeichert)."
                        FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
 
-                <Border IsVisible="{Binding HasNoGroups}" Style="{StaticResource Card}" Padding="24,22">
+                <Border IsVisible="{Binding HasNoGroups}" Style="{DynamicResource Card}" Padding="24,22">
                     <VerticalStackLayout Spacing="6">
                         <Label Text="Noch keine Vorlagen gespeichert" FontSize="15" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                         <Label Text="Erstelle im Label-Designer eine Vorlage und lege dort über „Platzhalter“ Felder an, die beim Drucken mit Daten befüllt werden."

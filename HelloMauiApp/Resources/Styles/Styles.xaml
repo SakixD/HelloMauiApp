@@ -432,10 +432,14 @@
     </Style>
 
     <!-- ============================================================================
-         App-Styles (Fluent-Design): einmal zentral definiert, von allen Seiten per
-         StaticResource genutzt. Die Farbwerte sind DynamicResource-Tokens, die der
-         AppearanceService zur Laufzeit setzt (Theme/Akzentfarbe) - dadurch reagieren
-         alle Seiten automatisch auf Dark Mode und Akzentwechsel.
+         App-Styles (Fluent-Design): einmal zentral definiert. WICHTIG: Seiten müssen
+         diese Styles per **DynamicResource** referenzieren (Style="{DynamicResource Card}"),
+         nicht per StaticResource - die Rail-Sektionen werden beim App-Start per DI
+         konstruiert, bevor sie im Visual Tree hängen, und StaticResource findet die
+         App-Ressourcen dann nicht (XamlParseException beim Start). Die Farbwerte sind
+         DynamicResource-Tokens, die der AppearanceService zur Laufzeit setzt
+         (Theme/Akzentfarbe) - dadurch reagieren alle Seiten automatisch auf Dark Mode
+         und Akzentwechsel.
          ============================================================================ -->
 
     <Style x:Key="Card" TargetType="Border">
