@@ -33,7 +33,9 @@ public partial class TemplateManagerPage : ContentView, IShellSectionView
 		var names = await _store.ListTemplateNamesAsync();
 		if (names.Count == 0)
 		{
-			ListLayout.Children.Add(new Label { Text = "Noch keine Vorlagen gespeichert.", TextColor = Colors.Gray });
+			var empty = new Label { Text = "Noch keine Vorlagen gespeichert." };
+			empty.SetDynamicResource(Label.TextColorProperty, "ColorText2");
+			ListLayout.Children.Add(empty);
 			return;
 		}
 
@@ -44,6 +46,7 @@ public partial class TemplateManagerPage : ContentView, IShellSectionView
 		}
 	}
 
+	/// <summary>Listenzeile im Stil der Profilliste – Farben/Styles als Theme-Tokens statt hartcodiert.</summary>
 	View CreateRow(string name, LabelTemplate? template)
 	{
 		var grid = new Grid { ColumnSpacing = 8 };
@@ -52,14 +55,22 @@ public partial class TemplateManagerPage : ContentView, IShellSectionView
 		grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
 
 		var textStack = new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Spacing = 2 };
-		textStack.Children.Add(new Label { Text = name, LineBreakMode = LineBreakMode.TailTruncation });
+		var nameLabel = new Label { Text = name, FontSize = 14, FontAttributes = FontAttributes.Bold, LineBreakMode = LineBreakMode.TailTruncation };
+		nameLabel.SetDynamicResource(Label.TextColorProperty, "ColorText");
+		textStack.Children.Add(nameLabel);
 
 		string? subtitle = BuildSubtitle(template);
 		if (subtitle is not null)
-			textStack.Children.Add(new Label { Text = subtitle, FontSize = 12, TextColor = Colors.Gray, LineBreakMode = LineBreakMode.TailTruncation });
+		{
+			var subtitleLabel = new Label { Text = subtitle, FontSize = 12, LineBreakMode = LineBreakMode.TailTruncation };
+			subtitleLabel.SetDynamicResource(Label.TextColorProperty, "ColorText2");
+			textStack.Children.Add(subtitleLabel);
+		}
 
-		var openButton = new Button { Text = "Öffnen" };
-		var deleteButton = new Button { Text = "Löschen", BackgroundColor = Colors.IndianRed, TextColor = Colors.White };
+		var openButton = new Button { Text = "Öffnen", VerticalOptions = LayoutOptions.Center };
+		openButton.SetDynamicResource(VisualElement.StyleProperty, "ChipButton");
+		var deleteButton = new Button { Text = "Löschen", VerticalOptions = LayoutOptions.Center };
+		deleteButton.SetDynamicResource(VisualElement.StyleProperty, "DangerButton");
 
 		openButton.Clicked += async (s, e) => await OpenTemplateAsync(name);
 		deleteButton.Clicked += async (s, e) => await DeleteTemplateAsync(name);
@@ -72,13 +83,16 @@ public partial class TemplateManagerPage : ContentView, IShellSectionView
 		grid.Children.Add(openButton);
 		grid.Children.Add(deleteButton);
 
-		return new Border
+		var border = new Border
 		{
-			Padding = 10,
+			Padding = new Thickness(16, 12),
 			StrokeThickness = 1,
-			Stroke = Colors.LightGray,
+			StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
 			Content = grid,
 		};
+		border.SetDynamicResource(Border.StrokeProperty, "ColorStroke");
+		border.SetDynamicResource(VisualElement.BackgroundColorProperty, "ColorLayer");
+		return border;
 	}
 
 	static string? BuildSubtitle(LabelTemplate? template)

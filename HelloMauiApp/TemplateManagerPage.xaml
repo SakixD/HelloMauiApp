@@ -3,11 +3,22 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="HelloMauiApp.TemplateManagerPage">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="12">
-            <Label Text="Gespeicherte Vorlagen" FontSize="16" FontAttributes="Bold" />
-            <VerticalStackLayout x:Name="ListLayout" Spacing="8" />
+    <!-- Card/ChipButton/... kommen zentral aus Resources/Styles/Styles.xaml -->
+
+    <Grid RowDefinitions="Auto,*" Padding="24,20" RowSpacing="14">
+
+        <!-- KOPFZEILE -->
+        <VerticalStackLayout Grid.Row="0" Spacing="2">
+            <Label Text="Vorlagen" FontSize="22" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+            <Label Text="Gespeicherte Vorlagen öffnen oder löschen – neue Vorlagen entstehen im Designer"
+                   FontSize="12.5" TextColor="{DynamicResource ColorText2}" />
         </VerticalStackLayout>
-    </ScrollView>
+
+        <!-- INHALT -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout x:Name="ListLayout" Spacing="8" MaximumWidthRequest="860" HorizontalOptions="Fill" />
+        </ScrollView>
+
+    </Grid>
 
 </ContentView>
