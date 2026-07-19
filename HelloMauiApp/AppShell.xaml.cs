@@ -52,7 +52,7 @@ public partial class AppShell : ContentPage
 		RegisterNavRows();
 
 		home.ViewModel.NavigateToSection = section => _ = NavigateTo(section);
-		templateManager.OpenInDesigner = template => { designer.LoadTemplate(template); _ = NavigateTo("designer"); };
+		templateManager.ViewModel.OpenInDesigner = template => { designer.LoadTemplate(template); _ = NavigateTo("designer"); };
 		placeholderLibrary.ViewModel.OpenInDesigner = template => { designer.LoadTemplate(template); _ = NavigateTo("designer"); };
 
 		_sections["home"] = home;

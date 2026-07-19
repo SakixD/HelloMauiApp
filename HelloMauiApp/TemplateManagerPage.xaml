@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="HelloMauiApp.TemplateManagerPage">
+             xmlns:viewmodels="clr-namespace:HelloMauiApp.ViewModels"
+             x:Class="HelloMauiApp.TemplateManagerPage"
+             x:Name="Root"
+             x:DataType="viewmodels:TemplateManagerViewModel">
 
     <!-- Card/ChipButton/... kommen zentral aus Resources/Styles/Styles.xaml -->
 
@@ -16,7 +19,37 @@
 
         <!-- INHALT -->
         <ScrollView Grid.Row="1">
-            <VerticalStackLayout x:Name="ListLayout" Spacing="8" MaximumWidthRequest="860" HorizontalOptions="Fill" />
+            <VerticalStackLayout Spacing="8" MaximumWidthRequest="860" HorizontalOptions="Fill">
+
+                <Label IsVisible="{Binding HasNoTemplates}" Text="Noch keine Vorlagen gespeichert."
+                       FontSize="13" TextColor="{DynamicResource ColorText2}" />
+
+                <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Templates}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="viewmodels:TemplateListItem">
+                            <Border StrokeThickness="1" Stroke="{DynamicResource ColorStroke}"
+                                    BackgroundColor="{DynamicResource ColorLayer}"
+                                    StrokeShape="RoundRectangle 10" Padding="16,12">
+                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{Binding Name}" FontSize="14" FontAttributes="Bold"
+                                               LineBreakMode="TailTruncation" TextColor="{DynamicResource ColorText}" />
+                                        <Label Text="{Binding Subtitle}" IsVisible="{Binding HasSubtitle}" FontSize="12"
+                                               LineBreakMode="TailTruncation" TextColor="{DynamicResource ColorText2}" />
+                                    </VerticalStackLayout>
+                                    <Button Grid.Column="1" Text="Öffnen" VerticalOptions="Center" Style="{DynamicResource ChipButton}"
+                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenCommand}"
+                                            CommandParameter="{Binding .}" />
+                                    <Button Grid.Column="2" Text="Löschen" VerticalOptions="Center" Style="{DynamicResource DangerButton}"
+                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.DeleteCommand}"
+                                            CommandParameter="{Binding .}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
         </ScrollView>
 
     </Grid>

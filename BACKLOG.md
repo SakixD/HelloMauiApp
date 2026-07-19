@@ -247,14 +247,22 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
   testbare Logik; im Dev-Bericht als nächster regulärer Schritt notiert.
 - **Lösungsskizze:** Je Seite ein ViewModel nach Muster
   `MediaLibraryViewModel`; XAML auf `DynamicResource`-Tokens; Verhalten identisch.
-- **Priorität:** Mittel · **Aufwand/Risiko:** M · **Status:** `[~]`
+- **Priorität:** Mittel · **Aufwand/Risiko:** M · **Status:** `[x]`
 - **Zwischenstand (2026-07-18):** **Fluent-Design-Teil erledigt** — beide
   Rail-Sektionen auf Kopfzeile + Cards + zentrale Token-Styles umgestellt
   (TemplateManagerPage inkl. Code-behind-Listenzeilen ohne hartcodierte
   Farben; ZplConsolePage nutzte schon Tokens, jetzt auch Karten/ChipButtons).
   Optik vom Nutzer im Sichttest bestätigt (2026-07-18).
-  **Offen: MVVM-Teil** — je Seite ein ViewModel nach Muster
-  `MediaLibraryViewModel` (Logik testbar machen), als eigener Folgeschritt.
+- **Ergebnis (2026-07-19, MVVM-Teil):** `TemplateManagerViewModel` (Liste als
+  `TemplateListItem`-Records + BindableLayout-DataTemplate statt Code-behind-
+  Zeilenbau; Öffnen/Löschen als Commands; `OpenInDesigner` liegt jetzt auf dem
+  ViewModel wie bei `PlaceholderLibraryViewModel`) und `ZplConsoleViewModel`
+  (ZplText/ResponseText/IsSending als Bindings, vier RelayCommands, Buttons
+  über `IsIdle` gesperrt). Beide als DI-Singletons registriert, Code-behinds
+  auf Konstruktor+`OnActivatedAsync` ausgedünnt. Kleine bewusste Abweichung:
+  Beim Löschen einer nicht mehr ladbaren Vorlage über den „Öffnen"-Dialog
+  entfällt die bisherige doppelte Rückfrage. Build 0 Fehler · App-Start
+  stabil (12s, keine Crash-Datei).
 
 ### FEAT-03 — Drill-down-Seiten modernisieren (Fluent + DI)
 - **Fundstelle:** `TemplateTestPage.xaml:13-28`, `MediaManagerPage.xaml:12-47`,
