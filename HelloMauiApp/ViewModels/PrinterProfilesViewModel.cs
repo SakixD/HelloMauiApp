@@ -7,10 +7,14 @@ using LabelPrinting.Services;
 namespace HelloMauiApp.ViewModels;
 
 /// <summary>Zeile der Profilliste (Anzeige-Daten vorformatiert, damit die View nur bindet).</summary>
-public record PrinterProfileListItem(PrinterProfile Profile, string Name, string Details, string TransportLabel, bool IsDefault)
+public record PrinterProfileListItem(PrinterProfile Profile, string Name, string Details, string TransportLabel, bool IsDefault, string RolesText, string Comment)
 {
 	/// <summary>Für die "Als Standard"-Schaltfläche (XAML hat keinen Invert-Konverter im Projekt).</summary>
 	public bool IsNotDefault => !IsDefault;
+
+	public bool HasRoles => RolesText.Length > 0;
+
+	public bool HasComment => Comment.Length > 0;
 }
 
 /// <summary>
@@ -48,6 +52,8 @@ public partial class PrinterProfilesViewModel : ViewModelBase
 
 	[ObservableProperty] string editorTitle = string.Empty;
 	[ObservableProperty] string editName = string.Empty;
+	[ObservableProperty] string editRolesText = string.Empty;
+	[ObservableProperty] string editComment = string.Empty;
 	[ObservableProperty] int transportIndex;
 	[ObservableProperty] bool isTcp = true;
 	[ObservableProperty] bool isTransportStub;
@@ -88,7 +94,9 @@ public partial class PrinterProfilesViewModel : ViewModelBase
 				PrinterTransportKind.Bluetooth => "Bluetooth",
 				_ => p.TransportKind.ToString(),
 			},
-			p.IsDefault)).ToList();
+			p.IsDefault,
+			string.Join(", ", p.Roles),
+			p.Comment)).ToList();
 
 		HasProfiles = ProfileItems.Count > 0;
 		CountText = ProfileItems.Count == 1 ? "1 Profil" : $"{ProfileItems.Count} Profile";
@@ -122,6 +130,8 @@ public partial class PrinterProfilesViewModel : ViewModelBase
 		var defaults = new PrinterProfile();
 		EditorTitle = "Neues Druckerprofil";
 		EditName = string.Empty;
+		EditRolesText = string.Empty;
+		EditComment = string.Empty;
 		TransportIndex = 0;
 		EditIp = string.Empty;
 		EditPortText = defaults.Port.ToString();
@@ -140,6 +150,8 @@ public partial class PrinterProfilesViewModel : ViewModelBase
 		_editing = profile;
 		EditorTitle = $"Profil: {profile.Name}";
 		EditName = profile.Name;
+		EditRolesText = string.Join(", ", profile.Roles);
+		EditComment = profile.Comment;
 		TransportIndex = profile.TransportKind switch
 		{
 			PrinterTransportKind.Usb => 1,
@@ -246,6 +258,15 @@ public partial class PrinterProfilesViewModel : ViewModelBase
 			return false;
 		}
 		profile.Name = EditName.Trim();
+
+		var roles = DeviceRoleName.ParseList(EditRolesText, out var invalidRoles);
+		if (invalidRoles.Count > 0)
+		{
+			error = $"Ungültige Rolle(n): {string.Join(", ", invalidRoles)} — erwartet wird das Format Bereich.Rolle, z.B. Versand.PaketLabel.";
+			return false;
+		}
+		profile.Roles = roles;
+		profile.Comment = EditComment?.Trim() ?? string.Empty;
 
 		if (profile.TransportKind == PrinterTransportKind.Tcp)
 		{

@@ -60,6 +60,10 @@
                                                 </Border>
                                             </HorizontalStackLayout>
                                             <Label Text="{Binding Details}" FontSize="12" TextColor="{DynamicResource ColorText2}" />
+                                            <Label Text="{Binding RolesText}" IsVisible="{Binding HasRoles}" FontSize="12"
+                                                   LineBreakMode="TailTruncation" TextColor="{DynamicResource AccentColor}" />
+                                            <Label Text="{Binding Comment}" IsVisible="{Binding HasComment}" FontSize="12"
+                                                   LineBreakMode="TailTruncation" TextColor="{DynamicResource ColorText3}" />
                                         </VerticalStackLayout>
                                         <Button Grid.Column="1" Text="Als Standard" Style="{DynamicResource ChipButton}"
                                                 IsVisible="{Binding IsNotDefault}"
@@ -96,6 +100,13 @@
 
                             <Label Text="NAME" Style="{DynamicResource FieldLabel}" />
                             <Entry Text="{Binding EditName}" Placeholder="z.B. Lager Zebra ZT230" />
+
+                            <Label Text="ROLLEN (KOMMA-GETRENNT, FORMAT BEREICH.ROLLE)" Style="{DynamicResource FieldLabel}" />
+                            <Entry Text="{Binding EditRolesText}" Placeholder="z.B. Versand.PaketLabel, Produktion.Produktetikett" />
+
+                            <Label Text="KOMMENTAR (OPTIONAL)" Style="{DynamicResource FieldLabel}" />
+                            <Editor Text="{Binding EditComment}" Placeholder="Freitext, z.B. Standort oder Besonderheiten"
+                                    AutoSize="TextChanges" MinimumHeightRequest="60" />
 
                             <Label Text="ANBINDUNG" Style="{DynamicResource FieldLabel}" />
                             <Picker SelectedIndex="{Binding TransportIndex}">
