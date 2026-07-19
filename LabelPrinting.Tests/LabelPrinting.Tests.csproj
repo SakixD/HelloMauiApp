@@ -36,6 +36,7 @@
 		<Compile Include="..\LabelPrinting\Models\LabelPrintParameters.cs" Link="Models\LabelPrintParameters.cs" />
 		<Compile Include="..\LabelPrinting\Models\PlaceholderDefinition.cs" Link="Models\PlaceholderDefinition.cs" />
 		<Compile Include="..\LabelPrinting\Models\PrinterProfile.cs" Link="Models\PrinterProfile.cs" />
+		<Compile Include="..\LabelPrinting\Models\DeviceRoleName.cs" Link="Models\DeviceRoleName.cs" />
 		<Compile Include="..\LabelPrinting\Models\PrinterConnectionMode.cs" Link="Models\PrinterConnectionMode.cs" />
 		<Compile Include="..\LabelPrinting\Models\PrinterTransportKind.cs" Link="Models\PrinterTransportKind.cs" />
 		<Compile Include="..\LabelPrinting\Services\ZplGraphic.cs" Link="Services\ZplGraphic.cs" />

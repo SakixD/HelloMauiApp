@@ -24,6 +24,8 @@ public class PrinterProfileTests
 			BluetoothAddress = "AA:BB:CC:DD:EE:FF",
 			RemotePrinterId = "remote-1",
 			RemoteProviderName = "Agent Halle 2",
+			Comment = "Steht am Packplatz 4",
+			Roles = ["Versand.PaketLabel", "Versand.RetourenLabel"],
 			LabelWidthMm = 103,
 			LabelHeightMm = 199,
 			Dpi = 300,
@@ -43,6 +45,8 @@ public class PrinterProfileTests
 		Assert.Equal(original.BluetoothAddress, clone.BluetoothAddress);
 		Assert.Equal(original.RemotePrinterId, clone.RemotePrinterId);
 		Assert.Equal(original.RemoteProviderName, clone.RemoteProviderName);
+		Assert.Equal(original.Comment, clone.Comment);
+		Assert.Equal(original.Roles, clone.Roles);
 		Assert.Equal(original.LabelWidthMm, clone.LabelWidthMm);
 		Assert.Equal(original.LabelHeightMm, clone.LabelHeightMm);
 		Assert.Equal(original.Dpi, clone.Dpi);
@@ -51,5 +55,10 @@ public class PrinterProfileTests
 		clone.IpAddress = "10.0.0.1";
 		Assert.Equal("Zebra Lager", original.Name);
 		Assert.Equal("192.168.1.251", original.IpAddress);
+
+		// Die Rollenliste muss eine echte Kopie sein — sonst editiert der Profileditor
+		// über den Klon unbemerkt das Original im Store mit.
+		clone.Roles.Add("Produktion.Produktetikett");
+		Assert.Equal(2, original.Roles.Count);
 	}
 }

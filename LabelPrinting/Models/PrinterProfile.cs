@@ -37,6 +37,19 @@ public class PrinterProfile
 
 	public string RemoteProviderName { get; set; } = string.Empty;
 
+	// ---------- Fachliche Zuordnung (Vorgriff auf ROADMAP Phase 3a, siehe DeviceRoleName) ----------
+
+	/// <summary>Freier Kommentar für Nutzer (Standort, Besonderheiten) — reine Anzeige, keine Logik.</summary>
+	public string Comment { get; set; } = string.Empty;
+
+	/// <summary>
+	/// Fachliche Rollen dieses Druckers im Format "Bereich.Rolle" (z.B. "Versand.PaketLabel"),
+	/// validiert über <see cref="DeviceRoleName"/>. Bewusster Vorgriff auf die DeviceRole-Schicht
+	/// aus ROADMAP Phase 3a: hier nur Daten, keine Auflösungslogik — die spätere Schicht
+	/// übernimmt sie unverändert.
+	/// </summary>
+	public List<string> Roles { get; set; } = [];
+
 	// ---------- Labelgeometrie (pro Profil statt global) ----------
 
 	public double LabelWidthMm { get; set; } = 100;
@@ -46,11 +59,16 @@ public class PrinterProfile
 	public int Dpi { get; set; } = 203;
 
 	/// <summary>
-	/// Kopie aller Werte (das Profil enthält nur Werttypen und Strings). Für Editoren, die ein
-	/// Profil erst beim Speichern zurückschreiben, ohne Felder zu verlieren, die ihr Formular
-	/// nicht kennt — per MemberwiseClone, damit künftige Felder automatisch mitkopiert werden.
+	/// Kopie aller Werte. Für Editoren, die ein Profil erst beim Speichern zurückschreiben, ohne
+	/// Felder zu verlieren, die ihr Formular nicht kennt — per MemberwiseClone, damit künftige
+	/// Felder automatisch mitkopiert werden; Listen werden danach tief kopiert.
 	/// </summary>
-	public PrinterProfile Clone() => (PrinterProfile)MemberwiseClone();
+	public PrinterProfile Clone()
+	{
+		var clone = (PrinterProfile)MemberwiseClone();
+		clone.Roles = [.. Roles]; // MemberwiseClone teilt sonst die Listenreferenz mit dem Original
+		return clone;
+	}
 
 	/// <summary>
 	/// Kurzbeschreibung der Verbindung für Listen/Statusanzeigen (z.B. "192.168.1.50:9100",
