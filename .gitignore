@@ -22,3 +22,6 @@ obj/
 # OS
 .DS_Store
 Thumbs.db
+
+# graphify analysis output (generated, machine-local paths)
+graphify-out/
