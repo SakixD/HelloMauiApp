@@ -18,9 +18,10 @@ public class PrinterProfileStore : IPrinterProfileStore
 	// Enums als Namen statt Zahlen speichern: lesbarer und robust gegen spätere Enum-Umsortierung.
 	static readonly JsonSerializerOptions JsonOptions = new() { Converters = { new JsonStringEnumConverter() } };
 
-	// Statisch, weil neben dem DI-Singleton auch Altbestand-Seiten eigene Instanzen erzeugen –
-	// Lesen-Ändern-Schreiben auf dem einen JSON-Blob muss über alle Instanzen hinweg atomar sein.
-	static readonly object SyncRoot = new();
+	// Instanz-Lock reicht: Seit CLEAN-02 gibt es nur noch die eine DI-Singleton-Instanz
+	// (einzige Erzeugung: MauiProgram-Factory). Der Lock serialisiert das
+	// Lesen-Ändern-Schreiben auf dem einen JSON-Blob in Preferences.
+	readonly object _syncRoot = new();
 
 	// Die Migration ist der eine legitime Nutzer der als obsolet markierten Legacy-Typen.
 #pragma warning disable CS0618
@@ -35,7 +36,7 @@ public class PrinterProfileStore : IPrinterProfileStore
 
 	public IReadOnlyList<PrinterProfile> GetAll()
 	{
-		lock (SyncRoot)
+		lock (_syncRoot)
 		{
 			MigrateIfNeeded();
 			return LoadList();
@@ -44,7 +45,7 @@ public class PrinterProfileStore : IPrinterProfileStore
 
 	public PrinterProfile? GetDefault()
 	{
-		lock (SyncRoot)
+		lock (_syncRoot)
 		{
 			MigrateIfNeeded();
 			return LoadList().FirstOrDefault(p => p.IsDefault);
@@ -53,7 +54,7 @@ public class PrinterProfileStore : IPrinterProfileStore
 
 	public PrinterProfile? GetById(Guid id)
 	{
-		lock (SyncRoot)
+		lock (_syncRoot)
 		{
 			MigrateIfNeeded();
 			return LoadList().FirstOrDefault(p => p.Id == id);
@@ -62,7 +63,7 @@ public class PrinterProfileStore : IPrinterProfileStore
 
 	public void Save(PrinterProfile profile)
 	{
-		lock (SyncRoot)
+		lock (_syncRoot)
 		{
 			MigrateIfNeeded();
 			var list = LoadList();
@@ -80,7 +81,7 @@ public class PrinterProfileStore : IPrinterProfileStore
 
 	public void Delete(Guid id)
 	{
-		lock (SyncRoot)
+		lock (_syncRoot)
 		{
 			MigrateIfNeeded();
 			var list = LoadList();
@@ -92,7 +93,7 @@ public class PrinterProfileStore : IPrinterProfileStore
 
 	public void SetDefault(Guid id)
 	{
-		lock (SyncRoot)
+		lock (_syncRoot)
 		{
 			MigrateIfNeeded();
 			var list = LoadList();

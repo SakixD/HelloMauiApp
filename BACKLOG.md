@@ -82,9 +82,11 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
   (+`IPrintMediaStore`-Abhängigkeit, reicht an drei Seiten durch), `AppShell`
   (+3 Services für den templatetest-Drill-down), `AppearanceSettingsViewModel`
   (reicht vorhandene Services weiter). `MainPageViewModel` brauchte keine
-  Änderung (baut keine Seiten). Statischer Lock im `PrinterProfileStore`
-  bewusst noch drin — Rückstufung auf Instanz-Lock als Folgeschritt. Build 0
-  Fehler · 65/65 Tests grün · App-Start + Drill-downs vom Nutzer bestätigt.
+  Änderung (baut keine Seiten). Build 0 Fehler · 65/65 Tests grün · App-Start +
+  Drill-downs vom Nutzer bestätigt. **Folgeschritt erledigt (2026-07-19):**
+  statischer Lock im `PrinterProfileStore` auf Instanz-Lock zurückgestuft,
+  nachdem per Suche bestätigt war, dass nur noch die MauiProgram-Factory
+  den Store erzeugt.
 
 ### CLEAN-03 — Duplizierte XAML-Styles zentralisieren
 - **Fundstelle:** `DesignerPage.xaml:8-58`, `PrinterProfilesPage.xaml:11-47`,
