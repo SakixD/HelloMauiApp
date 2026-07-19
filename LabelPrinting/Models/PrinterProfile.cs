@@ -46,6 +46,13 @@ public class PrinterProfile
 	public int Dpi { get; set; } = 203;
 
 	/// <summary>
+	/// Kopie aller Werte (das Profil enthält nur Werttypen und Strings). Für Editoren, die ein
+	/// Profil erst beim Speichern zurückschreiben, ohne Felder zu verlieren, die ihr Formular
+	/// nicht kennt — per MemberwiseClone, damit künftige Felder automatisch mitkopiert werden.
+	/// </summary>
+	public PrinterProfile Clone() => (PrinterProfile)MemberwiseClone();
+
+	/// <summary>
 	/// Kurzbeschreibung der Verbindung für Listen/Statusanzeigen (z.B. "192.168.1.50:9100",
 	/// "USB", "Remote über Server") – zentral hier, damit nicht jede Seite eigene Logik baut.
 	/// </summary>

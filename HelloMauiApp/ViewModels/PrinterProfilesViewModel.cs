@@ -228,18 +228,15 @@ public partial class PrinterProfilesViewModel : ViewModelBase
 
 	bool TryReadEditor(out PrinterProfile profile, out string? error)
 	{
-		// Bestehende Id behalten, damit Save() aktualisiert statt dupliziert; Default-Flag bleibt erhalten.
-		profile = new PrinterProfile
+		// Bestehendes Profil klonen statt neu aufbauen: Felder, die dieses Formular nicht kennt
+		// (UsbDeviceId, BluetoothAddress, Remote*, künftige), gingen sonst beim Speichern verloren —
+		// z.B. die IP, wenn der Transport kurz auf USB stand (BUG-03). Id/Default bleiben mit erhalten.
+		profile = _editing?.Clone() ?? new PrinterProfile { ConnectionMode = PrinterConnectionMode.Local };
+		profile.TransportKind = TransportIndex switch
 		{
-			Id = _editing?.Id ?? Guid.NewGuid(),
-			IsDefault = _editing?.IsDefault ?? false,
-			ConnectionMode = PrinterConnectionMode.Local,
-			TransportKind = TransportIndex switch
-			{
-				1 => PrinterTransportKind.Usb,
-				2 => PrinterTransportKind.Bluetooth,
-				_ => PrinterTransportKind.Tcp,
-			},
+			1 => PrinterTransportKind.Usb,
+			2 => PrinterTransportKind.Bluetooth,
+			_ => PrinterTransportKind.Tcp,
 		};
 		error = null;
 

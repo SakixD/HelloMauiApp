@@ -204,7 +204,13 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
   Felder bekommen.
 - **Lösungsskizze:** Statt Neuaufbau das bestehende Profil klonen und nur die
   im Formular editierbaren Felder überschreiben.
-- **Priorität:** Niedrig · **Aufwand/Risiko:** S · **Status:** `[ ]`
+- **Priorität:** Niedrig · **Aufwand/Risiko:** S · **Status:** `[x]`
+- **Ergebnis (2026-07-19):** `PrinterProfile.Clone()` ergänzt (MemberwiseClone —
+  kopiert künftige Felder automatisch mit, genau die Fehlerklasse dieses Bugs);
+  `TryReadEditor` klont das bestehende Profil und überschreibt nur noch die
+  Formularfelder. Ein TCP-Profil, das kurz auf „USB" stand, behält damit IP/Port;
+  auch `ConnectionMode` wird nicht mehr stumpf auf `Local` zurückgesetzt.
+  Clone-Test ergänzt (70/70 grün).
 
 ### BUG-04 — Fire-and-forget-Navigation schluckt Fehler lautlos
 - **Fundstelle:** `AppShell.xaml.cs:44-46,133-149,151-157`
