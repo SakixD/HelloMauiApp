@@ -94,6 +94,13 @@ Die App fragt nach **Rollen**, nicht nach Geräten.
 
 - `[ ]` **3a** `DeviceRole` als strukturierte Kennung (`Bereich.Rolle`,
   z.B. `Versand.PaketLabel`); Rollen pro Gerät/Profil zuweis- und persistierbar.
+  Datenebene bereits vorhanden (FEAT-01: `PrinterProfile.Roles` + Format-
+  Validierung `DeviceRoleName`, aktuell freie Strings). **Kern von 3a und noch
+  offen:** ein zentrales **Rollen-Verzeichnis** (`DeviceRoleStore`) als einzige
+  Quelle gültiger Rollen — Voraussetzung für Auswahlliste im Editor statt
+  Freitext, zentrale Namensregeln, „überall umbenennen" und die verlässliche
+  Auflösung in 3b (siehe BACKLOG FEAT-07). Gehört bewusst hierher (Device-SDK-
+  Phase, keine höhere SDK), zusammen mit dem Standort-/Raummodell.
 - `[ ]` **3b** `IRoleResolver`: „finde Gerät(e) mit Rolle X" → 0..n Geräte,
   Default-/Auswahlstrategie bei Mehrdeutigkeit.
 - `[ ]` **3c** UI: Rollenverwaltung pro Gerät; ein „Drucke an Rolle"-Testpfad.

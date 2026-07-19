@@ -342,3 +342,62 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
 - **Lösungsskizze:** Erst nach Phasen 2–5 bzw. sobald ein Server existiert —
   nur als Merkposten geführt.
 - **Priorität:** Niedrig · **Aufwand/Risiko:** L · **Status:** `[ ]`
+
+### FEAT-07 — Globales Rollen-Verzeichnis (Governance der Rollen-Kennungen)
+- **Fundstelle:** `PrinterProfile.Roles` + `Models/DeviceRoleName.cs` (aus
+  FEAT-01); Zielbild `ROADMAP.md:95` (Phase 3a), Leitplanke `PROJECT.md:214-216`
+- **Beschreibung:** Rollen sind heute freie, nur formatgeprüfte Strings pro
+  Profil. Ein zentrales Verzeichnis (`DeviceRoleStore`) hält den verbindlichen
+  Bestand gültiger Rollen (Bereich/Rolle/Beschreibung); Profile **wählen daraus**
+  statt frei zu tippen.
+- **Warum:** Ohne zentrale Quelle entstehen Tippfehler-Phantomrollen
+  (`Versand.PaketLabel` vs. `…Paketlabel`), nach denen nie ein Gerät gefunden
+  wird; kein Auswahlmenü, kein „überall umbenennen", keine gemeinsame Definition,
+  *was* eine Rolle bedeutet. Genau darauf baut die spätere Auflösung
+  (`IRoleResolver`, ROADMAP Phase 3b).
+- **Lösungsskizze:** Teil von **ROADMAP Phase 3a** — bewusst ein späterer
+  Bauschritt der Device SDK (keine höhere SDK), zusammen mit dem Standort-/
+  Raummodell. Editor-Auswahlliste statt Freitextfeld; die Prüfung wandert von
+  reiner Formatvalidierung (`DeviceRoleName`) zu „Rolle existiert im Verzeichnis".
+  Die in FEAT-01 angelegte Datenebene (Strings + Formatprüfung) wird übernommen.
+- **Priorität:** Mittel (mit Phase 3) · **Aufwand/Risiko:** M · **Status:** `[ ]`
+
+### FEAT-08 — Globaler Platzhalter-Katalog (zweiter Tab in der Platzhalter-Verwaltung)
+- **Fundstelle:** `ViewModels/PlaceholderLibraryViewModel.cs` (heutige
+  Übersicht), `Models/PlaceholderDefinition.cs`,
+  `Services/LabelTemplateFillService.cs:19` (Key füllt das Formular),
+  `PlaceholderManagerPage.xaml.cs` (Platzhalter-Editor im Designer-Drill-down)
+- **Beschreibung:** Die Platzhalter-Sektion (Rail „placeholders") bekommt zwei
+  Tabs: **(1) „Vorlagen"** — ein neuer globaler Katalog wiederverwendbarer
+  Platzhalter (CRUD, eigener Store), aus dem der Designer per **Kopie** einfügt;
+  **(2) „Verknüpfte Platzhalter"** — die heutige Ansicht bleibt (listet die
+  Platzhalter aller gespeicherten Label-Vorlagen). Ziel: dieselben Platzhalter
+  (z.B. fürs Versandlabel) nicht bei jeder Vorlage neu anlegen.
+- **Warum:** Nutzerwunsch; spart Wiederholung und hält die Benennung
+  einheitlich, ohne die Ein-Datei-Selbstständigkeit der Templates zu opfern.
+- **Entscheidungen (mit Nutzer abgestimmt, 2026-07-19):**
+  - **Kopieren, nicht referenzieren** — Einfügen kopiert die Definition ins
+    Template. So bleibt ein `LabelTemplate` eine eigenständige JSON-Datei
+    (Export/Import) und behält Pro-Template-Overrides (`Required`/`DefaultValue`).
+  - **Identität = `PlaceholderDefinition.Key`** — der Key ist die eindeutige
+    Kennung, die das Formular füllt (`LabelTemplateFillService.Fill` mappt per
+    Key; Element-Bindungen lösen `{{Key}}` auf). Der **Anzeigename** eines
+    Katalog-Eintrags ist nur ein Label und bewusst „egal". Kein separates
+    Id-Feld nötig; ein stabiles Id für „umbenennen ohne Bindungsbruch" wäre ein
+    eigener, späterer Zusatz.
+  - **Konflikt beim Einfügen:** vorhandene Keys bleiben stehen, nur fehlende
+    ergänzen (am wenigsten überraschend).
+  - **Label-Vorlage startet wie heute** leer bzw. mit Default-Preset; Einfügen
+    ist rein additiv.
+  - **Zweistufig:** erst einzelne Platzhalter-Presets, dann darüber **Sätze**,
+    die mehrere Presets bündeln und mit einem Klick einfügen.
+- **Lösungsskizze:**
+  - *Phase 1 (einzelne Presets):* `PlaceholderPreset`-Modell
+    (= `PlaceholderDefinition` + Anzeigename) + `IPlaceholderPresetStore` (JSON,
+    Muster `PrintMediaStore`); Platzhalter-Sektion auf Tab-Ansicht umbauen (das
+    bestehende `PlaceholderLibraryViewModel` wird Tab 2, unverändert);
+    „Preset einfügen" im Designer bzw. `PlaceholderManagerPage`.
+  - *Phase 2 (Sätze):* `PlaceholderSet` (Name + Liste von Presets) + „Satz
+    einfügen" (fügt alle enthaltenen Presets nach obiger Konfliktregel ein).
+  - Reine Template-/App-Schicht, **Device SDK unberührt**.
+- **Priorität:** Mittel · **Aufwand/Risiko:** M (Phase 1) / +S (Phase 2) · **Status:** `[ ]`
