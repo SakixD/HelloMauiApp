@@ -77,8 +77,17 @@ public partial class AppShell : ContentPage
 	{
 		base.OnAppearing();
 
-		if (_sections.TryGetValue(_activeSection, out var view) && view is IShellSectionView sectionView)
-			await sectionView.OnActivatedAsync();
+		// async void: Eine Exception aus OnActivatedAsync (z.B. Datei-I/O im Refresh) würde hier
+		// sonst den Prozess beenden statt gemeldet zu werden (BUG-04).
+		try
+		{
+			if (_sections.TryGetValue(_activeSection, out var view) && view is IShellSectionView sectionView)
+				await sectionView.OnActivatedAsync();
+		}
+		catch (Exception ex)
+		{
+			await ShowSectionErrorAsync(ex);
+		}
 	}
 
 	void RegisterNavRows()
@@ -142,21 +151,33 @@ public partial class AppShell : ContentPage
 
 	async Task NavigateTo(string section)
 	{
-		if (_sections.TryGetValue(section, out var view))
+		// Rail-Klicks starten diesen Task verworfen (_ = NavigateTo(...)); ohne catch verschwände
+		// eine Exception aus OnActivatedAsync unbeobachtet und die Sektion wirkte nur leer (BUG-04).
+		try
 		{
-			_activeSection = section;
-			UpdateRailHighlight();
-			TitleBarSectionLabel.Text = "— " + SectionTitle(section);
+			if (_sections.TryGetValue(section, out var view))
+			{
+				_activeSection = section;
+				UpdateRailHighlight();
+				TitleBarSectionLabel.Text = "— " + SectionTitle(section);
 
-			ContentHost.Content = view;
-			if (view is IShellSectionView sectionView)
-				await sectionView.OnActivatedAsync();
-			return;
+				ContentHost.Content = view;
+				if (view is IShellSectionView sectionView)
+					await sectionView.OnActivatedAsync();
+				return;
+			}
+
+			if (section == "templatetest")
+				await _navigationService.PushAsync(new TemplateTestPage(_templateStore, _printerService, _profileStore));
 		}
-
-		if (section == "templatetest")
-			await _navigationService.PushAsync(new TemplateTestPage(_templateStore, _printerService, _profileStore));
+		catch (Exception ex)
+		{
+			await ShowSectionErrorAsync(ex);
+		}
 	}
+
+	Task ShowSectionErrorAsync(Exception ex) =>
+		DisplayAlertAsync("Fehler beim Laden der Sektion", ex.Message, "OK");
 
 	void OnHomeTapped(object? sender, TappedEventArgs e) => _ = NavigateTo("home");
 	void OnDesignerTapped(object? sender, TappedEventArgs e) => _ = NavigateTo("designer");

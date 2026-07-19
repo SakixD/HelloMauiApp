@@ -222,7 +222,11 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
   einmal unbemerkt blieb (nie aufgerufenes `RefreshAsync`).
 - **Lösungsskizze:** In `NavigateTo` ein try/catch mit Log/Alert ergänzen;
   Handler-Signaturen bleiben unverändert.
-- **Priorität:** Niedrig · **Aufwand/Risiko:** S · **Status:** `[ ]`
+- **Priorität:** Niedrig · **Aufwand/Risiko:** S · **Status:** `[x]`
+- **Ergebnis (2026-07-19):** try/catch mit Alert („Fehler beim Laden der
+  Sektion") um den kompletten `NavigateTo`-Rumpf **und** um den
+  `OnActivatedAsync`-Aufruf in `OnAppearing` (async void — dort hätte eine
+  Exception sonst sogar den Prozess beendet). Handler-Signaturen unverändert.
 
 ---
 
