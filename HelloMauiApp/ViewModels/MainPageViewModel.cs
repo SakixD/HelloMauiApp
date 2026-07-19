@@ -81,6 +81,11 @@ public partial class MainPageViewModel : ViewModelBase
 		var templateNames = await _templateStore.ListTemplateNamesAsync();
 		var mediaList = await _mediaStore.ListAsync();
 
+		// Bewusste Entscheidung (CLEAN-06): Für die Platzhalterzahl wird jede Vorlage voll geladen
+		// (inkl. eingebetteter Bilder) — linearer Datei-I/O pro Dashboard-Aktivierung. Bei der
+		// erwarteten Vorlagenzahl unkritisch; ein Cache müsste Änderungen aus Designer, API und
+		// Dateisystem invalidieren und stünde in keinem Verhältnis zum Nutzen. Erst optimieren,
+		// wenn Vorlagenlisten real groß werden (dann: Zählung im Store cachen).
 		int placeholders = 0;
 		foreach (var name in templateNames)
 		{

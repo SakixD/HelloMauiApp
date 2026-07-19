@@ -148,7 +148,12 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
   Vorlagenzahl und Bildgröße.
 - **Lösungsskizze:** Entweder Zählung cachen/bei Bedarf laden oder akzeptieren
   und dokumentieren — erst relevant bei vielen Vorlagen. Bewusst niedrig priorisiert.
-- **Priorität:** Niedrig · **Aufwand/Risiko:** S · **Status:** `[ ]`
+- **Priorität:** Niedrig · **Aufwand/Risiko:** S · **Status:** `[x]`
+- **Ergebnis (2026-07-19):** Bewusst **akzeptiert und im Code dokumentiert**
+  (Kommentar in `MainPageViewModel.RefreshAsync`): Ein Cache müsste Änderungen
+  aus Designer, API und Dateisystem invalidieren — unverhältnismäßig für eine
+  Dashboard-Kennzahl bei kleiner Vorlagenzahl. Optimierung erst, wenn
+  Vorlagenlisten real groß werden (dann Zählung im Store cachen).
 
 ---
 
