@@ -1,3 +1,4 @@
+using HelloMauiApp.Services;
 using LabelPrinting.Models;
 using LabelPrinting.Services;
 
@@ -62,7 +63,7 @@ public partial class MediaManagerPage : ContentPage
 		string suffix = isActive ? "  ✓ aktiv" : string.Empty;
 		var nameLabel = new Label
 		{
-			Text = $"{media.Name}  ({media.WidthMm:0.#}×{media.HeightMm:0.#} mm, {SensorLabel(media.SensorType)}){suffix}",
+			Text = $"{media.Name}  ({media.WidthMm:0.#}×{media.HeightMm:0.#} mm, {MediaDetection.SensorLabel(media.SensorType)}){suffix}",
 			VerticalOptions = LayoutOptions.Center,
 			LineBreakMode = LineBreakMode.TailTruncation,
 			FontSize = 13,
@@ -95,13 +96,6 @@ public partial class MediaManagerPage : ContentPage
 		border.SetDynamicResource(VisualElement.BackgroundColorProperty, "ColorLayer");
 		return border;
 	}
-
-	static string SensorLabel(MediaSensorType type) => type switch
-	{
-		MediaSensorType.BlackMark => "Schwarzmarke",
-		MediaSensorType.Continuous => "Endlos",
-		_ => "Lücke",
-	};
 
 	void ApplyToTemplate(PrintMedia media)
 	{
@@ -206,33 +200,15 @@ public partial class MediaManagerPage : ContentPage
 		var status = await _printerService.GetDetailedStatusAsync(profile);
 		DetectBtn.IsEnabled = true;
 
-		if (!status.Success)
-		{
-			DetectResultLabel.Text = $"Fehler: {status.ErrorMessage}";
-			DetectResultLabel.IsVisible = true;
-			return;
-		}
-
-		var parts = new List<string>();
-		if (status.LabelLengthDots is int dots)
-			parts.Add($"Etikettenlänge: {ZplLabelBuilder.DotsToMm(dots, profile.Dpi):0.#} mm");
-		if (status.PaperOut is bool paperOut)
-			parts.Add(paperOut ? "Kein Papier!" : "Papier OK");
-		if (status.RibbonOut is bool ribbonOut)
-			parts.Add(ribbonOut ? "Kein Farbband!" : "Farbband OK");
-		if (status.HeadOpen is bool headOpen)
-			parts.Add(headOpen ? "Druckkopf offen!" : "Druckkopf geschlossen");
-
-		DetectResultLabel.Text = parts.Count > 0
-			? string.Join("  •  ", parts) + "  (Breite bitte manuell eintragen.)"
-			: "Keine auswertbaren Felder in der Statusantwort.";
+		var detection = MediaDetection.Interpret(status, profile.Dpi);
+		DetectResultLabel.Text = detection.SummaryText;
 		DetectResultLabel.IsVisible = true;
 
-		if (status.LabelLengthDots is int lengthDots)
+		if (detection.DetectedMedia is { } detected)
 		{
-			_editing = new PrintMedia { HeightMm = Math.Round(ZplLabelBuilder.DotsToMm(lengthDots, profile.Dpi), 1) };
+			_editing = detected;
 			_isNew = true;
-			ShowEditPanel(_editing);
+			ShowEditPanel(detected);
 		}
 	}
 }

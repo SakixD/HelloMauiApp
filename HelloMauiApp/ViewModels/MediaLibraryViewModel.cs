@@ -74,7 +74,7 @@ public partial class MediaLibraryViewModel : ViewModelBase
 		MediaItems = mediaList
 			.Select(m => new MediaListItem(
 				m.Name,
-				$"{m.WidthMm:0.#} × {m.HeightMm:0.#} mm · {SensorLabel(m.SensorType)}"
+				$"{m.WidthMm:0.#} × {m.HeightMm:0.#} mm · {MediaDetection.SensorLabel(m.SensorType)}"
 					+ (m.SensorType == MediaSensorType.Continuous ? string.Empty : $" · Lücke {m.GapMm:0.#} mm")
 					+ (string.IsNullOrWhiteSpace(m.Material) ? string.Empty : $" · {m.Material}"),
 				m))
@@ -83,13 +83,6 @@ public partial class MediaLibraryViewModel : ViewModelBase
 		HasMedia = MediaItems.Count > 0;
 		CountText = MediaItems.Count == 1 ? "1 Medium gespeichert" : $"{MediaItems.Count} Medien gespeichert";
 	}
-
-	static string SensorLabel(MediaSensorType type) => type switch
-	{
-		MediaSensorType.BlackMark => "Schwarzmarke",
-		MediaSensorType.Continuous => "Endlos",
-		_ => "Lücke",
-	};
 
 	// ---------- Editor ----------
 
@@ -185,32 +178,10 @@ public partial class MediaLibraryViewModel : ViewModelBase
 		var status = await _printerService.GetDetailedStatusAsync(profile);
 		IsBusy = false;
 
-		if (!status.Success)
-		{
-			DetectResult = $"Fehler: {status.ErrorMessage}";
-			return;
-		}
+		var detection = MediaDetection.Interpret(status, profile.Dpi);
+		DetectResult = detection.SummaryText;
 
-		var parts = new List<string>();
-		if (status.LabelLengthDots is int dots)
-			parts.Add($"Etikettenlänge: {ZplLabelBuilder.DotsToMm(dots, profile.Dpi):0.#} mm");
-		if (status.PaperOut is bool paperOut)
-			parts.Add(paperOut ? "Kein Papier!" : "Papier OK");
-		if (status.RibbonOut is bool ribbonOut)
-			parts.Add(ribbonOut ? "Kein Farbband!" : "Farbband OK");
-		if (status.HeadOpen is bool headOpen)
-			parts.Add(headOpen ? "Druckkopf offen!" : "Druckkopf geschlossen");
-
-		DetectResult = parts.Count > 0
-			? string.Join("  •  ", parts) + "  (Breite bitte manuell eintragen.)"
-			: "Keine auswertbaren Felder in der Statusantwort.";
-
-		if (status.LabelLengthDots is int lengthDots)
-		{
-			StartEditing(
-				new PrintMedia { HeightMm = Math.Round(ZplLabelBuilder.DotsToMm(lengthDots, profile.Dpi), 1) },
-				isNew: true,
-				title: "Erkanntes Medium");
-		}
+		if (detection.DetectedMedia is { } detected)
+			StartEditing(detected, isNew: true, title: "Erkanntes Medium");
 	}
 }

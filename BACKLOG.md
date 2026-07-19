@@ -121,7 +121,13 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
 - **Lösungsskizze:** Gemeinsamen Helfer extrahieren (z.B. statische Methode, die
   aus `PrinterStatus` + `Dpi` den Anzeigetext und das vorbefüllte `PrintMedia`
   liefert); beide Stellen darauf umstellen. Bietet sich nach CLEAN-02 an.
-- **Priorität:** Mittel · **Aufwand/Risiko:** S · **Status:** `[ ]`
+- **Priorität:** Mittel · **Aufwand/Risiko:** S · **Status:** `[x]`
+- **Ergebnis (2026-07-19):** Gemeinsamer Helfer `Services/MediaDetection.cs`
+  (statisch): `Interpret(PrinterStatus, dpi)` liefert Anzeigetext + ggf.
+  vorbefülltes `PrintMedia` (inkl. Fehlerfall), `SensorLabel` einmalig statt
+  doppelt. `MediaLibraryViewModel.DetectAsync` und
+  `MediaManagerPage.OnDetectClicked` auf den Helfer umgestellt; Verhalten
+  unverändert. Build 0 Fehler.
 
 ### CLEAN-05 — Toter Doku-Verweis auf gelöschte `PrinterSettingsPage`
 - **Fundstelle:** `PrinterDeviceSettingsPage.xaml.cs:8`
