@@ -108,6 +108,7 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
   App crasht beim Start (stowed exception 0xc000027b, `XamlParseException:
   StaticResource not found`). Dazu Crash-Logger in
   `Platforms/Windows/App.xaml.cs` ergänzt (`%TEMP%\hellomaui_crash.txt`).
+  Fix-Commit `cb39e1e`; App-Start danach stabil, vom Nutzer bestätigt (2026-07-18).
 
 ### CLEAN-04 — Doppelte Medienerkennungs-Logik zusammenführen
 - **Fundstelle:** `ViewModels/MediaLibraryViewModel.cs:175-216` vs.
@@ -237,6 +238,7 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
   Rail-Sektionen auf Kopfzeile + Cards + zentrale Token-Styles umgestellt
   (TemplateManagerPage inkl. Code-behind-Listenzeilen ohne hartcodierte
   Farben; ZplConsolePage nutzte schon Tokens, jetzt auch Karten/ChipButtons).
+  Optik vom Nutzer im Sichttest bestätigt (2026-07-18).
   **Offen: MVVM-Teil** — je Seite ein ViewModel nach Muster
   `MediaLibraryViewModel` (Logik testbar machen), als eigener Folgeschritt.
 
@@ -257,7 +259,8 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
   erzeugte Controls über `SetDynamicResource`-Tokens — keine hartcodierten
   Farben mehr (Ausnahme: weiße Vorschaufläche in `TemplateTestPage`, die
   bewusst das physische Etikett darstellt). Nebenbei totes Token `ColorBase`
-  in `PrinterProfilesPage` auf `ColorBg` korrigiert.
+  in `PrinterProfilesPage` auf `ColorBg` korrigiert. Optik vom Nutzer im
+  Sichttest bestätigt (2026-07-18).
 
 ### FEAT-04 — ROADMAP Phase 2: Device-SDK-Kern
 - **Fundstelle:** `ROADMAP.md:61-77`

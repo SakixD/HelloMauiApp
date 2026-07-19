@@ -183,6 +183,16 @@ gebaut wird davon jetzt **nichts**:
   sauberes Fail-Ergebnis.
 - **UI + DI:** `PrinterProfilesPage` (Profilverwaltung), Services als DI-Singletons in
   `MauiProgram.cs`. 65 Tests grün, Verhaltensgleichheit des TCP-Drucks verifiziert.
+- **Einheitliches UI-Design der Test-App (2026-07-18):** Alle Seiten — Rail-Sektionen
+  wie Drill-downs — folgen dem Token-Design: Farbtokens (`Tokens.Light/Dark.xaml`,
+  zur Laufzeit vom `AppearanceService` gesetzt) plus zentrale Styles in
+  `Resources/Styles/Styles.xaml` (`Card`, `ChipButton`, `AccentChipButton`,
+  `DangerButton`, `SectionTitle`, `FieldLabel`, `ToolbarSeparator`). Alle Seiten
+  beziehen ihre Services per Konstruktor-DI; das alte `new`-Service-Muster ist
+  entfernt. **Wichtige Regel:** App-weite Styles per `DynamicResource`
+  referenzieren, nie `StaticResource` — sonst Startcrash (Begründung und Lektion
+  in `BACKLOG.md`, CLEAN-03). Crash-Diagnose: `%TEMP%\hellomaui_crash.txt`
+  (UnhandledException-Logger in `Platforms/Windows/App.xaml.cs`).
 
 **Grenzen des jetzigen Stands (was die nächsten Schritte aufheben):**
 - Der Drucker ist noch kein abstraktes *Device* mit *Capability*/*Role* — die App
