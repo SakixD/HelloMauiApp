@@ -50,7 +50,7 @@ public class AppApi : IAppApi
 		Register("zpl.send", "Rohen ZPL-Code drucken (Standardprofil oder \"printer\").", "{ \"zpl\": \"^XA...^XZ\", \"printer\": \"Name oder Id (optional)\" }", ZplSendAsync);
 		Register("printer.status", "Druckerstatus abfragen (~HS, ausgewertete Felder).", "{ \"printer\": \"Name oder Id (optional)\" }", PrinterStatusAsync);
 		Register("printer.settings", "Aktives Druckerprofil (Standard bzw. \"printer\", nur lesen).", "{ \"printer\": \"Name oder Id (optional)\" }", PrinterSettingsAsync);
-		Register("printers.list", "Alle Druckerprofile (Name, Anbindung, Default-Flag).", null, PrintersListAsync);
+		Register("printers.list", "Alle Druckerprofile (Name, Anbindung, Rollen, Kommentar, Default-Flag).", null, PrintersListAsync);
 		Register("media.list", "Alle gespeicherten Druckmedien-Presets.", null, MediaListAsync);
 	}
 
@@ -226,6 +226,8 @@ public class AppApi : IAppApi
 			p.ConnectionMode,
 			p.TransportKind,
 			Connection = p.ConnectionSummary,
+			p.Roles,
+			p.Comment,
 			p.LabelWidthMm,
 			p.LabelHeightMm,
 			p.Dpi,

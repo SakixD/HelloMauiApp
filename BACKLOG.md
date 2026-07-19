@@ -252,7 +252,18 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
   im Format `Bereich.Rolle`), Editor + Listenanzeige + API-Felder ergänzen.
   Bewusst als Vorgriff auf ROADMAP Phase 3a markieren, damit die spätere
   `DeviceRole`-Schicht die Daten übernehmen kann (keine Auflösungslogik jetzt).
-- **Priorität:** Hoch · **Aufwand/Risiko:** M · **Status:** `[ ]`
+- **Priorität:** Hoch · **Aufwand/Risiko:** M · **Status:** `[x]`
+- **Ergebnis (2026-07-19, drei Commits):** **(a)** SDK-Modell:
+  `PrinterProfile.Comment` + `Roles` mit zentraler Format-Validierung
+  `Models/DeviceRoleName.cs` (`Bereich.Rolle`, Vorgriff auf Phase 3a — nur
+  Daten, keine Auflösungslogik); `Clone()` kopiert die Rollenliste tief;
+  15 neue Tests. **(b)** Profilverwaltung: Rollen-Eingabe (komma-getrennt,
+  ungültige Einträge werden namentlich abgelehnt) + Kommentarfeld im Editor;
+  Liste zeigt Rollen (Akzentfarbe) und Kommentar. **(c)** Dashboard-Karte
+  zeigt „Rollen" des aktiven Druckers; `printers.list` liefert `Roles` +
+  `Comment` (`printer.settings` enthielt sie automatisch, da volles Profil).
+  Alte Profil-Blobs ohne die Felder laden mit leeren Defaults — keine
+  Migration nötig.
 
 ### FEAT-02 — MVVM + Fluent-Design für TemplateManagerPage & ZplConsolePage
 - **Fundstelle:** `DEV_BERICHT_2026-07-17.md:57`; alte Optik z.B.

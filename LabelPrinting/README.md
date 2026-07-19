@@ -21,7 +21,8 @@
 | `Services/ZplImageConverter.cs` | Wandelt Bilder (Logos/Symbole) via SkiaSharp + Dithering in ZPL-Grafikfelder (`^GFA`) um |
 | `Services/PrinterResult.cs`, `PrinterQueryResult.cs`, `ZplGraphic.cs` | Ergebnistypen |
 | `Services/LabelSamples.cs` | Fertige ZPL-Beispiellabels (Testdruck, Bild-als-Label) für die Testfunktionen der App |
-| `Models/PrinterProfile.cs` (+ `PrinterConnectionMode.cs`, `PrinterTransportKind.cs`) | Ein konfigurierter Drucker als eigenständiges Profil: Anbindungsart (Local/Remote, Tcp/Usb/Bluetooth), Adressdaten, Labelgeometrie/DPI, Default-Kennzeichnung; ersetzt die frühere globale Einzeldrucker-Konfiguration |
+| `Models/PrinterProfile.cs` (+ `PrinterConnectionMode.cs`, `PrinterTransportKind.cs`) | Ein konfigurierter Drucker als eigenständiges Profil: Anbindungsart (Local/Remote, Tcp/Usb/Bluetooth), Adressdaten, Labelgeometrie/DPI, Default-Kennzeichnung, freier Kommentar und fachliche Rollen; ersetzt die frühere globale Einzeldrucker-Konfiguration |
+| `Models/DeviceRoleName.cs` | Validierung/Normalisierung der Rollen-Kennungen im Format `Bereich.Rolle` (z.B. `Versand.PaketLabel`) — Vorgriff auf die spätere DeviceRole-Schicht (Roadmap Phase 3a), nur Daten, keine Auflösungslogik |
 | `Services/IPrinterProfileStore.cs` + `PrinterProfileStore.cs` | Persistenz der Profil-Liste (JSON in `Preferences`); höchstens ein Default-Profil (= app-weit aktiver Drucker); migriert die Legacy-Einzeldrucker-Werte **einmalig** in ein Default-Profil |
 | `Services/IPrinterConnectionFactory.cs` + `PrinterConnectionFactory.cs` | Baut aus einem lokalen `PrinterProfile` die passende, noch nicht verbundene `IPrinterConnection` (Profil sagt *was*, Factory baut *wie*) |
 | `Services/UsbPrinterConnection.cs` + `BluetoothPrinterConnection.cs` + `PrinterTransportNotImplementedException.cs` | Ehrliche Stubs für USB/Bluetooth: architektonisch vorbereitet, werfen bei Nutzung eine klar erkennbare „nicht implementiert"-Ausnahme (kein stiller Fake) |

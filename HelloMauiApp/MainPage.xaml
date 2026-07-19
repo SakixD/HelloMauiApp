@@ -50,7 +50,7 @@
                                     FontSize="14" TextColor="{DynamicResource ColorText}" />
                         </VerticalStackLayout>
 
-                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="14" ColumnSpacing="24">
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="14" ColumnSpacing="24">
                             <VerticalStackLayout Grid.Row="0" Grid.Column="0">
                                 <Label Text="VERBINDUNG" FontSize="11" TextColor="{DynamicResource ColorText3}" CharacterSpacing="0.5" />
                                 <Label Text="{Binding IpValue}" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
@@ -68,6 +68,10 @@
                                 <Label Text="{Binding CalibratedValue}" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
+                                <Label Text="ROLLEN" FontSize="11" TextColor="{DynamicResource ColorText3}" CharacterSpacing="0.5" />
+                                <Label Text="{Binding RolesValue}" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2">
                                 <Label Text="LOKALE API (TERMINAL/ANDERE APPS)" FontSize="11" TextColor="{DynamicResource ColorText3}" CharacterSpacing="0.5" />
                                 <Label Text="{Binding ApiValue}" FontSize="14" FontAttributes="Bold" TextColor="{DynamicResource ColorText}" />
                             </VerticalStackLayout>

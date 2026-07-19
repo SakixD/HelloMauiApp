@@ -28,6 +28,7 @@ public partial class MainPageViewModel : ViewModelBase
 	[ObservableProperty] string ipValue = "Nicht konfiguriert";
 	[ObservableProperty] string dpiValue = string.Empty;
 	[ObservableProperty] string mediaValue = string.Empty;
+	[ObservableProperty] string rolesValue = "—";
 	[ObservableProperty] string calibratedValue = "—";
 	[ObservableProperty] string statusText = "Nicht getestet";
 	[ObservableProperty] Brush statusBrush = new SolidColorBrush(Colors.Gray);
@@ -117,12 +118,14 @@ public partial class MainPageViewModel : ViewModelBase
 			IpValue = "Nicht konfiguriert";
 			DpiValue = string.Empty;
 			MediaValue = string.Empty;
+			RolesValue = "—";
 			return;
 		}
 
 		IpValue = profile.ConnectionSummary;
 		DpiValue = $"{profile.Dpi} dpi · {profile.Dpi / 25.4:0.#} Dots/mm";
 		MediaValue = $"{profile.LabelWidthMm:0.#} × {profile.LabelHeightMm:0.#} mm";
+		RolesValue = profile.Roles.Count > 0 ? string.Join(", ", profile.Roles) : "—";
 	}
 
 	/// <summary>Liefert das aktive Profil oder zeigt den einheitlichen "kein Drucker"-Hinweis.</summary>
