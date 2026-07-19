@@ -183,7 +183,15 @@ Remote-Contracts, Profilverwaltungs-UI, API-Erweiterung, 65 Tests grün).
 - **Lösungsskizze:** Beim Speichern mit geändertem Namen die alte Datei
   entfernen (echtes Umbenennen), alternativ explizit „Speichern unter" mit
   neuer Id anbieten. Verhalten mit Tests absichern.
-- **Priorität:** Mittel · **Aufwand/Risiko:** S · **Status:** `[ ]`
+- **Priorität:** Mittel · **Aufwand/Risiko:** S · **Status:** `[x]`
+- **Ergebnis (2026-07-19):** Neue pure Helper-Klasse
+  `LabelTemplateDuplicateCleanup` (ohne MAUI-Abhängigkeit, per Compile-Include
+  testbar): löscht nach dem Speichern alle anderen Vorlagen-Dateien mit
+  derselben Id — Speichern unter neuem Namen ist damit ein echtes Umbenennen.
+  `LabelTemplateStore.SaveAsync` ruft die Bereinigung nach jedem Speichern auf;
+  das gilt auch für Saves über die App-API. Kaputte/Id-lose Dateien werden
+  bewusst übersprungen. 4 neue Tests (69/69 grün). Wer eine Kopie will, nutzt
+  Export/Import — ein explizites „Duplizieren" (neue Id) wäre ein eigenes Feature.
 
 ### BUG-03 — Profileditor verwirft Daten beim Transportwechsel
 - **Fundstelle:** `ViewModels/PrinterProfilesViewModel.cs:229-267`

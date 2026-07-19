@@ -43,6 +43,7 @@
 		<Compile Include="..\LabelPrinting\Services\ZplImageConverter.cs" Link="Services\ZplImageConverter.cs" />
 		<Compile Include="..\LabelPrinting\Services\SgdResponseParser.cs" Link="Services\SgdResponseParser.cs" />
 		<Compile Include="..\LabelPrinting\Services\LabelTemplateRenderer.cs" Link="Services\LabelTemplateRenderer.cs" />
+		<Compile Include="..\LabelPrinting\Services\LabelTemplateDuplicateCleanup.cs" Link="Services\LabelTemplateDuplicateCleanup.cs" />
 		<Compile Include="..\LabelPrinting\Services\LabelTemplateFillService.cs" Link="Services\LabelTemplateFillService.cs" />
 		<Compile Include="..\LabelPrinting\Services\TemplateFillResult.cs" Link="Services\TemplateFillResult.cs" />
 		<Compile Include="..\LabelPrinting\Services\PrinterStatus.cs" Link="Services\PrinterStatus.cs" />

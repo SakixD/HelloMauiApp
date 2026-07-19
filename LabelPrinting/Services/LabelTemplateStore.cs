@@ -79,8 +79,15 @@ public class LabelTemplateStore : ILabelTemplateStore
 
 	public async Task SaveAsync(LabelTemplate template)
 	{
-		await using var stream = File.Create(PathFor(template.Name));
-		await JsonSerializer.SerializeAsync(stream, template, JsonOptions).ConfigureAwait(false);
+		string path = PathFor(template.Name);
+		await using (var stream = File.Create(path))
+		{
+			await JsonSerializer.SerializeAsync(stream, template, JsonOptions).ConfigureAwait(false);
+		}
+
+		// „Speichern unter neuem Namen" wäre sonst ein stilles Kopieren: die Datei des alten
+		// Namens trüge dieselbe — laut Modell eindeutige — Id weiter (BUG-02).
+		LabelTemplateDuplicateCleanup.DeleteOtherFilesWithSameId(TemplatesDirectory, path, template.Id);
 	}
 
 	public Task DeleteAsync(string name)
